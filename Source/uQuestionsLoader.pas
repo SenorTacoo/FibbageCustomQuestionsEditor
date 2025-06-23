@@ -150,6 +150,8 @@ type
     function Questions: IFibbageQuestions;
   end;
 
+  EAudioFileNotFound = class(Exception);
+
 implementation
 
 { TQuestionsLoader }
@@ -212,27 +214,34 @@ begin
   begin
     var dataFile := TDirectory.GetFiles(dir, '*.jet');
 
+    singleQuestion := nil;
     fs := TFileStream.Create(dataFile[0], fmOpenRead);
     sr := TStreamReader.Create(fs);
     try
-      sr.OwnStream;
-      singleQuestion := TJSON.JsonToObject<TQuestionItem>(sr.ReadToEnd);
+      try
+        sr.OwnStream;
+        singleQuestion := TJSON.JsonToObject<TQuestionItem>(sr.ReadToEnd);
+        singleQuestion.FId := StrToIntDef(ExtractFileName(dir), 0);
+
+        if singleQuestion.GetHaveQuestionAudio then
+          singleQuestion.FQuestionAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetQuestionAudioName + '.ogg'));
+
+        if singleQuestion.GetHaveAnswerAudio then
+          singleQuestion.FAnswerAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetAnswerAudioName + '.ogg'));
+
+        if singleQuestion.GetHaveBumperAudio then
+          singleQuestion.FBumperAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetBumperAudioName + '.ogg'));
+
+        singleQuestion.PrepareEmptyValues;
+        AQuestionsList.Add(singleQuestion);
+        singleQuestion := nil;
+      except
+        on E: EAudioFileNotFound do ;
+      end;
     finally
       sr.Free;
+      singleQuestion.Free;
     end;
-    singleQuestion.FId := StrToIntDef(ExtractFileName(dir), 0);
-
-    if singleQuestion.GetHaveQuestionAudio then
-      singleQuestion.FQuestionAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetQuestionAudioName + '.ogg'));
-
-    if singleQuestion.GetHaveAnswerAudio then
-      singleQuestion.FAnswerAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetAnswerAudioName + '.ogg'));
-
-    if singleQuestion.GetHaveBumperAudio then
-      singleQuestion.FBumperAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetBumperAudioName + '.ogg'));
-
-    singleQuestion.PrepareEmptyValues;
-    AQuestionsList.Add(singleQuestion);
   end;
 end;
 
@@ -240,6 +249,9 @@ function TQuestionsLoader.ReadAudioData(const APath: string): TBytes;
 begin
   Result := nil;
   try
+    if not TFile.Exists(APath) then
+      raise EAudioFileNotFound.Create(APath);
+
     var fs := TFileStream.Create(APath, fmOpenRead);
     try
       SetLength(Result, fs.Size);
