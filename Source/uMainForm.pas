@@ -7,16 +7,17 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
   FMX.Edit, FMX.Controls.Presentation, FMX.MultiView, FMX.TabControl,
   System.Actions, FMX.ActnList, FMX.StdActns, FMX.Layouts, uConfig,
-  Spring.Container, uInterfaces, uPathChecker, System.IOUtils,
+  uInterfaces, uPathChecker, System.IOUtils,
   FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView.Adapters.Base,
   FMX.ListView, Data.Bind.GenData, System.Rtti, System.Bindings.Outputs,
   Fmx.Bind.Editors, Data.Bind.EngExt, Fmx.Bind.DBEngExt, Data.Bind.Components,
-  Data.Bind.ObjectScope, FMX.Platform, uQuestionsLoader, uSpringContainer, System.Math,
+  Data.Bind.ObjectScope, FMX.Platform, uQuestionsLoader, System.Math,
   FMX.Memo.Types, FMX.ScrollBox, FMX.Memo, FMX.Media,
   ACS_Classes, ACS_DXAudio, ACS_Vorbis, ACS_Converters, ACS_Wave,
   NewACDSAudio, System.Generics.Collections, uRecordForm, FMX.ListBox, 
   System.Messaging, System.DateUtils, uLog, uCategoriesLoader,
   FMX.Menus, System.StrUtils, uGetTextDlg, FMX.Objects, FMX.DialogService, uAsyncAction,
+  uContentConfiguration, uFibbageContent, uProjectActivator, uLastQuestionsLoader,
   FMX.Effects, Winapi.Windows, Winapi.ShellAPI, FMX.Platform.Win, Grijjy.CloudLogging,
   uUserDialog;
 
@@ -556,8 +557,8 @@ procedure TFrmMain.aImportProjectExecute(Sender: TObject);
 var
   str: string;
 begin
-  var pathChecker := GlobalContainer.Resolve<IContentPathChecker>;
-  var cfg := GlobalContainer.Resolve<IContentConfiguration>;
+  var pathChecker: IContentPathChecker := TContentPathChecker.Create;
+  var cfg: IContentConfiguration := TContentConfiguration.Create;
   while True do
     if not GetProjectPath(str) then
       Exit
@@ -721,7 +722,7 @@ end;
 
 procedure TFrmMain.InitializeContentTask;
 begin
-  FContent := GlobalContainer.Resolve<IFibbageContent>;
+  FContent := TFibbageContent.Create(TFibbageCategories.Create, TQuestionsLoader.Create);
   FContent.Initialize(FSelectedConfiguration);
 end;
 
@@ -768,7 +769,7 @@ procedure TFrmMain.aNewProjectExecute(Sender: TObject);
 var
   str: string;
 begin
-  var cfg := GlobalContainer.Resolve<IContentConfiguration>;
+  var cfg: IContentConfiguration := TContentConfiguration.Create;
   if not GetProjectName(str) then
     Exit;
   cfg.SetName(str);
@@ -1290,7 +1291,7 @@ end;
 
 procedure TFrmMain.ActivateProjectProc;
 begin
-  var activator := GlobalContainer.Resolve<IProjectActivator>;
+  var activator: IProjectActivator := TProjectActivator.Create;
   activator.Activate(FActiveConfiguration, System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbagePath, 'content'));
 end;
 
@@ -1978,7 +1979,7 @@ begin
   tcEditTabs.ActiveTab := tiQuestionProjects;
   tcQuestions.ActiveTab := tiShortieQuestions;
 
-  FLastQuestionProjects := GlobalContainer.Resolve<ILastQuestionProjects>;
+  FLastQuestionProjects := TLastQuestionsLoader.Create;
   FLastQuestionProjects.Initialize;
   InitializeLastQuestionProjects;
 

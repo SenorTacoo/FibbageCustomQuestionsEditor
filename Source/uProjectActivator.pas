@@ -3,6 +3,9 @@
 interface
 
 uses
+  uFibbageContent,
+  uCategoriesLoader,
+  uQuestionsLoader,
   uInterfaces;
 
 type
@@ -15,15 +18,12 @@ type
 
 implementation
 
-uses
-  uSpringContainer;
-
 { TProjectActivator }
 
 procedure TProjectActivator.Activate(AConfig: IContentConfiguration;
   const APath: string);
 begin
-  FTempContent := GlobalContainer.Resolve<IFibbageContent>;
+  FTempContent := TFibbageContent.Create(TFibbageCategories.Create, TQuestionsLoader.Create);
   try
     FTempContent.Initialize(AConfig);
     FTempContent.Save(APath, [soDoNotSaveConfig]);
