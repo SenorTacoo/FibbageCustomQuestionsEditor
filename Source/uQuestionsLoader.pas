@@ -10,6 +10,7 @@ uses
   REST.JSON,
   REST.Json.Types,
   DBXJSON,
+  uPathChecker,
   System.IOUtils,
   uInterfaces;
 
@@ -116,7 +117,7 @@ type
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
 
-    procedure Save(const APath: string);
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions);
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
 
@@ -137,6 +138,7 @@ type
   private
     FContentPath: string;
     FQuestions: IFibbageQuestions;
+    FPartyPack1: Boolean;
 
     procedure LoadShorties;
     procedure LoadFinals;
@@ -149,6 +151,8 @@ type
     procedure LoadQuestions(const AContentDir: string);
     function Questions: IFibbageQuestions;
   end;
+
+  EAudioFileNotFound = class(Exception);
 
 implementation
 
@@ -170,13 +174,21 @@ procedure TQuestionsLoader.LoadQuestions(const AContentDir: string);
 begin
   FContentPath := AContentDir;
 
+  FPartyPack1 := TContentPathChecker.IsPartyPack1(AContentDir);
+
   LoadShorties;
   LoadFinals;
 end;
 
 procedure TQuestionsLoader.LoadShorties;
+var
+  shortieDir: TArray<string>;
 begin
-  var shortieDir := TDirectory.GetDirectories(FContentPath, '*fibbageshortie*');
+  if FPartyPack1 then
+    shortieDir := TDirectory.GetDirectories(FContentPath, '*questions*')
+  else
+    shortieDir := TDirectory.GetDirectories(FContentPath, '*fibbageshortie*');
+
   if Length(shortieDir) = 0 then
     Exit;
 
@@ -212,27 +224,34 @@ begin
   begin
     var dataFile := TDirectory.GetFiles(dir, '*.jet');
 
+    singleQuestion := nil;
     fs := TFileStream.Create(dataFile[0], fmOpenRead);
     sr := TStreamReader.Create(fs);
     try
-      sr.OwnStream;
-      singleQuestion := TJSON.JsonToObject<TQuestionItem>(sr.ReadToEnd);
+      try
+        sr.OwnStream;
+        singleQuestion := TJSON.JsonToObject<TQuestionItem>(sr.ReadToEnd);
+        singleQuestion.FId := StrToIntDef(ExtractFileName(dir), 0);
+
+        if singleQuestion.GetHaveQuestionAudio then
+          singleQuestion.FQuestionAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetQuestionAudioName + '.ogg'));
+
+        if singleQuestion.GetHaveAnswerAudio then
+          singleQuestion.FAnswerAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetAnswerAudioName + '.ogg'));
+
+        if singleQuestion.GetHaveBumperAudio then
+          singleQuestion.FBumperAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetBumperAudioName + '.ogg'));
+
+        singleQuestion.PrepareEmptyValues;
+        AQuestionsList.Add(singleQuestion);
+        singleQuestion := nil;
+      except
+        on E: EAudioFileNotFound do ;
+      end;
     finally
       sr.Free;
+      singleQuestion.Free;
     end;
-    singleQuestion.FId := StrToIntDef(ExtractFileName(dir), 0);
-
-    if singleQuestion.GetHaveQuestionAudio then
-      singleQuestion.FQuestionAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetQuestionAudioName + '.ogg'));
-
-    if singleQuestion.GetHaveAnswerAudio then
-      singleQuestion.FAnswerAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetAnswerAudioName + '.ogg'));
-
-    if singleQuestion.GetHaveBumperAudio then
-      singleQuestion.FBumperAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetBumperAudioName + '.ogg'));
-
-    singleQuestion.PrepareEmptyValues;
-    AQuestionsList.Add(singleQuestion);
   end;
 end;
 
@@ -240,6 +259,9 @@ function TQuestionsLoader.ReadAudioData(const APath: string): TBytes;
 begin
   Result := nil;
   try
+    if not TFile.Exists(APath) then
+      raise EAudioFileNotFound.Create(APath);
+
     var fs := TFileStream.Create(APath, fmOpenRead);
     try
       SetLength(Result, fs.Size);
@@ -785,10 +807,18 @@ begin
   FShortieQuestions.Remove(AQuestion);
 end;
 
-procedure TQuestions.Save(const APath: string);
+procedure TQuestions.Save(const APath: string; ASaveOptions: TSaveOptions);
 begin
-  ShortieQuestions.Save(APath, 'fibbageshortie');
-  FinalQuestions.Save(APath, 'finalfibbage');
+  if soPartyPack1 in ASaveOptions then
+  begin
+    ShortieQuestions.Save(APath, 'questions');
+    FinalQuestions.Save(APath, 'questions');
+  end
+  else
+  begin
+    ShortieQuestions.Save(APath, 'fibbageshortie');
+    FinalQuestions.Save(APath, 'finalfibbage');
+  end;
 end;
 
 function TQuestions.ShortieQuestions: TQuestionList;

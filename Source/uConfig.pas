@@ -38,6 +38,8 @@ type
     procedure SetShowInfoAboutDuplicatedCategories(const Value: Boolean);
     function GetShowInfoAboutTooFewSuggestions: Boolean;
     procedure SetShowInfoAboutTooFewSuggestions(const Value: Boolean);
+    function GetShowInfoAboutTooFewShortieQuestions: Boolean;
+    procedure SetShowInfoAboutTooFewShortieQuestions(const Value: Boolean);
   public
     constructor Create;
     destructor Destroy; override;
@@ -51,6 +53,7 @@ type
     property FibbagePath: string read GetFibbagePath write SetFibbagePath;
     property ShowInfoAboutDuplicatedCategories: Boolean read GetShowInfoAboutDuplicatedCategories write SetShowInfoAboutDuplicatedCategories;
     property ShowInfoAboutTooFewSuggestions: Boolean read GetShowInfoAboutTooFewSuggestions write SetShowInfoAboutTooFewSuggestions;
+    property ShowInfoAboutTooFewShortieQuestions: Boolean read GetShowInfoAboutTooFewShortieQuestions write SetShowInfoAboutTooFewShortieQuestions;
   end;
 
 implementation
@@ -122,6 +125,11 @@ begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutDuplicatedCategories', True);
 end;
 
+function TAppConfig.GetShowInfoAboutTooFewShortieQuestions: Boolean;
+begin
+  Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewShortieQuestions', True);
+end;
+
 function TAppConfig.GetShowInfoAboutTooFewSuggestions: Boolean;
 begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewSuggestions', True);
@@ -165,6 +173,12 @@ end;
 procedure TAppConfig.SetShowInfoAboutDuplicatedCategories(const Value: Boolean);
 begin
   FIniFile.WriteBool('General', 'ShowInfoAboutDuplicatedCategories', Value);
+end;
+
+procedure TAppConfig.SetShowInfoAboutTooFewShortieQuestions(
+  const Value: Boolean);
+begin
+  FIniFile.WriteBool('General', 'ShowInfoAboutTooFewShortieQuestions', Value);
 end;
 
 procedure TAppConfig.SetShowInfoAboutTooFewSuggestions(const Value: Boolean);

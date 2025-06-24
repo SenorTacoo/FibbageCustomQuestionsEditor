@@ -7,6 +7,7 @@ uses
   System.SysUtils,
   System.IOUtils,
   System.Generics.Collections,
+  uContentConfiguration,
   uFibbageContent,
   uInterfaces;
 
@@ -34,9 +35,6 @@ type
   end;
 
 implementation
-
-uses
-  uSpringContainer;
 
 { TLastQuestionsLoader }
 
@@ -92,7 +90,7 @@ begin
     if path.Trim.IsEmpty then
       Continue;
 
-    var item := GlobalContainer.Resolve<IContentConfiguration>;
+    var item: IContentConfiguration := TContentConfiguration.Create;
     item.Initialize(path);
     Result.Add(item);
   end;

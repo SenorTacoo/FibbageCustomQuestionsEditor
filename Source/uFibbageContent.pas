@@ -10,6 +10,7 @@ uses
   System.Classes,
   uQuestionsLoader,
   uCategoriesLoader,
+  uPathChecker,
   uInterfaces;
 
 type
@@ -18,7 +19,7 @@ type
     FConfig: IContentConfiguration;
     FCategories: IFibbageCategories;
     FQuestionsLoader: IQuestionsLoader;
-    procedure SaveManifest(const APath: string);
+    procedure SaveManifest(const APath: string; ASaveOptions: TSaveOptions);
     procedure PrepareBackup(const APath: string);
     procedure RemoveBackup(const APath: string);
     procedure RestoreBackup(const APath: string);
@@ -27,6 +28,8 @@ type
     procedure PreSave(const APath: string);
     procedure InnerSave(const APath: string; ASaveOptions: TSaveOptions = []);
     procedure AssignCategoryToQuestion;
+    procedure DoAssignCategoryToQuestion;
+    procedure DoAssignQuestionToCategory;
   public
     constructor Create(ACategories: IFibbageCategories; AQuestionsLoader: IQuestionsLoader);
 
@@ -114,6 +117,63 @@ begin
   FQuestionsLoader := AQuestionsLoader;
 end;
 
+procedure TFibbageContent.DoAssignCategoryToQuestion;
+begin
+  for var idx := FQuestionsLoader.Questions.ShortieQuestions.Count - 1 downto 0 do
+  begin
+    var item := FQuestionsLoader.Questions.ShortieQuestions[idx];
+    var category := FCategories.GetShortieCategory(item);
+    if Assigned(category) then
+      item.SetCategoryObj(category)
+    else
+    begin
+      LogE('AssignCategoryToQuestion, have shortie question (%d) without category', [item.GetId]);
+      FQuestionsLoader.Questions.ShortieQuestions.Delete(idx);
+    end;
+  end;
+
+  for var idx := FQuestionsLoader.Questions.FinalQuestions.Count - 1 downto 0 do
+  begin
+    var item := FQuestionsLoader.Questions.FinalQuestions[idx];
+    var category := FCategories.GetFinalCategory(item);
+    if Assigned(category) then
+      item.SetCategoryObj(category)
+    else
+    begin
+      LogE('AssignCategoryToQuestion, have final question (%d) without category', [item.GetId]);
+      FQuestionsLoader.Questions.FinalQuestions.Delete(idx);
+    end;
+  end;
+end;
+
+procedure TFibbageContent.DoAssignQuestionToCategory;
+begin
+  for var idx := FQuestionsLoader.Questions.ShortieQuestions.Count - 1 downto 0 do
+  begin
+    var question := FQuestionsLoader.Questions.ShortieQuestions[idx];
+    var category := FCategories.GetShortieCategory(question);
+    if Assigned(category) then
+    begin
+      question.SetCategoryObj(category);
+      Continue;
+    end;
+
+    FQuestionsLoader.Questions.ShortieQuestions.Extract(question);
+    FQuestionsLoader.Questions.FinalQuestions.Add(question);
+    question.SetQuestionType(qtFinal);
+
+    category := FCategories.GetFinalCategory(question);
+    if Assigned(category) then
+    begin
+      question.SetCategoryObj(category);
+      Continue;
+    end;
+
+    LogE('AssignQuestionToCategory, have question (%d) without category', [question.GetId]);
+    FQuestionsLoader.Questions.FinalQuestions.Extract(question);
+  end;
+end;
+
 function TFibbageContent.GetPath: string;
 begin
   Result := FConfig.GetPath;
@@ -130,23 +190,10 @@ end;
 
 procedure TFibbageContent.AssignCategoryToQuestion;
 begin
-  for var item in FQuestionsLoader.Questions.ShortieQuestions do
-  begin
-    var category := FCategories.GetShortieCategory(item);
-    if Assigned(category) then
-      item.SetCategoryObj(category)
-    else
-      LogE('AssignCategoryToQuestion, have shortie question (%d) without category', [item.GetId]);
-  end;
-
-  for var item in FQuestionsLoader.Questions.FinalQuestions do
-  begin
-    var category := FCategories.GetFinalCategory(item);
-    if Assigned(category) then
-      item.SetCategoryObj(category)
-    else
-      LogE('AssignCategoryToQuestion, have final question (%d) without category', [item.GetId]);
-  end;
+  if TContentPathChecker.IsPartyPack1(GetPath) then
+    DoAssignQuestionToCategory
+  else
+    DoAssignCategoryToQuestion
 end;
 
 function TFibbageContent.Questions: IFibbageQuestions;
@@ -209,13 +256,16 @@ end;
 
 procedure TFibbageContent.InnerSave(const APath: string; ASaveOptions: TSaveOptions = []);
 begin
+  if TContentPathChecker.IsPartyPack1(APath) then
+    ASaveOptions := ASaveOptions + [soPartyPack1];
   PreSave(APath);
   try
     if not (soDoNotSaveConfig in ASaveOptions) then
       FConfig.Save(APath);
-    FQuestionsLoader.Questions.Save(APath);
-    FCategories.Save(APath);
-    SaveManifest(APath);
+    
+    FQuestionsLoader.Questions.Save(APath, ASaveOptions);
+    FCategories.Save(APath, ASaveOptions);
+    SaveManifest(APath, ASaveOptions);
 
     PostSaveSuccessful(APath);
   except
@@ -254,8 +304,10 @@ begin
   InnerSave(FConfig.GetPath);
 end;
 
-procedure TFibbageContent.SaveManifest(const APath: string);
+procedure TFibbageContent.SaveManifest(const APath: string; ASaveOptions: TSaveOptions);
 begin
+  if soPartyPack1 in ASaveOptions then
+    Exit;
   var fs := TFileStream.Create(TPath.Combine(APath, 'manifest.jet'), fmCreate);
   var sw := TStreamWriter.Create(fs);
   try

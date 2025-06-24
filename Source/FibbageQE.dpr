@@ -10,7 +10,6 @@ uses
   uQuestionsLoader in 'uQuestionsLoader.pas',
   uCategoriesLoader in 'uCategoriesLoader.pas',
   uFibbageContent in 'uFibbageContent.pas',
-  uSpringContainer in 'uSpringContainer.pas',
   uRecordForm in 'uRecordForm.pas' {RecordForm},
   uLastQuestionsLoader in 'uLastQuestionsLoader.pas',
   uLog in 'uLog.pas',
