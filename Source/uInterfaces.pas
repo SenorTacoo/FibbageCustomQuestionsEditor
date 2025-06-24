@@ -28,13 +28,16 @@ type
     procedure CloneFrom(AObj: ICategory);
   end;
 
+  TSaveOption = (soDoNotSaveConfig, soPartyPack1);
+  TSaveOptions = set of TSaveOption;
+
   ICategories = interface
     ['{705D1649-BB15-41E4-BBFE-8DB36E16C3F8}']
     function Count: Integer;
     function Category(AIdx: Integer): ICategory;
     procedure Add(ACategory: ICategory);
     procedure Delete(AId: Integer);
-    procedure Save(const APath, AName: string);
+    procedure Save(const APath, AName: string; ASaveOptions: TSaveOptions);
   end;
 
   IFibbageCategories = interface
@@ -47,10 +50,10 @@ type
     function CreateNewFinalCategory: ICategory;
     procedure RemoveShortieCategory(AQuestion: IQuestion);
     procedure RemoveFinalCategory(AQuestion: IQuestion);
-    procedure Save(const APath: string);
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions);
   end;
 
-  TQuestionType = (qtShortie, qtFinal);
+  TQuestionType = (qtShortie, qtFinal, qtUnknown);
 
   IQuestion = interface
    ['{EE283E65-E86A-4FCF-952F-4C9FAC7CBD69}']
@@ -90,7 +93,7 @@ type
     ['{E703044F-3534-4F18-892D-99D381446C1C}']
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
-    procedure Save(const APath: string);
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions);
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
     function CreateNewShortieQuestion: IQuestion;
@@ -102,9 +105,6 @@ type
     procedure LoadQuestions(const AContentDir: string);
     function Questions: IFibbageQuestions;
   end;
-
-  TSaveOption = (soDoNotSaveConfig);
-  TSaveOptions = set of TSaveOption;
 
   IContentConfiguration = interface
     ['{B756232F-2FC1-4BD9-8CDB-76D33AC44D4B}']

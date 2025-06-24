@@ -10,6 +10,7 @@ uses
   REST.JSON,
   REST.Json.Types,
   DBXJSON,
+  uPathChecker,
   System.IOUtils,
   uInterfaces;
 
@@ -116,7 +117,7 @@ type
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
 
-    procedure Save(const APath: string);
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions);
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
 
@@ -137,6 +138,7 @@ type
   private
     FContentPath: string;
     FQuestions: IFibbageQuestions;
+    FPartyPack1: Boolean;
 
     procedure LoadShorties;
     procedure LoadFinals;
@@ -172,13 +174,21 @@ procedure TQuestionsLoader.LoadQuestions(const AContentDir: string);
 begin
   FContentPath := AContentDir;
 
+  FPartyPack1 := TContentPathChecker.IsPartyPack1(AContentDir);
+
   LoadShorties;
   LoadFinals;
 end;
 
 procedure TQuestionsLoader.LoadShorties;
+var
+  shortieDir: TArray<string>;
 begin
-  var shortieDir := TDirectory.GetDirectories(FContentPath, '*fibbageshortie*');
+  if FPartyPack1 then
+    shortieDir := TDirectory.GetDirectories(FContentPath, '*questions*')
+  else
+    shortieDir := TDirectory.GetDirectories(FContentPath, '*fibbageshortie*');
+
   if Length(shortieDir) = 0 then
     Exit;
 
@@ -797,10 +807,18 @@ begin
   FShortieQuestions.Remove(AQuestion);
 end;
 
-procedure TQuestions.Save(const APath: string);
+procedure TQuestions.Save(const APath: string; ASaveOptions: TSaveOptions);
 begin
-  ShortieQuestions.Save(APath, 'fibbageshortie');
-  FinalQuestions.Save(APath, 'finalfibbage');
+  if soPartyPack1 in ASaveOptions then
+  begin
+    ShortieQuestions.Save(APath, 'questions');
+    FinalQuestions.Save(APath, 'questions');
+  end
+  else
+  begin
+    ShortieQuestions.Save(APath, 'fibbageshortie');
+    FinalQuestions.Save(APath, 'finalfibbage');
+  end;
 end;
 
 function TQuestions.ShortieQuestions: TQuestionList;

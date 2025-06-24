@@ -262,6 +262,7 @@ type
     cbShowCategoryDuplicatedInfo: TCheckBox;
     cbShowDialogAboutTooFewSuggestions: TCheckBox;
     rDim: TRectangle;
+    cbShowDialogAboutTooFewShortieQuestions: TCheckBox;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -391,6 +392,7 @@ type
     function IsCategoryDuplicated: Boolean;
     function ShowInfoAboutDuplicatedCategories(const AInfo: string): Boolean;
     function ShowInfoAboutTooFewSuggestions(const AInfo: string): Boolean;
+    function ShowInfoAboutTooFewShortieQuestions(const AInfo: string): Boolean;
     function IsTooFewSuggestions: Boolean;
     function GetSingleQuestionSuggestions: string;
     function GetFirstDuplicatedCategoryQuestionId(out AIsShortie: Boolean; out AId: Integer): Boolean;
@@ -399,6 +401,7 @@ type
     function CheckForDuplicatedCategoriesPreSave: Boolean;
     function CheckForTooFewSuggestions: Boolean;
     function ShouldSaveProject: Boolean;
+    function CheckForTooFewShortieQuestions_PartyPack1: Boolean;
   public
     { Public declarations }
   end;
@@ -408,6 +411,7 @@ var
 
 const
   OPTIMAL_NR_OF_SUGGESTIONS = 17;
+  PARTY_PACK_1_MIN_NR_OF_SHORTIE_QUESTIONS = 6;
 
 implementation
 
@@ -557,12 +561,11 @@ procedure TFrmMain.aImportProjectExecute(Sender: TObject);
 var
   str: string;
 begin
-  var pathChecker: IContentPathChecker := TContentPathChecker.Create;
   var cfg: IContentConfiguration := TContentConfiguration.Create;
   while True do
     if not GetProjectPath(str) then
       Exit
-    else if pathChecker.IsValid(str) then
+    else if TContentPathChecker.IsValid(str) then
       Break
     else
       ShowMessage('Invalid path, question directories not found');
@@ -928,6 +931,7 @@ begin
   TAppConfig.GetInstance.FibbagePath := eSettingsGamePath.Text;
   TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := cbShowCategoryDuplicatedInfo.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := cbShowDialogAboutTooFewSuggestions.IsChecked;
+  TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions := cbShowDialogAboutTooFewShortieQuestions.IsChecked;
 
   GoToHome;
 end;
@@ -1084,6 +1088,20 @@ begin
     end;
 end;
 
+function TFrmMain.CheckForTooFewShortieQuestions_PartyPack1: Boolean;
+begin
+  Result := True;
+
+  if FContent.Questions.ShortieQuestions.Count < PARTY_PACK_1_MIN_NR_OF_SHORTIE_QUESTIONS then
+    if not ShowInfoAboutTooFewShortieQuestions(
+      Format('Too few shortie questions. FibbageXL from PartyPack1 will freeze on start. A minimum of %u questions is required. Continue?', [PARTY_PACK_1_MIN_NR_OF_SHORTIE_QUESTIONS])) then
+    begin
+      GoToAllQuestions;
+      GoToShortieQuestions;
+      Result := False;
+    end;
+end;
+
 function TFrmMain.CheckForTooFewSuggestions: Boolean;
 var
   isShortie: Boolean;
@@ -1114,12 +1132,15 @@ begin
 end;
 
 function TFrmMain.ShouldSaveProject: Boolean;
-begin            
+begin
   Result := False;
   if not CheckForDuplicatedCategoriesPreSave then
-    Exit
-  else if not CheckForTooFewSuggestions then
     Exit;
+  if not CheckForTooFewSuggestions then
+    Exit;
+  if not CheckForTooFewShortieQuestions_PartyPack1 then
+    Exit;
+
   Result := True;
 end;
 
@@ -1162,6 +1183,27 @@ begin
       Continue
     else if SameText(question.GetCategory, eSingleItemCategory.Text.Trim) then
       Exit(True);
+end;
+
+function TFrmMain.ShowInfoAboutTooFewShortieQuestions(
+  const AInfo: string): Boolean;
+var
+  dontAskAgain: Boolean;
+begin
+  Result := False;
+  rDim.Visible := True;
+  var dlg := TUserDialog.Create(Self);
+  try
+    if dlg.MakeInfo(AInfo, dontAskAgain) then
+    begin
+      Result := True;
+      if dontAskAgain then
+        TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions := False;
+    end;
+  finally
+    dlg.Free;
+    rDim.Visible := False;
+  end;
 end;
 
 function TFrmMain.ShowInfoAboutTooFewSuggestions(const AInfo: string): Boolean;
@@ -1291,8 +1333,9 @@ end;
 
 procedure TFrmMain.ActivateProjectProc;
 begin
-  var activator: IProjectActivator := TProjectActivator.Create;
-  activator.Activate(FActiveConfiguration, System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbagePath, 'content'));
+  var destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbagePath, 'content');
+
+  TProjectActivator.Activate(FActiveConfiguration, destPath);
 end;
 
 procedure TFrmMain.OnPreSave;
@@ -1880,6 +1923,7 @@ begin
     eSettingsGamePath.Text := TAppConfig.GetInstance.FibbagePath;
     cbShowCategoryDuplicatedInfo.IsChecked := TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories;
     cbShowDialogAboutTooFewSuggestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions;
+    cbShowDialogAboutTooFewShortieQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions;
 
     aGoToSettings.Execute;
   finally
