@@ -110,9 +110,6 @@ begin
 end;
 
 procedure TFibbageContent.CreateProperObjects;
-var
-  categories: IFibbageCategories;
-  questions: IFibbageQuestions;
 begin
   case FConfig.GetGameType of
     TGameType.FibbageXL:

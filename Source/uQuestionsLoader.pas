@@ -123,6 +123,8 @@ type
 
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
+    function SpecialQuestions: TQuestionList; virtual;
+    function PersonalShortieQuestions: TQuestionList; virtual;
 
     procedure LoadQuestions(const AContentDir: string);
 
@@ -144,7 +146,15 @@ type
   end;
 
   TQuestionsFibbage3PP4 = class(TQuestionsBase)
+  private
+    FSpecialQuestions: TQuestionList;
+    FPersonalShortieQuestions: TQuestionList;
+  public
+    constructor Create;
+    destructor Destroy; override;
 
+    function SpecialQuestions: TQuestionList; override;
+    function PersonalShortieQuestions: TQuestionList; override;
   end;
 
 //  TFibbageQuestions = class
@@ -821,6 +831,12 @@ begin
     item.SetQuestionType(qtShortie);
 end;
 
+function TQuestionsBase.PersonalShortieQuestions: TQuestionList;
+begin
+  Result := nil;
+  Assert(False);
+end;
+
 function TQuestionsBase.CreateNewFinalQuestion: IQuestion;
 begin
   Result := InnerCreateNewQuestion;
@@ -935,6 +951,12 @@ begin
   Result := FShortieQuestions;
 end;
 
+function TQuestionsBase.SpecialQuestions: TQuestionList;
+begin
+  Result := nil;
+  Assert(False);
+end;
+
 { TQuestionListHelper }
 
 procedure TQuestionListHelper.Save(const AProjectPath, AQuestionsDir: string);
@@ -958,6 +980,32 @@ begin
 
   for var item in FShortieQuestions do
     item.SetQuestionType(qtShortie);
+end;
+
+{ TQuestionsFibbage3PP4 }
+
+constructor TQuestionsFibbage3PP4.Create;
+begin
+  inherited Create;
+  FSpecialQuestions := TQuestionList.Create;
+  FPersonalShortieQuestions := TQuestionList.Create;
+end;
+
+destructor TQuestionsFibbage3PP4.Destroy;
+begin
+  FSpecialQuestions.Free;
+  FPersonalShortieQuestions.Free;
+  inherited;
+end;
+
+function TQuestionsFibbage3PP4.PersonalShortieQuestions: TQuestionList;
+begin
+  Result := FPersonalShortieQuestions;
+end;
+
+function TQuestionsFibbage3PP4.SpecialQuestions: TQuestionList;
+begin
+  Result := FSpecialQuestions;
 end;
 
 end.

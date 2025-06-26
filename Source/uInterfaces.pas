@@ -93,6 +93,8 @@ type
     ['{E703044F-3534-4F18-892D-99D381446C1C}']
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
+    function SpecialQuestions: TQuestionList;
+    function PersonalShortieQuestions: TQuestionList;
     procedure Save(const APath: string; ASaveOptions: TSaveOptions);
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
