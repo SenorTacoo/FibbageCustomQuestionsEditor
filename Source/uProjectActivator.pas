@@ -22,9 +22,11 @@ implementation
 class procedure TProjectActivator.Activate(AConfig: IContentConfiguration;
   const APath: string);
 begin
-  var content := TFibbageContent.Create(TFibbageCategories.Create, TQuestionsLoader.Create);
+  // TODO XL 3 ???
+  var content := TFibbageContent.Create;
   try
     content.Initialize(AConfig);
+
     content.Save(APath, [soDoNotSaveConfig]);
   finally
     content.Free;

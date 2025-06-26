@@ -98,13 +98,10 @@ type
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
     function CreateNewShortieQuestion: IQuestion;
     function CreateNewFinalQuestion: IQuestion;
+    procedure LoadQuestions(const APath: string);
   end;
 
-  IQuestionsLoader = interface
-    ['{64B170E4-BEF8-46F8-BE7F-502FA2027E98}']
-    procedure LoadQuestions(const AContentDir: string);
-    function Questions: IFibbageQuestions;
-  end;
+  TGameType = (FibbageXL, FibbageXLPartyPack1, Fibbage3PartyPack4);
 
   IContentConfiguration = interface
     ['{B756232F-2FC1-4BD9-8CDB-76D33AC44D4B}']
@@ -114,11 +111,13 @@ type
 
     procedure SetName(const AName: string);
     procedure SetPath(const APath: string);
+    procedure SetGameType(AType: TGameType);
     procedure SetShowCategoryDuplicated(AValue: Boolean);
     procedure SetShowTooFewSuggestions(AValue: Boolean);
 
     function GetName: string;
     function GetPath: string;
+    function GetGameType: TGameType;
     function GetShowCategoryDuplicated: Boolean;
     function GetShowTooFewSuggestions: Boolean;
   end;

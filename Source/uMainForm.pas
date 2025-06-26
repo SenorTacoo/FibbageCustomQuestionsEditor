@@ -19,7 +19,7 @@ uses
   FMX.Menus, System.StrUtils, uGetTextDlg, FMX.Objects, FMX.DialogService, uAsyncAction,
   uContentConfiguration, uFibbageContent, uProjectActivator, uLastQuestionsLoader,
   FMX.Effects, Winapi.Windows, Winapi.ShellAPI, FMX.Platform.Win, Grijjy.CloudLogging,
-  uUserDialog;
+  uUserDialog, uGetGameTypeDlg;
 
 type
   TQuestionScrollItem = class(TPanel)
@@ -245,9 +245,9 @@ type
     aSaveChangesSettings: TAction;
     aCancelChangesSettings: TAction;
     Layout2: TLayout;
-    lSettingsGamePath: TLabel;
-    eSettingsGamePath: TEdit;
-    bSettingsGamePath: TButton;
+    lSettingsFibbageXLPath: TLabel;
+    eSettingsFibbageXLPath: TEdit;
+    bSettingsFibbageXLPath: TButton;
     aGetGamePath: TAction;
     Layout3: TLayout;
     bRefreshQuestionId: TButton;
@@ -263,6 +263,15 @@ type
     cbShowDialogAboutTooFewSuggestions: TCheckBox;
     rDim: TRectangle;
     cbShowDialogAboutTooFewShortieQuestions: TCheckBox;
+    Layout4: TLayout;
+    bSettingsFibbage3PP4Path: TButton;
+    lSettingsFibbage3PP4Path: TLabel;
+    eSettingsFibbage3PP4Path: TEdit;
+    Layout5: TLayout;
+    bSettingsFibbageXLPP1Path: TButton;
+    lSettingsFibbagePP1Path: TLabel;
+    eSettingsFibbageXLPP1Path: TEdit;
+    Action1: TAction;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -307,11 +316,13 @@ type
     procedure aSaveChangesSettingsExecute(Sender: TObject);
     procedure aCancelChangesSettingsExecute(Sender: TObject);
     procedure bSettingsClick(Sender: TObject);
-    procedure aGetGamePathExecute(Sender: TObject);
     procedure bRefreshQuestionIdClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure aSaveProjectAndCloseExecute(Sender: TObject);
     procedure lFamilyFriendlyClick(Sender: TObject);
+    procedure bSettingsFibbageXLPathClick(Sender: TObject);
+    procedure bSettingsFibbageXLPP1PathClick(Sender: TObject);
+    procedure bSettingsFibbage3PP4PathClick(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -362,6 +373,7 @@ type
     procedure CreateNewShortieQuestion;
     procedure SetDarkMode(AEnabled: Boolean);
     function GetProjectName(out AName: string): Boolean;
+    function GetGameType(out AType: TGameType): Boolean;
     function GetProjectPath(out APath: string): Boolean;
     procedure ProcessInitializeProject;
     procedure ClearPreviousData;
@@ -382,7 +394,8 @@ type
     procedure ActivateProjectProc;
     procedure OnActivateEnd;
     procedure OnActivateStart;
-    function GetFibbagePath(out APath: string): Boolean;
+    function GetFibbageXLPath(out APath: string): Boolean;
+    function GetFibbage3Path(out APath: string): Boolean;
     procedure OnPostSaveClose;
     procedure ProcessKeyDown_Questions(var Key: Word; Shift: TShiftState);
     procedure ProcessKeyDown_QuestionsProject(var Key: Word;
@@ -542,17 +555,12 @@ begin
   GoToQuestionDetails;
 end;
 
-procedure TFrmMain.aGetGamePathExecute(Sender: TObject);
-var
-  path: string;
+function TFrmMain.GetFibbage3Path(out APath: string): Boolean;
 begin
-  if not GetFibbagePath(path) then
-    Exit;
-
-  eSettingsGamePath.Text := path;
+  Result := SelectDirectory('Select Fibbage3 directory', '', APath);
 end;
 
-function TFrmMain.GetFibbagePath(out APath: string): Boolean;
+function TFrmMain.GetFibbageXLPath(out APath: string): Boolean;
 begin
   Result := SelectDirectory('Select FibbageXL directory', '', APath);
 end;
@@ -560,23 +568,32 @@ end;
 procedure TFrmMain.aImportProjectExecute(Sender: TObject);
 var
   str: string;
+  gameType: TGameType;
 begin
   var cfg: IContentConfiguration := TContentConfiguration.Create;
-  while True do
-    if not GetProjectPath(str) then
-      Exit
-    else if TContentPathChecker.IsValid(str) then
-      Break
-    else
-      ShowMessage('Invalid path, question directories not found');
 
-  if not cfg.Initialize(str) then
+  while True do
   begin
-    cfg.SetPath(str);
+    if not GetProjectPath(str) then
+      Exit;
+    if cfg.Initialize(str) then
+      Break;
+    if not GetGameType(gameType) then
+      Exit;
+    if not TContentPathChecker.IsValid(str, gameType) then
+    begin
+      ShowMessage('Invalid path, needed directories for this game not found');
+      Continue;
+    end;
+
     if not GetProjectName(str) then
       Exit;
+
     cfg.SetName(str);
+    cfg.SetGameType(gameType);
     cfg.Save(cfg.GetPath);
+
+    Break;
   end;
 
   sbxProjects.BeginUpdate;
@@ -725,7 +742,7 @@ end;
 
 procedure TFrmMain.InitializeContentTask;
 begin
-  FContent := TFibbageContent.Create(TFibbageCategories.Create, TQuestionsLoader.Create);
+  FContent := TFibbageContent.Create;
   FContent.Initialize(FSelectedConfiguration);
 end;
 
@@ -771,14 +788,19 @@ end;
 procedure TFrmMain.aNewProjectExecute(Sender: TObject);
 var
   str: string;
+  gameType: TGameType;
 begin
   var cfg: IContentConfiguration := TContentConfiguration.Create;
   if not GetProjectName(str) then
     Exit;
-  cfg.SetName(str);
+  if not GetGameType(gameType) then
+    Exit;
   if not GetProjectPath(str) then
     Exit;
+
+  cfg.SetName(str);
   cfg.SetPath(str);
+  cfg.SetGameType(gameType);
   cfg.Save(cfg.GetPath);
 
   sbxProjects.BeginUpdate;
@@ -928,7 +950,9 @@ begin
   if FChangingTab then
     Exit;
 
-  TAppConfig.GetInstance.FibbagePath := eSettingsGamePath.Text;
+  TAppConfig.GetInstance.FibbageXLPath := eSettingsFibbageXLPath.Text;
+  TAppConfig.GetInstance.FibbageXLPartyPack1Path := eSettingsFibbageXLPP1Path.Text;
+  TAppConfig.GetInstance.Fibbage3PartyPack4Path := eSettingsFibbage3PP4Path.Text;
   TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := cbShowCategoryDuplicatedInfo.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := cbShowDialogAboutTooFewSuggestions.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions := cbShowDialogAboutTooFewShortieQuestions.IsChecked;
@@ -1019,6 +1043,18 @@ begin
     finally
       suggestions.Free;
     end;
+  end;
+end;
+
+function TFrmMain.GetGameType(out AType: TGameType): Boolean;
+begin
+  rDim.Visible := True;
+  var dlg := TGetGameTypeDlg.Create(Self);
+  try
+    Result := dlg.GetGameType(AType);
+  finally
+    dlg.Free;
+    rDim.Visible := False;
   end;
 end;
 
@@ -1303,18 +1339,39 @@ procedure TFrmMain.aSetProjectAsActiveExecute(Sender: TObject);
 var
   path: string;
 begin
-  if TAppConfig.GetInstance.FibbagePath.IsEmpty then
-    if GetFibbagePath(path) then
-      TAppConfig.GetInstance.FibbagePath := path
-    else
-      Exit;
-
   for var item in FProjectVisItems do
     if item.Selected then
     begin
       FActiveConfiguration := item.OrgConfiguration;
       Break;
     end;
+
+  case FActiveConfiguration.GetGameType of
+    TGameType.FibbageXL:
+      begin
+        if TAppConfig.GetInstance.FibbageXLPath.IsEmpty then
+          if GetFibbageXLPath(path) then
+            TAppConfig.GetInstance.FibbageXLPath := path
+          else
+            Exit;
+      end;
+    TGameType.FibbageXLPartyPack1:
+      begin
+        if TAppConfig.GetInstance.FibbageXLPartyPack1Path.IsEmpty then
+          if GetFibbageXLPath(path) then
+            TAppConfig.GetInstance.FibbageXLPartyPack1Path := path
+          else
+            Exit;
+      end;
+    TGameType.Fibbage3PartyPack4:
+      begin
+        if TAppConfig.GetInstance.Fibbage3PartyPack4Path.IsEmpty then
+          if GetFibbage3Path(path) then
+            TAppConfig.GetInstance.Fibbage3PartyPack4Path := path
+          else
+            Exit;
+      end;
+  end;
 
   TAsyncAction.Create(OnActivateStart, OnActivateEnd, ActivateProjectProc).Start;
 end;
@@ -1332,8 +1389,17 @@ begin
 end;
 
 procedure TFrmMain.ActivateProjectProc;
+var
+  destPath: string;
 begin
-  var destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbagePath, 'content');
+  case FActiveConfiguration.GetGameType of
+    TGameType.FibbageXL:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbageXLPath, 'content');
+    TGameType.FibbageXLPartyPack1:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbageXLPartyPack1Path, 'content');
+    TGameType.Fibbage3PartyPack4:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.Fibbage3PartyPack4Path, 'content');
+  end;
 
   TProjectActivator.Activate(FActiveConfiguration, destPath);
 end;
@@ -1409,7 +1475,7 @@ end;
 
 function TFrmMain.GetProjectPath(out APath: string): Boolean;
 begin
-  Result := SelectDirectory('Select directory', '', APath);
+  Result := SelectDirectory('Select content directory', '', APath);
 end;
 
 function TFrmMain.GetProjectName(out AName: string): Boolean;
@@ -1906,6 +1972,36 @@ begin
   GoToSettings;
 end;
 
+procedure TFrmMain.bSettingsFibbage3PP4PathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetFibbage3Path(path) then
+    Exit;
+
+  eSettingsFibbage3PP4Path.Text := path;
+end;
+
+procedure TFrmMain.bSettingsFibbageXLPathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetFibbageXLPath(path) then
+    Exit;
+
+  eSettingsFibbageXLPath.Text := path;
+end;
+
+procedure TFrmMain.bSettingsFibbageXLPP1PathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetFibbageXLPath(path) then
+    Exit;
+
+  eSettingsFibbageXLPP1Path.Text := path;
+end;
+
 procedure TFrmMain.bShortieQuestionsClick(Sender: TObject);
 begin
   if FChangingTab then
@@ -1920,7 +2016,9 @@ procedure TFrmMain.GoToSettings;
 begin
   FChangingTab := True;
   try
-    eSettingsGamePath.Text := TAppConfig.GetInstance.FibbagePath;
+    eSettingsFibbageXLPath.Text := TAppConfig.GetInstance.FibbageXLPath;
+    eSettingsFibbageXLPP1Path.Text := TAppConfig.GetInstance.FibbageXLPartyPack1Path;
+    eSettingsFibbage3PP4Path.Text := TAppConfig.GetInstance.Fibbage3PartyPack4Path;
     cbShowCategoryDuplicatedInfo.IsChecked := TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories;
     cbShowDialogAboutTooFewSuggestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions;
     cbShowDialogAboutTooFewShortieQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions;

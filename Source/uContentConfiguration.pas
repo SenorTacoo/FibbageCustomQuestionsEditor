@@ -21,11 +21,13 @@ type
     procedure SetPath(const APath: string);
     procedure SetShowCategoryDuplicated(AValue: Boolean);
     procedure SetShowTooFewSuggestions(AValue: Boolean);
+    procedure SetGameType(AType: TGameType);
 
     function GetName: string;
     function GetPath: string;
     function GetShowCategoryDuplicated: Boolean;
     function GetShowTooFewSuggestions: Boolean;
+    function GetGameType: TGameType;
 
     function Initialize(const APath: string): Boolean;
     procedure Save(const APath: string); overload;
@@ -47,6 +49,15 @@ destructor TContentConfiguration.Destroy;
 begin
   FRawCfg.Free;
   inherited;
+end;
+
+function TContentConfiguration.GetGameType: TGameType;
+begin
+  var res := FRawCfg.Values['GameType'];
+  if res.IsEmpty then
+    Result := TGameType.FibbageXL
+  else
+    Result := TGameType(StrToInt(res));
 end;
 
 function TContentConfiguration.GetName: string;
@@ -93,6 +104,11 @@ end;
 procedure TContentConfiguration.Save;
 begin
   Save(GetPath);
+end;
+
+procedure TContentConfiguration.SetGameType(AType: TGameType);
+begin
+  FRawCfg.Values['GameType'] := IntToStr(Ord(AType));
 end;
 
 procedure TContentConfiguration.SetName(const AName: string);

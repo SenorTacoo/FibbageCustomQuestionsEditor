@@ -190,6 +190,10 @@
             <Form>UserDialog</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <DCCReference Include="uGetGameTypeDlg.pas">
+            <Form>GetGameTypeDlg</Form>
+            <FormType>fmx</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
