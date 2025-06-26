@@ -55,10 +55,6 @@ begin
         if not DirectoryExists(IncludeTrailingPathDelimiter(APath) +
           IncludeTrailingPathDelimiter('fibbagespecial')) then
           Exit;
-
-        if not DirectoryExists(IncludeTrailingPathDelimiter(APath) +
-          IncludeTrailingPathDelimiter('tmishortie')) then
-          Exit;
       end;
     else
       Exit;

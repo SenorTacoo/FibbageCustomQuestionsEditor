@@ -125,6 +125,7 @@ type
     tiFinalQuestions: TTabItem;
     aGoToFinalQuestions: TChangeTabAction;
     aGoToShortieQuestions: TChangeTabAction;
+    aGoToSpecialQuestions: TChangeTabAction;
     tiQuestions: TTabItem;
     tcQuestions: TTabControl;
     aGoToAllQuestions: TChangeTabAction;
@@ -273,11 +274,17 @@ type
     eSettingsFibbageXLPP1Path: TEdit;
     Action1: TAction;
     bSpecialQuestions: TButton;
-    bPersonalShortieQuestions: TButton;
     tiSpecialQuestions: TTabItem;
     tiPersonalShortieQuestions: TTabItem;
     sbxSpecialQuestions: TVertScrollBox;
     sbxPersonalShortieQuestions: TVertScrollBox;
+    pmSpecialQuestions: TPopupMenu;
+    MenuItem4: TMenuItem;
+    MenuItem5: TMenuItem;
+    MenuItem6: TMenuItem;
+    MenuItem8: TMenuItem;
+    MenuItem9: TMenuItem;
+    MenuItem10: TMenuItem;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -329,6 +336,7 @@ type
     procedure bSettingsFibbageXLPathClick(Sender: TObject);
     procedure bSettingsFibbageXLPP1PathClick(Sender: TObject);
     procedure bSettingsFibbage3PP4PathClick(Sender: TObject);
+    procedure bSpecialQuestionsClick(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -364,7 +372,6 @@ type
     procedure GoToFinalQuestions;
     procedure GoToShortieQuestions;
     procedure GoToSpecialQuestions;
-    procedure GoToPersonalShortieQuestions;
 
     procedure GoToAllQuestions;
     procedure GoToHome;
@@ -373,22 +380,30 @@ type
     procedure PrepareMultiViewButtons(AActTab: TAppTab);
     procedure OnProjectItemDoubleClick(Sender: TObject);
     procedure OnProjectItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+
     procedure OnShortieQuestionItemDoubleClick(Sender: TObject);
     procedure OnFinalQuestionItemDoubleClick(Sender: TObject);
+    procedure OnSpecialQuestionItemDoubleClick(Sender: TObject);
+
     procedure OnShortieQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure OnFinalQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+    procedure OnSpecialQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+
     procedure RemoveSelectedShortieQuestions;
     procedure RemoveSelectedFinalQuestions;
+    procedure RemoveSelectedSpecialQuestions;
 
     procedure FillFinalScrollBox;
     procedure FillShortiesScrollBox;
     procedure FillSpecialScrollBox;
-    procedure FillPersonalShortiesScrollBox;
 
     procedure RefreshSelectedFinalQuestion;
     procedure RefreshSelectedShortieQuestion;
+
     procedure CreateNewFinalQuestion;
     procedure CreateNewShortieQuestion;
+    procedure CreateNewSpecialQuestion;
+
     procedure SetDarkMode(AEnabled: Boolean);
     function GetProjectName(out AName: string): Boolean;
     function GetGameType(out AType: TGameType): Boolean;
@@ -456,8 +471,12 @@ begin
 
   if tcQuestions.ActiveTab = tiShortieQuestions then
     CreateNewShortieQuestion
+  else if tcQuestions.ActiveTab = tiFinalQuestions then
+    CreateNewFinalQuestion
+  else if tcQuestions.ActiveTab = tiSpecialQuestions then
+    CreateNewSpecialQuestion
   else
-    CreateNewFinalQuestion;
+    Assert(False);
 
   lNewQuestion.Text := 'New question';
   GoToQuestionDetails;
@@ -749,10 +768,7 @@ begin
     FillFinalScrollBox;
 
     if FSelectedConfiguration.GetGameType = TGameType.Fibbage3PartyPack4 then
-    begin
       FillSpecialScrollBox;
-      FillPersonalShortiesScrollBox;
-    end;
 
     AddLastChoosenProject;
   finally
@@ -762,7 +778,6 @@ begin
     FLastClickedItemToEdit := nil;
     aRemoveQuestions.Enabled := False;
     bSpecialQuestions.Visible := FSelectedConfiguration.GetGameType = TGameType.Fibbage3PartyPack4;
-    bPersonalShortieQuestions.Visible := FSelectedConfiguration.GetGameType = TGameType.Fibbage3PartyPack4;
     UpdateQuestionsGridView;
     lProjectQuestions.Text := Format('Questions - %s', [FSelectedConfiguration.GetName]);
   end;
@@ -991,8 +1006,12 @@ procedure TFrmMain.aRemoveQuestionsExecute(Sender: TObject);
 begin
   if tcQuestions.ActiveTab = tiShortieQuestions then
     RemoveSelectedShortieQuestions
+  else if tcQuestions.ActiveTab = tiFinalQuestions then
+    RemoveSelectedFinalQuestions
+  else if tcQuestions.ActiveTab = tiSpecialQuestions then
+    RemoveSelectedSpecialQuestions
   else
-    RemoveSelectedFinalQuestions;
+    Assert(False);
 end;
 
 procedure TFrmMain.aSaveChangesSettingsExecute(Sender: TObject);
@@ -1323,10 +1342,6 @@ begin
       gplQuestions.ColumnCollection[2]. Value := 33.33333333
     else
       gplQuestions.ColumnCollection[2].Value := 0;
-    if bPersonalShortieQuestions.Visible then
-      gplQuestions.ColumnCollection[3].Value := 25
-    else
-      gplQuestions.ColumnCollection[3].Value := 0;
   finally
     gplQuestions.EndUpdate;
   end;
@@ -1512,6 +1527,24 @@ begin
     FLastClickedItemToEdit := nil;
     aRemoveQuestions.Enabled := False;
     sbxShortieQuestions.EndUpdate;
+  end;
+end;
+
+procedure TFrmMain.RemoveSelectedSpecialQuestions;
+begin
+  sbxSpecialQuestions.BeginUpdate;
+  try
+    for var idx := FSpecialVisItems.Count - 1 downto 0 do
+      if FSpecialVisItems[idx].Selected then
+      begin
+        var item := FSpecialVisItems.ExtractAt(idx);
+        FContent.RemoveSpecialQuestion(item.OrgQuestion);
+        FreeAndNil(item);
+      end;
+  finally
+    FLastClickedItemToEdit := nil;
+    aRemoveQuestions.Enabled := False;
+    sbxSpecialQuestions.EndUpdate;
   end;
 end;
 
@@ -1798,6 +1831,85 @@ begin
   aRemoveQuestions.Text := IfThen(selCnt > 1, 'Remove questions', 'Remove question');
 end;
 
+procedure TFrmMain.OnSpecialQuestionItemDoubleClick(Sender: TObject);
+begin
+  if FChangingTab then
+    Exit;
+
+  Log('OnSpecialQuestionItemDoubleClick');
+  aEditQuestion.Execute;
+end;
+
+procedure TFrmMain.OnSpecialQuestionItemMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+begin
+  Log('OnSpecialQuestionItemMouseDown');
+  if FChangingTab then
+    Exit;
+  if not (Sender is TQuestionScrollItem) then
+    Exit;
+
+  FLastClickedItemToEdit := Sender as TQuestionScrollItem;
+
+  if Button = TMouseButton.mbRight then
+  begin
+    FLastClickedItem := Sender as TQuestionScrollItem;
+    sbxSpecialQuestions.BeginUpdate;
+    try
+      if not (Sender as TQuestionScrollItem).Selected then
+      begin
+        FSpecialVisItems.ClearSelection;
+        (Sender as TQuestionScrollItem).Selected := True;
+      end;
+    finally
+      sbxSpecialQuestions.EndUpdate;
+    end;
+    pmSpecialQuestions.Popup(Screen.MousePos.X, Screen.MousePos.Y);
+  end
+  else if ssDouble in Shift then
+  begin
+    FSpecialVisItems.ClearSelection;
+    (Sender as TQuestionScrollItem).Selected := True;
+  end
+  else if ssShift in Shift then
+  begin
+    var fIdx := 0;
+    var sIdx := FSpecialVisItems.IndexOf(Sender as TQuestionScrollItem);
+    if Assigned(FLastClickedItem) then
+      fIdx := FSpecialVisItems.IndexOf(FLastClickedItem);
+
+    if fIdx > sIdx then
+    begin
+      var tmp := fIdx;
+      fIdx := sIdx;
+      sIdx := tmp;
+    end;
+
+    for var idx := 0 to FSpecialVisItems.Count - 1 do
+      FSpecialVisItems[idx].Selected := (idx >= fIdx) and (idx <= sIdx);
+  end
+  else
+  begin
+    FLastClickedItem := Sender as TQuestionScrollItem;
+    if ssCtrl in Shift then
+      (Sender as TQuestionScrollItem).Selected := not (Sender as TQuestionScrollItem).Selected
+    else
+    begin
+      for var item in FSpecialVisItems do
+        if item = Sender then
+          item.Selected := not item.Selected
+        else
+          item.Selected := False;
+    end;
+  end;
+  if not (Sender as TQuestionScrollItem).Selected then
+    FLastClickedItemToEdit := nil;
+
+  var selCnt := FSpecialVisItems.SelectedCount;
+  aRemoveQuestions.Enabled :=  selCnt > 0;
+  aRemoveQuestions.Text := IfThen(selCnt > 1, 'Remove questions', 'Remove question');
+end;
+
 procedure TFrmMain.PrepareMultiViewButtons(AActTab: TAppTab);
 begin
   mvHomeOptions.BeginUpdate;
@@ -1837,8 +1949,8 @@ begin
       qItem.Parent := sbxSpecialQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
-//      qItem.OnMouseDown := OnShortieQuestionItemMouseDown;
-//      qItem.OnDblClick := OnShortieQuestionItemDoubleClick;
+      qItem.OnMouseDown := OnSpecialQuestionItemMouseDown;
+      qItem.OnDblClick := OnSpecialQuestionItemDoubleClick;
       FSpecialVisItems.Add(qItem);
     end;
   finally
@@ -1862,25 +1974,6 @@ begin
     end;
   finally
     sbxFinalQuestions.EndUpdate;
-  end;
-end;
-
-procedure TFrmMain.FillPersonalShortiesScrollBox;
-begin
-  sbxPersonalShortieQuestions.BeginUpdate;
-  try
-    for var item in FContent.Questions.PersonalShortieQuestions do
-    begin
-      var qItem := TQuestionScrollItem.CreateItem(sbxPersonalShortieQuestions, item);
-      qItem.Parent := sbxPersonalShortieQuestions;
-      qItem.Align := TAlignLayout.Top;
-      qItem.Position.Y := MaxInt;
-//      qItem.OnMouseDown := OnShortieQuestionItemMouseDown;
-//      qItem.OnDblClick := OnShortieQuestionItemDoubleClick;
-      FPersonalShortieVisItems.Add(qItem);
-    end;
-  finally
-    sbxPersonalShortieQuestions.EndUpdate;
   end;
 end;
 
@@ -1968,9 +2061,33 @@ begin
   end;
 end;
 
+procedure TFrmMain.CreateNewSpecialQuestion;
+begin
+  FContent.AddSpecialQuestion;
+  FSelectedQuestion := FContent.Questions.SpecialQuestions.Last;
+  FSelectedCategory := FSelectedQuestion.GetCategoryObj;
+
+  sbxSpecialQuestions.BeginUpdate;
+  try
+    FSpecialVisItems.ClearSelection;
+    var qItem := TQuestionScrollItem.CreateItem(sbxSpecialQuestions, FSelectedQuestion);
+    qItem.Parent := sbxSpecialQuestions;
+    qItem.Align := TAlignLayout.Top;
+    qItem.Position.Y := MaxInt;
+    qItem.OnMouseDown := OnSpecialQuestionItemMouseDown;
+    qItem.OnDblClick := OnSpecialQuestionItemDoubleClick;
+    FLastClickedItemToEdit := qItem;
+    qItem.Selected := True;
+    aRemoveQuestions.Enabled := True;
+    FSpecialVisItems.Add(qItem);
+  finally
+    sbxSpecialQuestions.EndUpdate;
+  end;
+end;
+
 procedure TFrmMain.DisableButton(AButton: TButton);
 begin
-  for var item in [bShortieQuestions, bFinalQuestions, bSpecialQuestions, bPersonalShortieQuestions] do
+  for var item in [bShortieQuestions, bFinalQuestions, bSpecialQuestions] do
     item.Enabled := item <> AButton;
 end;
 
@@ -2049,11 +2166,6 @@ begin
     FChangingTab := False;
   end;
   PrepareMultiViewButtons(atHome);
-end;
-
-procedure TFrmMain.GoToPersonalShortieQuestions;
-begin
-
 end;
 
 procedure TFrmMain.bGoToHomeClick(Sender: TObject);
@@ -2180,7 +2292,22 @@ end;
 
 procedure TFrmMain.GoToSpecialQuestions;
 begin
-
+  SetButtonPressed(bSpecialQuestions);
+  sbxSpecialQuestions.BeginUpdate;
+  try
+    FSpecialVisItems.ClearSelection;
+    FLastClickedItemToEdit := nil;
+    aRemoveQuestions.Enabled := FSpecialVisItems.SelectedCount > 0;
+  finally
+    sbxSpecialQuestions.EndUpdate;
+  end;
+  FChangingTab := True;
+  try
+    aGoToSpecialQuestions.Execute;
+  finally
+    FChangingTab := False;
+  end;
+  DisableButton(bSpecialQuestions);
 end;
 
 procedure TFrmMain.bSingleItemBumperAudioClick(Sender: TObject);
@@ -2217,6 +2344,11 @@ begin
     form.Free;
     rDim.Visible := False;
   end;
+end;
+
+procedure TFrmMain.bSpecialQuestionsClick(Sender: TObject);
+begin
+  GoToSpecialQuestions;
 end;
 
 procedure TFrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -2521,7 +2653,7 @@ end;
 
 procedure TFrmMain.SetButtonPressed(AButton: TButton);
 begin
-  for var item in [bShortieQuestions, bFinalQuestions, bSpecialQuestions, bPersonalShortieQuestions] do
+  for var item in [bShortieQuestions, bFinalQuestions, bSpecialQuestions] do
     item.IsPressed := item = AButton;
 end;
 

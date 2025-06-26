@@ -8,6 +8,9 @@ uses
   System.SysUtils,
   System.Threading,
   System.Classes,
+  System.JSON,
+  System.JSON.Builders,
+  System.JSON.Writers,
   uQuestionsLoader,
   uCategoriesLoader,
   uPathChecker,
@@ -20,7 +23,7 @@ type
     FCategories: IFibbageCategories;
     FQuestions: IFibbageQuestions;
 
-    procedure SaveManifest(const APath: string; ASaveOptions: TSaveOptions);
+    procedure SaveManifest(const APath: string);
     procedure PrepareBackup(const APath: string);
     procedure RemoveBackup(const APath: string);
     procedure RestoreBackup(const APath: string);
@@ -49,9 +52,11 @@ type
 
     procedure AddShortieQuestion;
     procedure AddFinalQuestion;
+    procedure AddSpecialQuestion;
 
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
+    procedure RemoveSpecialQuestion(AQuestion: IQuestion);
   end;
 
 implementation
@@ -70,6 +75,14 @@ procedure TFibbageContent.AddShortieQuestion;
 begin
   var category := FCategories.CreateNewShortieCategory;
   var question := FQuestions.CreateNewShortieQuestion;
+
+  question.SetCategoryObj(category);
+end;
+
+procedure TFibbageContent.AddSpecialQuestion;
+begin
+  var category := FCategories.CreateNewSpecialCategory;
+  var question := FQuestions.CreateNewSpecialQuestion;
 
   question.SetCategoryObj(category);
 end;
@@ -159,6 +172,22 @@ begin
       FQuestions.FinalQuestions.Delete(idx);
     end;
   end;
+
+  if FConfig.GetGameType <> TGameType.Fibbage3PartyPack4 then
+    Exit;
+
+  for var idx := FQuestions.SpecialQuestions.Count - 1 downto 0 do
+  begin
+    var item := FQuestions.SpecialQuestions[idx];
+    var category := FCategories.GetSpecialCategory(item);
+    if Assigned(category) then
+      item.SetCategoryObj(category)
+    else
+    begin
+      LogE('AssignCategoryToQuestion, have special question (%d) without category', [item.GetId]);
+      FQuestions.SpecialQuestions.Delete(idx);
+    end;
+  end;
 end;
 
 procedure TFibbageContent.DoAssignQuestionToCategory;
@@ -230,6 +259,12 @@ begin
   FQuestions.RemoveShortieQuestion(AQuestion);
 end;
 
+procedure TFibbageContent.RemoveSpecialQuestion(AQuestion: IQuestion);
+begin
+  FCategories.RemoveSpecialCategory(AQuestion);
+  FQuestions.RemoveSpecialQuestion(AQuestion);
+end;
+
 procedure TFibbageContent.PrepareBackup(const APath: string);
 begin
   if DirectoryExists(APath) then
@@ -282,7 +317,7 @@ begin
     
     FQuestions.Save(APath, ASaveOptions);
     FCategories.Save(APath, ASaveOptions);
-    SaveManifest(APath, ASaveOptions);
+    SaveManifest(APath);
 
     PostSaveSuccessful(APath);
   except
@@ -321,16 +356,35 @@ begin
   InnerSave(FConfig.GetPath);
 end;
 
-procedure TFibbageContent.SaveManifest(const APath: string; ASaveOptions: TSaveOptions);
+procedure TFibbageContent.SaveManifest(const APath: string);
 begin
-  if soPartyPack1 in ASaveOptions then
+  if FConfig.GetGameType = TGameType.FibbageXLPartyPack1 then
     Exit;
+
   var fs := TFileStream.Create(TPath.Combine(APath, 'manifest.jet'), fmCreate);
-  var sw := TStreamWriter.Create(fs);
+  var jw := TJsonTextWriter.Create(fs);
+  var job := TJSONObjectBuilder.Create(jw);
   try
-    sw.WriteLine('{ "id":"Main", "name":"Main Content Pack", "types":["fibbageshortie","finalfibbage"] }');
+    var jsonObj := job.BeginObject;
+
+    var typesArray := jsonObj
+      .Add('id', 'Main')
+      .Add('name', 'Main Content Pack')
+      .BeginArray('types');
+
+    typesArray
+        .Add('fibbageshortie')
+        .Add('finalfibbage');
+
+    if FConfig.GetGameType = TGameType.Fibbage3PartyPack4 then
+      typesArray.Add('fibbagespecial');
+
+    typesArray.EndArray;
+
+    jsonObj.EndObject;
   finally
-    sw.Free;
+    job.Free;
+    jw.Free;
     fs.Free;
   end;
 end;

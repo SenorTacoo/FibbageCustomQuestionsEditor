@@ -20,15 +20,19 @@ type
     function GetId: Integer;
     function GetCategory: string;
     function GetIsFamilyFriendly: Boolean;
+    function GetIsPortrait: Boolean;
+    function GetBumper: string;
 
     procedure SetId(AId: Integer);
     procedure SetCategory(const ACategory: string);
     procedure SetIsFamilyFriendly(AValue: Boolean);
+    procedure SetIsPortrait(AValue: Boolean);
+    procedure SetBumper(const AValue: string);
 
     procedure CloneFrom(AObj: ICategory);
   end;
 
-  TSaveOption = (soDoNotSaveConfig, soPartyPack1);
+  TSaveOption = (soDoNotSaveConfig);
   TSaveOptions = set of TSaveOption;
 
   ICategories = interface
@@ -44,16 +48,20 @@ type
     ['{C079C47F-9F11-4CEA-B404-FC1393155440}']
     function GetShortieCategory(AQuestion: IQuestion): ICategory;
     function GetFinalCategory(AQuestion: IQuestion): ICategory;
+    function GetSpecialCategory(AQuestion: IQuestion): ICategory;
+    function GetPersonalShortieCategory(AQuestion: IQuestion): ICategory;
     procedure LoadCategories(const AContentDir: string);
     function GetAvailableId: Word;
     function CreateNewShortieCategory: ICategory;
     function CreateNewFinalCategory: ICategory;
+    function CreateNewSpecialCategory: ICategory;
     procedure RemoveShortieCategory(AQuestion: IQuestion);
     procedure RemoveFinalCategory(AQuestion: IQuestion);
+    procedure RemoveSpecialCategory(AQuestion: IQuestion);
     procedure Save(const APath: string; ASaveOptions: TSaveOptions);
   end;
 
-  TQuestionType = (qtShortie, qtFinal, qtUnknown);
+  TQuestionType = (qtShortie, qtFinal, qtSpecial, qtPersonalShortie, qtUnknown);
 
   IQuestion = interface
    ['{EE283E65-E86A-4FCF-952F-4C9FAC7CBD69}']
@@ -71,6 +79,7 @@ type
     function GetBumperAudioData: TBytes;
     function GetCategoryObj: ICategory;
     function GetCategory: string;
+    function GetPortraitData: TBytes;
 
     procedure SetQuestion(const AQuestion: string);
     procedure SetSuggestions(const ASuggestions: string);
@@ -94,12 +103,13 @@ type
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
     function SpecialQuestions: TQuestionList;
-    function PersonalShortieQuestions: TQuestionList;
     procedure Save(const APath: string; ASaveOptions: TSaveOptions);
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
+    procedure RemoveSpecialQuestion(AQuestion: IQuestion);
     function CreateNewShortieQuestion: IQuestion;
     function CreateNewFinalQuestion: IQuestion;
+    function CreateNewSpecialQuestion: IQuestion;
     procedure LoadQuestions(const APath: string);
   end;
 
@@ -145,8 +155,11 @@ type
 
     procedure AddShortieQuestion;
     procedure AddFinalQuestion;
+    procedure AddSpecialQuestion;
+
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
+    procedure RemoveSpecialQuestion(AQuestion: IQuestion);
   end;
 
   TContentConfigurations = TList<IContentConfiguration>;
