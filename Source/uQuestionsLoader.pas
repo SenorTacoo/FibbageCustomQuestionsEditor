@@ -131,7 +131,6 @@ type
 
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
-    function SpecialQuestions: TQuestionList; virtual;
 
     procedure LoadQuestions(const AContentDir: string);
 
@@ -157,21 +156,8 @@ type
     procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
   end;
 
-  TQuestionsFibbage3PP4 = class(TQuestionsBase)
-  private
-    FSpecialQuestions: TQuestionList;
-
-    procedure LoadSpecialQuestions;
-  protected
-    procedure DoLoadQuestions; override;
+  TQuestionsFibbage3PP4 = class(TQuestionsFibbageXL)
   public
-    constructor Create;
-    destructor Destroy; override;
-
-    function SpecialQuestions: TQuestionList; override;
-    procedure RemoveSpecialQuestion(AQuestion: IQuestion); override;
-    function CreateNewSpecialQuestion: IQuestion; override;
-
     procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
   end;
 
@@ -867,12 +853,6 @@ begin
   Result := FShortieQuestions;
 end;
 
-function TQuestionsBase.SpecialQuestions: TQuestionList;
-begin
-  Result := nil;
-  Assert(False);
-end;
-
 { TQuestionListHelper }
 
 procedure TQuestionListHelper.Save(const AProjectPath, AQuestionsDir: string);
@@ -907,61 +887,11 @@ end;
 
 { TQuestionsFibbage3PP4 }
 
-constructor TQuestionsFibbage3PP4.Create;
-begin
-  inherited Create;
-  FSpecialQuestions := TQuestionList.Create;
-end;
-
-function TQuestionsFibbage3PP4.CreateNewSpecialQuestion: IQuestion;
-begin
-  Result := InnerCreateNewQuestion;
-  Result.SetQuestionType(qtSpecial);
-
-  FSpecialQuestions.Add(Result);
-end;
-
-destructor TQuestionsFibbage3PP4.Destroy;
-begin
-  FSpecialQuestions.Free;
-  inherited;
-end;
-
-procedure TQuestionsFibbage3PP4.DoLoadQuestions;
-begin
-  inherited;
-  LoadSpecialQuestions;
-end;
-
-procedure TQuestionsFibbage3PP4.LoadSpecialQuestions;
-begin
-  var specialDir := TDirectory.GetDirectories(FContentDir, '*fibbagespecial*');
-
-  if Length(specialDir) = 0 then
-    Exit;
-
-  FillQuestions(specialDir[0], FSpecialQuestions);
-
-  for var item in FSpecialQuestions do
-    item.SetQuestionType(qtSpecial);
-end;
-
-procedure TQuestionsFibbage3PP4.RemoveSpecialQuestion(AQuestion: IQuestion);
-begin
-  FSpecialQuestions.Remove(AQuestion);
-end;
-
 procedure TQuestionsFibbage3PP4.Save(const APath: string;
   ASaveOptions: TSaveOptions);
 begin
-  FShortieQuestions.Save(APath, 'fibbageshortie');
-  FFinalQuestions.Save(APath, 'finalfibbage');
-  FSpecialQuestions.Save(APath, 'fibbagespecial');
-end;
-
-function TQuestionsFibbage3PP4.SpecialQuestions: TQuestionList;
-begin
-  Result := FSpecialQuestions;
+  inherited;
+  // save special questions
 end;
 
 { TQuestionsFibbageXL }

@@ -52,11 +52,9 @@ type
 
     procedure AddShortieQuestion;
     procedure AddFinalQuestion;
-    procedure AddSpecialQuestion;
 
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
-    procedure RemoveSpecialQuestion(AQuestion: IQuestion);
   end;
 
 implementation
@@ -75,14 +73,6 @@ procedure TFibbageContent.AddShortieQuestion;
 begin
   var category := FCategories.CreateNewShortieCategory;
   var question := FQuestions.CreateNewShortieQuestion;
-
-  question.SetCategoryObj(category);
-end;
-
-procedure TFibbageContent.AddSpecialQuestion;
-begin
-  var category := FCategories.CreateNewSpecialCategory;
-  var question := FQuestions.CreateNewSpecialQuestion;
 
   question.SetCategoryObj(category);
 end;
@@ -172,22 +162,6 @@ begin
       FQuestions.FinalQuestions.Delete(idx);
     end;
   end;
-
-  if FConfig.GetGameType <> TGameType.Fibbage3PartyPack4 then
-    Exit;
-
-  for var idx := FQuestions.SpecialQuestions.Count - 1 downto 0 do
-  begin
-    var item := FQuestions.SpecialQuestions[idx];
-    var category := FCategories.GetSpecialCategory(item);
-    if Assigned(category) then
-      item.SetCategoryObj(category)
-    else
-    begin
-      LogE('AssignCategoryToQuestion, have special question (%d) without category', [item.GetId]);
-      FQuestions.SpecialQuestions.Delete(idx);
-    end;
-  end;
 end;
 
 procedure TFibbageContent.DoAssignQuestionToCategory;
@@ -257,12 +231,6 @@ procedure TFibbageContent.RemoveShortieQuestion(AQuestion: IQuestion);
 begin
   FCategories.RemoveShortieCategory(AQuestion);
   FQuestions.RemoveShortieQuestion(AQuestion);
-end;
-
-procedure TFibbageContent.RemoveSpecialQuestion(AQuestion: IQuestion);
-begin
-  FCategories.RemoveSpecialCategory(AQuestion);
-  FQuestions.RemoveSpecialQuestion(AQuestion);
 end;
 
 procedure TFibbageContent.PrepareBackup(const APath: string);
