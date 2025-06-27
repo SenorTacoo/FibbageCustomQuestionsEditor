@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, uInterfaces,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, System.Rtti, System.Generics.Collections;
+  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, System.Generics.Collections;
 
 type
   TGetGameTypeDlg = class(TForm)
@@ -86,7 +86,7 @@ begin
     begin
       var rb := TRadioButton.Create(Self);
       rb.Align := TAlignLayout.Top;
-      rb.Text := TRttiEnumerationType.GetName(gameType);
+      rb.Text := gameType.ToString;
       rb.TextAlign := TTextAlign.Center;
       rb.Tag := Ord(gameType);
       rb.Margins.Top := 3;

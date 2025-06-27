@@ -29,6 +29,7 @@ type
     function GetShowTooFewSuggestions: Boolean;
     function GetGameType: TGameType;
 
+    function GetClone: IContentConfiguration;
     function Initialize(const APath: string): Boolean;
     procedure Save(const APath: string); overload;
     procedure Save; overload;
@@ -49,6 +50,16 @@ destructor TContentConfiguration.Destroy;
 begin
   FRawCfg.Free;
   inherited;
+end;
+
+function TContentConfiguration.GetClone: IContentConfiguration;
+begin
+  Result := TContentConfiguration.Create;
+  Result.SetName(GetName);
+  Result.SetPath(GetPath);
+  Result.SetShowCategoryDuplicated(GetShowCategoryDuplicated);
+  Result.SetShowTooFewSuggestions(GetShowTooFewSuggestions);
+  Result.SetGameType(GetGameType);
 end;
 
 function TContentConfiguration.GetGameType: TGameType;

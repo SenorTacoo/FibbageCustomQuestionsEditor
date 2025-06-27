@@ -38,8 +38,10 @@ type
   public
     function Questions: IFibbageQuestions;
     function Categories: IFibbageCategories;
+    function Configuration: IContentConfiguration;
     function GetPath: string;
 
+    procedure CopyDataFrom(ASource: IFibbageContent);
     procedure Initialize(AConfiguration: IContentConfiguration);
 
     procedure Save; overload;
@@ -80,6 +82,17 @@ end;
 function TFibbageContent.Categories: IFibbageCategories;
 begin
   Result := FCategories;
+end;
+
+function TFibbageContent.Configuration: IContentConfiguration;
+begin
+  Result := FConfig;
+end;
+
+procedure TFibbageContent.CopyDataFrom(ASource: IFibbageContent);
+begin
+  FCategories.CopyDataFrom(ASource.Categories);
+  FQuestions.CopyDataFrom(ASource.Questions);
 end;
 
 procedure TFibbageContent.CopyToFinalQuestions(const AQuestion: IQuestion;
@@ -276,8 +289,6 @@ end;
 
 procedure TFibbageContent.InnerSave(const APath: string; ASaveOptions: TSaveOptions = []);
 begin
-//  if TContentPathChecker.IsPartyPack1(APath) then
-//    ASaveOptions := ASaveOptions + [soPartyPack1]; //???
   PreSave(APath);
   try
     if not (soDoNotSaveConfig in ASaveOptions) then
@@ -345,7 +356,11 @@ begin
         .Add('finalfibbage');
 
     if FConfig.GetGameType = TGameType.Fibbage3PartyPack4 then
-      typesArray.Add('fibbagespecial');
+    begin
+      typesArray
+        .Add('tmishortie')
+        .Add('fibbagespecial');
+    end;
 
     typesArray.EndArray;
 

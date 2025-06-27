@@ -131,17 +131,16 @@ type
 
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
+    procedure CopyDataFrom(ASource: IFibbageQuestions);
 
     procedure LoadQuestions(const AContentDir: string);
 
     procedure Save(const APath: string; ASaveOptions: TSaveOptions); virtual; abstract;
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
-    procedure RemoveSpecialQuestion(AQuestion: IQuestion); virtual;
 
     function CreateNewShortieQuestion: IQuestion;
     function CreateNewFinalQuestion: IQuestion;
-    function CreateNewSpecialQuestion: IQuestion; virtual;
   end;
 
   TQuestionsFibbageXL = class(TQuestionsBase)
@@ -157,6 +156,11 @@ type
   end;
 
   TQuestionsFibbage3PP4 = class(TQuestionsFibbageXL)
+  private
+    function GetFibbage3DataPath: string;
+
+    procedure SaveSpecialQuestions(const APath: string);
+    procedure SavePersonalShortieQuestions(const APath: string);
   public
     procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
   end;
@@ -677,6 +681,26 @@ end;
 
 { TQuestionsBase }
 
+procedure TQuestionsBase.CopyDataFrom(ASource: IFibbageQuestions);
+begin
+  FShortieQuestions.Clear;
+  FFinalQuestions.Clear;
+  for var idx := 0 to ASource.ShortieQuestions.Count - 1 do
+  begin
+    var item := TQuestionItem.Create;
+    item.SetDefaults;
+    item.CloneFrom(ASource.ShortieQuestions[idx]);
+    FShortieQuestions.Add(item);
+  end;
+  for var idx := 0 to ASource.FinalQuestions.Count - 1 do
+  begin
+    var item := TQuestionItem.Create;
+    item.SetDefaults;
+    item.CloneFrom(ASource.FinalQuestions[idx]);
+    FFinalQuestions.Add(item);
+  end;
+end;
+
 constructor TQuestionsBase.Create;
 begin
   inherited;
@@ -738,12 +762,6 @@ begin
   Result.SetQuestionType(qtShortie);
 
   FShortieQuestions.Add(Result);
-end;
-
-function TQuestionsBase.CreateNewSpecialQuestion: IQuestion;
-begin
-  Result := nil;
-  Assert(False);
 end;
 
 destructor TQuestionsBase.Destroy;
@@ -843,11 +861,6 @@ begin
   FShortieQuestions.Remove(AQuestion);
 end;
 
-procedure TQuestionsBase.RemoveSpecialQuestion(AQuestion: IQuestion);
-begin
-  Assert(False);
-end;
-
 function TQuestionsBase.ShortieQuestions: TQuestionList;
 begin
   Result := FShortieQuestions;
@@ -887,11 +900,59 @@ end;
 
 { TQuestionsFibbage3PP4 }
 
+function TQuestionsFibbage3PP4.GetFibbage3DataPath: string;
+begin
+  var exePath := ExtractFilePath(ParamStr(0));
+  {$ifdef debug}
+  Result := TPath.Combine(exePath, '..\..\..\..\setup\data\Fibbage3');
+  {$else}
+  Result := TPath.Combine(exePath, 'data\Fibbage3');
+  {$endif}
+end;
+
 procedure TQuestionsFibbage3PP4.Save(const APath: string;
   ASaveOptions: TSaveOptions);
 begin
   inherited;
-  // save special questions
+  SaveSpecialQuestions(APath);
+  SavePersonalShortieQuestions(APath);
+end;
+
+procedure TQuestionsFibbage3PP4.SavePersonalShortieQuestions(
+  const APath: string);
+begin
+  var dataPath := GetFibbage3DataPath;
+  var dirPath := TPath.Combine(dataPath, 'tmishortie');
+  var wantedPath := TPath.Combine(APath, 'tmishortie');
+
+  if not DirectoryExists(dirPath) then
+  begin
+    Assert(False);
+    Exit;
+  end;
+
+  if DirectoryExists(wantedPath) then
+    TDirectory.Delete(wantedPath, True);
+
+  TDirectory.Copy(dirPath, wantedPath);
+end;
+
+procedure TQuestionsFibbage3PP4.SaveSpecialQuestions(const APath: string);
+begin
+  var dataPath := GetFibbage3DataPath;
+  var dirPath := TPath.Combine(dataPath, 'fibbagespecial');
+  var wantedPath := TPath.Combine(APath, 'fibbagespecial');
+
+  if not DirectoryExists(dirPath) then
+  begin
+    Assert(False);
+    Exit;
+  end;
+
+  if DirectoryExists(wantedPath) then
+    TDirectory.Delete(wantedPath, True);
+
+  TDirectory.Copy(dirPath, wantedPath);
 end;
 
 { TQuestionsFibbageXL }
