@@ -17,6 +17,8 @@ type
     procedure FormCreate(Sender: TObject);
   public
     function MakeInfo(const AInfo: string; out ADontAskAgain: Boolean): Boolean;
+    procedure MakeSimpleInfo(const AInfo: string);
+    function MakeSimpleInfoWithResult(const AInfo: string): Boolean;
   end;
 
 implementation
@@ -43,6 +45,23 @@ begin
     Result := True;
     ADontAskAgain := cbDontAskAgain.IsChecked;
   end;
+end;
+
+procedure TUserDialog.MakeSimpleInfo(const AInfo: string);
+begin
+  cbDontAskAgain.Visible := False;
+  lUserDialogInfo.Text := AInfo;
+  gplButtons.ColumnCollection[0].Value := 0;
+  gplButtons.ColumnCollection[1].Value := 100;
+  ShowModal;
+end;
+
+function TUserDialog.MakeSimpleInfoWithResult(const AInfo: string): Boolean;
+begin
+  cbDontAskAgain.Visible := False;
+  lUserDialogInfo.Text := AInfo;
+
+  Result := ShowModal = mrOk;
 end;
 
 end.

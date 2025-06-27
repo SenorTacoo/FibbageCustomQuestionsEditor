@@ -43,22 +43,27 @@ type
     [JSONMarshalledAttribute(False)]
     FBumperAudioBytes: TBytes;
     [JSONMarshalledAttribute(False)]
+    FPortraitBytes: TBytes;
+    [JSONMarshalledAttribute(False)]
     FCategory: ICategory; {do not clone}
 
     procedure PrepareEmptyValues;
     procedure SetHaveQuestionAudio(AHave: Boolean);
     procedure SetHaveAnswerAudio(AHave: Boolean);
     procedure SetHaveBumperAudio(AHave: Boolean);
-
+    
     function GetQuestionAudioName: string;
     function GetAnswerAudioName: string;
     function GetBumperAudioName: string;
+    function GetPortraitName: string;
+
     procedure SetQuestionAudioName(const AName: string);
     procedure SetAnswerAudioName(const AName: string);
     procedure SetBumperAudioName(const AName: string);
-    procedure CreateAudioFile(const APath: string; const AData: TBytes);
+    procedure CreateFile(const APath: string; const AData: TBytes);
     procedure SetId(AId: Integer);
     procedure SetCategory(const ACategory: string);
+    procedure SetPortraitName(const AName: string);
   public
     destructor Destroy; override;
 
@@ -73,6 +78,7 @@ type
     function GetHaveQuestionAudio: Boolean;
     function GetHaveAnswerAudio: Boolean;
     function GetHaveBumperAudio: Boolean;
+    function GetHavePortrait: Boolean;
 
     procedure SetQuestion(const AQuestion: string);
     procedure SetSuggestions(const ASuggestions: string);
@@ -82,10 +88,12 @@ type
     function GetQuestionAudioData: TBytes;
     function GetAnswerAudioData: TBytes;
     function GetBumperAudioData: TBytes;
+    function GetPortraitData: TBytes;
 
     procedure SetQuestionAudioData(const AData: TBytes);
     procedure SetAnswerAudioData(const AData: TBytes);
     procedure SetBumperAudioData(const AData: TBytes);
+    procedure SetPortraitData(const AData: TBytes);
 
     function GetCategoryObj: ICategory;
     procedure SetCategoryObj(ACategory: ICategory);
@@ -105,19 +113,29 @@ type
     procedure Save(const AProjectPath, AQuestionsDir: string);
   end;
 
-  TQuestions = class(TInterfacedObject, IFibbageQuestions)
+  TQuestionsBase = class(TInterfacedObject, IFibbageQuestions)
    private
+    FContentDir: string;
     FShortieQuestions: TQuestionList;
     FFinalQuestions: TQuestionList;
     function InnerCreateNewQuestion: IQuestion;
+    procedure LoadFinals;
+    procedure FillQuestions(const AMainDir: string; AQuestionsList: TList<IQuestion>);
+    function ReadFileData(const APath: string): TBytes;
+  protected
+    procedure DoLoadQuestions; virtual;
+    procedure LoadShorties; virtual;
   public
     constructor Create;
     destructor Destroy; override;
 
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
+    procedure CopyDataFrom(ASource: IFibbageQuestions);
 
-    procedure Save(const APath: string; ASaveOptions: TSaveOptions);
+    procedure LoadQuestions(const AContentDir: string);
+
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); virtual; abstract;
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
 
@@ -125,176 +143,31 @@ type
     function CreateNewFinalQuestion: IQuestion;
   end;
 
-  TFibbageQuestions = class
-  private
-    FShortie: TQuestions;
-    FFinal: TQuestions;
+  TQuestionsFibbageXL = class(TQuestionsBase)
   public
-    constructor Create;
-    destructor Destroy; override;
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
   end;
 
-  TQuestionsLoader = class(TInterfacedObject, IQuestionsLoader)
-  private
-    FContentPath: string;
-    FQuestions: IFibbageQuestions;
-    FPartyPack1: Boolean;
-
-    procedure LoadShorties;
-    procedure LoadFinals;
-    procedure FillQuestions(const AMainDir: string; AQuestionsList: TList<IQuestion>);
-    function ReadAudioData(const APath: string): TBytes;
+  TQuestionsFibbageXLPP1 = class(TQuestionsFibbageXL)
+  protected
+    procedure LoadShorties; override;
   public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure LoadQuestions(const AContentDir: string);
-    function Questions: IFibbageQuestions;
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
   end;
 
-  EAudioFileNotFound = class(Exception);
+  TQuestionsFibbage3PP4 = class(TQuestionsFibbageXL)
+  private
+    function GetFibbage3DataPath: string;
+
+    procedure SaveSpecialQuestions(const APath: string);
+    procedure SavePersonalShortieQuestions(const APath: string);
+  public
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
+  end;
+
+  EInternalFileNotFound = class(Exception);
 
 implementation
-
-{ TQuestionsLoader }
-
-constructor TQuestionsLoader.Create;
-begin
-  inherited;
-  FQuestions := TQuestions.Create;
-end;
-
-destructor TQuestionsLoader.Destroy;
-begin
-  FQuestions := nil;
-  inherited;
-end;
-
-procedure TQuestionsLoader.LoadQuestions(const AContentDir: string);
-begin
-  FContentPath := AContentDir;
-
-  FPartyPack1 := TContentPathChecker.IsPartyPack1(AContentDir);
-
-  LoadShorties;
-  LoadFinals;
-end;
-
-procedure TQuestionsLoader.LoadShorties;
-var
-  shortieDir: TArray<string>;
-begin
-  if FPartyPack1 then
-    shortieDir := TDirectory.GetDirectories(FContentPath, '*questions*')
-  else
-    shortieDir := TDirectory.GetDirectories(FContentPath, '*fibbageshortie*');
-
-  if Length(shortieDir) = 0 then
-    Exit;
-
-  FillQuestions(shortieDir[0], FQuestions.ShortieQuestions);
-
-  for var item in FQuestions.ShortieQuestions do
-    item.SetQuestionType(qtShortie);
-end;
-
-procedure TQuestionsLoader.LoadFinals;
-begin
-  var finalDirs := TDirectory.GetDirectories(FContentPath, '*finalfibbage*');
-  if Length(finalDirs) = 0 then
-    Exit;
-
-  FillQuestions(finalDirs[0], FQuestions.FinalQuestions);
-
-  for var item in FQuestions.FinalQuestions do
-    item.SetQuestionType(qtFinal);
-end;
-
-procedure TQuestionsLoader.FillQuestions(const AMainDir: string; AQuestionsList: TList<IQuestion>);
-var
-  singleQuestion: TQuestionItem;
-  fs: TFileStream;
-  sr: TStreamReader;
-begin
-  if not Assigned(AQuestionsList) then
-    Assert(False, 'AQuestionsList not assigned');
-
-  var shortieDirs := TDirectory.GetDirectories(AMainDir);
-  for var dir in shortieDirs do
-  begin
-    var dataFile := TDirectory.GetFiles(dir, '*.jet');
-
-    singleQuestion := nil;
-    fs := TFileStream.Create(dataFile[0], fmOpenRead);
-    sr := TStreamReader.Create(fs);
-    try
-      try
-        sr.OwnStream;
-        singleQuestion := TJSON.JsonToObject<TQuestionItem>(sr.ReadToEnd);
-        singleQuestion.FId := StrToIntDef(ExtractFileName(dir), 0);
-
-        if singleQuestion.GetHaveQuestionAudio then
-          singleQuestion.FQuestionAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetQuestionAudioName + '.ogg'));
-
-        if singleQuestion.GetHaveAnswerAudio then
-          singleQuestion.FAnswerAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetAnswerAudioName + '.ogg'));
-
-        if singleQuestion.GetHaveBumperAudio then
-          singleQuestion.FBumperAudioBytes := ReadAudioData(TPath.Combine(dir, singleQuestion.GetBumperAudioName + '.ogg'));
-
-        singleQuestion.PrepareEmptyValues;
-        AQuestionsList.Add(singleQuestion);
-        singleQuestion := nil;
-      except
-        on E: EAudioFileNotFound do ;
-      end;
-    finally
-      sr.Free;
-      singleQuestion.Free;
-    end;
-  end;
-end;
-
-function TQuestionsLoader.ReadAudioData(const APath: string): TBytes;
-begin
-  Result := nil;
-  try
-    if not TFile.Exists(APath) then
-      raise EAudioFileNotFound.Create(APath);
-
-    var fs := TFileStream.Create(APath, fmOpenRead);
-    try
-      SetLength(Result, fs.Size);
-      fs.Read(Result, fs.Size);
-    finally
-      fs.Free;
-    end;
-  except
-    on E: Exception do
-      LogE('ReadAudioData exception, %s/%s', [E.Message, E.ClassName]);
-  end;
-end;
-
-function TQuestionsLoader.Questions: IFibbageQuestions;
-begin
-  Result := FQuestions;
-end;
-
-{ TFibbageQuestions }
-
-constructor TFibbageQuestions.Create;
-begin
-  inherited;
-  FShortie := TQuestions.Create;
-  FFinal := TQuestions.Create;
-end;
-
-destructor TFibbageQuestions.Destroy;
-begin
-  FShortie.Free;
-  FFinal.Free;
-  inherited;
-end;
 
 { TQuestionItem }
 
@@ -378,6 +251,17 @@ begin
     end;
 end;
 
+function TQuestionItem.GetHavePortrait: Boolean;
+begin
+  Result := False;
+  for var field in FFields do
+    if SameText('Pic', field.N) then
+    begin
+      Result := not field.v.IsEmpty;
+      Break;
+    end;
+end;
+
 function TQuestionItem.GetHaveQuestionAudio: Boolean;
 begin
   Result := False;
@@ -408,6 +292,22 @@ end;
 function TQuestionItem.GetId: Integer;
 begin
   Result := FId;
+end;
+
+function TQuestionItem.GetPortraitData: TBytes;
+begin
+  Result := FPortraitBytes;
+end;
+
+function TQuestionItem.GetPortraitName: string;
+begin
+  Result := '';
+  for var field in FFields do
+    if SameText('Pic', field.N) then
+    begin
+      Result := field.V;
+      Break;
+    end;
 end;
 
 function TQuestionItem.GetQuestion: string;
@@ -460,21 +360,27 @@ begin
 
   if GetHaveQuestionAudio then
     if Length(GetQuestionAudioData) > 0 then
-      CreateAudioFile(TPath.Combine(dir, GetQuestionAudioName + '.ogg'), GetQuestionAudioData)
+      CreateFile(TPath.Combine(dir, GetQuestionAudioName + '.ogg'), GetQuestionAudioData)
     else
       LogE('Have question audio but audio file is empty');
 
   if GetHaveAnswerAudio then
     if Length(GetAnswerAudioData) > 0 then
-      CreateAudioFile(TPath.Combine(dir, GetAnswerAudioName + '.ogg'), GetAnswerAudioData)
+      CreateFile(TPath.Combine(dir, GetAnswerAudioName + '.ogg'), GetAnswerAudioData)
     else
       LogE('Have answer audio but audio file is empty');
 
   if GetHaveBumperAudio then
     if Length(GetBumperAudioName) > 0 then
-      CreateAudioFile(TPath.Combine(dir, GetBumperAudioName + '.ogg'), GetBumperAudioData)
+      CreateFile(TPath.Combine(dir, GetBumperAudioName + '.ogg'), GetBumperAudioData)
     else
       LogE('Have bumper audio but audio file is empty');
+
+  if GetHavePortrait then
+    if Length(GetPortraitData) > 0 then
+      CreateFile(TPath.Combine(dir, GetPortraitName + '.png'), GetPortraitData)
+    else
+      LogE('Have picture but picture file is empty');
 end;
 
 procedure TQuestionItem.CloneFrom(AObj: IQuestion);
@@ -489,9 +395,10 @@ begin
   SetBumperAudioData(AObj.GetBumperAudioData);
   SetQuestionType(AObj.GetQuestionType);
   SetCategory(AObj.GetCategory);
+  SetPortraitData(AObj.GetPortraitData);
 end;
 
-procedure TQuestionItem.CreateAudioFile(const APath: string; const AData: TBytes);
+procedure TQuestionItem.CreateFile(const APath: string; const AData: TBytes);
 begin
   var fs := TFileStream.Create(APath, fmCreate);
   try
@@ -690,6 +597,26 @@ begin
   FId := AId;
 end;
 
+procedure TQuestionItem.SetPortraitData(const AData: TBytes);
+begin
+  FPortraitBytes := Copy(AData, 0, Length(AData));
+
+  if AData = nil then
+    SetPortraitName('')
+  else
+    SetPortraitName(ChangeFileExt(TPath.GetRandomFileName, ''));
+end;
+
+procedure TQuestionItem.SetPortraitName(const AName: string);
+begin
+  for var field in FFields do
+    if SameText('Pic', field.N) then
+    begin
+      field.V := AName;
+      Break;
+    end;
+end;
+
 procedure TQuestionItem.SetQuestion(const AQuestion: string);
 begin
   for var field in FFields do
@@ -752,16 +679,36 @@ begin
         field.V := EMPTY_STRING;
 end;
 
-{ TQuestions }
+{ TQuestionsBase }
 
-constructor TQuestions.Create;
+procedure TQuestionsBase.CopyDataFrom(ASource: IFibbageQuestions);
+begin
+  FShortieQuestions.Clear;
+  FFinalQuestions.Clear;
+  for var idx := 0 to ASource.ShortieQuestions.Count - 1 do
+  begin
+    var item := TQuestionItem.Create;
+    item.SetDefaults;
+    item.CloneFrom(ASource.ShortieQuestions[idx]);
+    FShortieQuestions.Add(item);
+  end;
+  for var idx := 0 to ASource.FinalQuestions.Count - 1 do
+  begin
+    var item := TQuestionItem.Create;
+    item.SetDefaults;
+    item.CloneFrom(ASource.FinalQuestions[idx]);
+    FFinalQuestions.Add(item);
+  end;
+end;
+
+constructor TQuestionsBase.Create;
 begin
   inherited;
   FShortieQuestions := TList<IQuestion>.Create;
   FFinalQuestions := TList<IQuestion>.Create;
 end;
 
-function TQuestions.InnerCreateNewQuestion: IQuestion;
+function TQuestionsBase.InnerCreateNewQuestion: IQuestion;
 begin
   var res := TQuestionItem.Create;
   res.SetDefaults;
@@ -769,7 +716,39 @@ begin
   Result := res;
 end;
 
-function TQuestions.CreateNewFinalQuestion: IQuestion;
+procedure TQuestionsBase.LoadFinals;
+begin
+  var finalDirs := TDirectory.GetDirectories(FContentDir, '*finalfibbage*');
+  if Length(finalDirs) = 0 then
+    Exit;
+
+  FillQuestions(finalDirs[0], FFinalQuestions);
+
+  for var item in FFinalQuestions do
+    item.SetQuestionType(qtFinal);
+end;
+
+procedure TQuestionsBase.LoadQuestions(const AContentDir: string);
+begin
+  FContentDir := AContentDir;
+
+  DoLoadQuestions;
+end;
+
+procedure TQuestionsBase.LoadShorties;
+begin
+  var shortieDir := TDirectory.GetDirectories(FContentDir, '*fibbageshortie*');
+
+  if Length(shortieDir) = 0 then
+    Exit;
+
+  FillQuestions(shortieDir[0], FShortieQuestions);
+
+  for var item in FShortieQuestions do
+    item.SetQuestionType(qtShortie);
+end;
+
+function TQuestionsBase.CreateNewFinalQuestion: IQuestion;
 begin
   Result := InnerCreateNewQuestion;
   Result.SetQuestionType(qtFinal);
@@ -777,7 +756,7 @@ begin
   FFinalQuestions.Add(Result);
 end;
 
-function TQuestions.CreateNewShortieQuestion: IQuestion;
+function TQuestionsBase.CreateNewShortieQuestion: IQuestion;
 begin
   Result := InnerCreateNewQuestion;
   Result.SetQuestionType(qtShortie);
@@ -785,43 +764,104 @@ begin
   FShortieQuestions.Add(Result);
 end;
 
-destructor TQuestions.Destroy;
+destructor TQuestionsBase.Destroy;
 begin
   FShortieQuestions.Free;
   FFinalQuestions.Free;
   inherited;
 end;
 
-function TQuestions.FinalQuestions: TQuestionList;
+procedure TQuestionsBase.DoLoadQuestions;
+begin
+  LoadShorties;
+  LoadFinals;
+end;
+
+procedure TQuestionsBase.FillQuestions(const AMainDir: string;
+  AQuestionsList: TList<IQuestion>);
+var
+  singleQuestion: TQuestionItem;
+  fs: TFileStream;
+  sr: TStreamReader;
+begin
+  if not Assigned(AQuestionsList) then
+    Assert(False, 'AQuestionsList not assigned');
+
+  var shortieDirs := TDirectory.GetDirectories(AMainDir);
+  for var dir in shortieDirs do
+  begin
+    var dataFile := TDirectory.GetFiles(dir, '*.jet');
+
+    singleQuestion := nil;
+    fs := TFileStream.Create(dataFile[0], fmOpenRead);
+    sr := TStreamReader.Create(fs);
+    try
+      try
+        sr.OwnStream;
+        singleQuestion := TJSON.JsonToObject<TQuestionItem>(sr.ReadToEnd);
+        singleQuestion.FId := StrToIntDef(ExtractFileName(dir), 0);
+
+        if singleQuestion.GetHaveQuestionAudio then
+          singleQuestion.FQuestionAudioBytes := ReadFileData(TPath.Combine(dir, singleQuestion.GetQuestionAudioName + '.ogg'));
+
+        if singleQuestion.GetHaveAnswerAudio then
+          singleQuestion.FAnswerAudioBytes := ReadFileData(TPath.Combine(dir, singleQuestion.GetAnswerAudioName + '.ogg'));
+
+        if singleQuestion.GetHaveBumperAudio then
+          singleQuestion.FBumperAudioBytes := ReadFileData(TPath.Combine(dir, singleQuestion.GetBumperAudioName + '.ogg'));
+
+        if singleQuestion.GetHavePortrait then
+          singleQuestion.FPortraitBytes := ReadFileData(TPath.Combine(dir, singleQuestion.GetPortraitName + '.png'));
+
+        singleQuestion.PrepareEmptyValues;
+        AQuestionsList.Add(singleQuestion);
+        singleQuestion := nil;
+      except
+        on E: EInternalFileNotFound do ;
+      end;
+    finally
+      sr.Free;
+      singleQuestion.Free;
+    end;
+  end;
+end;
+
+function TQuestionsBase.FinalQuestions: TQuestionList;
 begin
   Result := FFinalQuestions;
 end;
 
-procedure TQuestions.RemoveFinalQuestion(AQuestion: IQuestion);
+function TQuestionsBase.ReadFileData(const APath: string): TBytes;
+begin
+  Result := nil;
+  try
+    if not TFile.Exists(APath) then
+      raise EInternalFileNotFound.Create(APath);
+
+    var fs := TFileStream.Create(APath, fmOpenRead);
+    try
+      SetLength(Result, fs.Size);
+      fs.Read(Result, fs.Size);
+    finally
+      fs.Free;
+    end;
+  except
+    on E: Exception do
+      LogE('ReadFileData exception, %s/%s', [E.Message, E.ClassName]);
+  end;
+end;
+
+procedure TQuestionsBase.RemoveFinalQuestion(AQuestion: IQuestion);
 begin
   FFinalQuestions.Remove(AQuestion);
 end;
 
-procedure TQuestions.RemoveShortieQuestion(AQuestion: IQuestion);
+procedure TQuestionsBase.RemoveShortieQuestion(AQuestion: IQuestion);
 begin
   FShortieQuestions.Remove(AQuestion);
 end;
 
-procedure TQuestions.Save(const APath: string; ASaveOptions: TSaveOptions);
-begin
-  if soPartyPack1 in ASaveOptions then
-  begin
-    ShortieQuestions.Save(APath, 'questions');
-    FinalQuestions.Save(APath, 'questions');
-  end
-  else
-  begin
-    ShortieQuestions.Save(APath, 'fibbageshortie');
-    FinalQuestions.Save(APath, 'finalfibbage');
-  end;
-end;
-
-function TQuestions.ShortieQuestions: TQuestionList;
+function TQuestionsBase.ShortieQuestions: TQuestionList;
 begin
   Result := FShortieQuestions;
 end;
@@ -834,6 +874,94 @@ begin
   ForceDirectories(targetDir);
   for var question in Self do
     question.Save(targetDir);
+end;
+
+{ TQuestionsFibbageXLPP1 }
+
+procedure TQuestionsFibbageXLPP1.LoadShorties;
+begin
+  var shortieDir := TDirectory.GetDirectories(FContentDir, '*questions*');
+
+  if Length(shortieDir) = 0 then
+    Exit;
+
+  FillQuestions(shortieDir[0], FShortieQuestions);
+
+  for var item in FShortieQuestions do
+    item.SetQuestionType(qtShortie);
+end;
+
+procedure TQuestionsFibbageXLPP1.Save(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  FShortieQuestions.Save(APath, 'questions');
+  FFinalQuestions.Save(APath, 'questions');
+end;
+
+{ TQuestionsFibbage3PP4 }
+
+function TQuestionsFibbage3PP4.GetFibbage3DataPath: string;
+begin
+  var exePath := ExtractFilePath(ParamStr(0));
+  {$ifdef debug}
+  Result := TPath.Combine(exePath, '..\..\..\..\setup\data\Fibbage3');
+  {$else}
+  Result := TPath.Combine(exePath, 'data\Fibbage3');
+  {$endif}
+end;
+
+procedure TQuestionsFibbage3PP4.Save(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  inherited;
+  SaveSpecialQuestions(APath);
+  SavePersonalShortieQuestions(APath);
+end;
+
+procedure TQuestionsFibbage3PP4.SavePersonalShortieQuestions(
+  const APath: string);
+begin
+  var dataPath := GetFibbage3DataPath;
+  var dirPath := TPath.Combine(dataPath, 'tmishortie');
+  var wantedPath := TPath.Combine(APath, 'tmishortie');
+
+  if not DirectoryExists(dirPath) then
+  begin
+    Assert(False);
+    Exit;
+  end;
+
+  if DirectoryExists(wantedPath) then
+    TDirectory.Delete(wantedPath, True);
+
+  TDirectory.Copy(dirPath, wantedPath);
+end;
+
+procedure TQuestionsFibbage3PP4.SaveSpecialQuestions(const APath: string);
+begin
+  var dataPath := GetFibbage3DataPath;
+  var dirPath := TPath.Combine(dataPath, 'fibbagespecial');
+  var wantedPath := TPath.Combine(APath, 'fibbagespecial');
+
+  if not DirectoryExists(dirPath) then
+  begin
+    Assert(False);
+    Exit;
+  end;
+
+  if DirectoryExists(wantedPath) then
+    TDirectory.Delete(wantedPath, True);
+
+  TDirectory.Copy(dirPath, wantedPath);
+end;
+
+{ TQuestionsFibbageXL }
+
+procedure TQuestionsFibbageXL.Save(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  FShortieQuestions.Save(APath, 'fibbageshortie');
+  FFinalQuestions.Save(APath, 'finalfibbage');
 end;
 
 end.

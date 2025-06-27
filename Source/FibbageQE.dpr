@@ -17,7 +17,8 @@ uses
   uContentConfiguration in 'uContentConfiguration.pas',
   uAsyncAction in 'uAsyncAction.pas',
   uProjectActivator in 'uProjectActivator.pas',
-  uUserDialog in 'uUserDialog.pas' {UserDialog};
+  uUserDialog in 'uUserDialog.pas' {UserDialog},
+  uGetGameTypeDlg in 'uGetGameTypeDlg.pas' {GetGameTypeDlg};
 
 {$R *.res}
 

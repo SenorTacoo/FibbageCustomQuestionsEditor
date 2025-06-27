@@ -49,7 +49,7 @@ object UserDialog: TUserDialog
         Value = 100.000000000000000000
       end>
     object bOk: TButton
-      Align = Top
+      Align = Client
       ModalResult = 1
       Size.Width = 320.000000000000000000
       Size.Height = 50.000000000000000000
@@ -57,6 +57,7 @@ object UserDialog: TUserDialog
       StyleLookup = 'ticktoolbuttonmultiview'
       TabOrder = 0
       Text = 'Ok'
+      TextSettings.Trimming = None
     end
     object bCancel: TButton
       Align = Client
@@ -67,6 +68,7 @@ object UserDialog: TUserDialog
       StyleLookup = 'canceltoolbuttonmultiview'
       TabOrder = 1
       Text = 'Cancel'
+      TextSettings.Trimming = None
     end
   end
   object cbDontAskAgain: TCheckBox

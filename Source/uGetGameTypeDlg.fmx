@@ -1,0 +1,80 @@
+object GetGameTypeDlg: TGetGameTypeDlg
+  Left = 0
+  Top = 0
+  ClientHeight = 480
+  ClientWidth = 640
+  Position = OwnerFormCenter
+  StyleBook = FrmMain.sbLightStyle
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnShow = FormShow
+  DesignerMasterStyle = 0
+  object gplButtons: TGridPanelLayout
+    Align = Bottom
+    Position.Y = 430.000000000000000000
+    Size.Width = 640.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    ColumnCollection = <
+      item
+        Value = 50.000000000000000000
+      end
+      item
+        Value = 50.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = bOk
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = bCancel
+        Row = 0
+      end>
+    RowCollection = <
+      item
+        Value = 100.000000000000000000
+      end>
+    object bOk: TButton
+      Align = Top
+      ModalResult = 1
+      Margins.Bottom = 3.000000000000000000
+      Size.Width = 320.000000000000000000
+      Size.Height = 50.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'ticktoolbuttonmultiview'
+      TabOrder = 0
+      Text = 'Ok'
+      TextSettings.Trimming = None
+    end
+    object bCancel: TButton
+      Align = Client
+      ModalResult = 2
+      Size.Width = 320.000000000000000000
+      Size.Height = 50.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'canceltoolbuttonmultiview'
+      TabOrder = 1
+      Text = 'Cancel'
+      TextSettings.Trimming = None
+    end
+  end
+  object Label1: TLabel
+    Align = MostTop
+    AutoSize = True
+    Margins.Top = 3.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Position.Y = 3.000000000000000000
+    Size.Width = 640.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    Text = 'Select for which game this project will be created'
+    TabOrder = 1
+  end
+end

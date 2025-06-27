@@ -14,7 +14,7 @@ uses
   uInterfaces;
 
 type
-  TCategoryData = class(TInterfacedObject, ICategory)
+  TCategoryDataBase = class(TInterfacedObject, ICategory)
   private
     FX: Boolean;
     FId: Integer;
@@ -26,12 +26,26 @@ type
     function GetId: Integer;
     function GetCategory: string;
     function GetIsFamilyFriendly: Boolean;
+    function GetIsPortrait: Boolean; virtual;
+    function GetBumper: string;
 
     procedure SetId(AId: Integer);
     procedure SetCategory(const ACategory: string);
     procedure SetIsFamilyFriendly(AValue: Boolean);
+    procedure SetIsPortrait(AValue: Boolean); virtual;
+    procedure SetBumper(const AValue: string);
+  end;
 
-    function Bumper: string;
+  TCategoryData_FibbageXL = class(TCategoryDataBase);
+
+  TCategoryData_Fibbage3PartyPack4 = class(TCategoryDataBase)
+  private
+    FPersonal: string;
+    FPortrait: Boolean;
+    FUs: Boolean;
+  public
+    procedure SetIsPortrait(AValue: Boolean); override;
+    function GetIsPortrait: Boolean; override;
   end;
 
   TBaseCategories = class(TInterfacedObject, ICategories)
@@ -57,41 +71,62 @@ type
     procedure Add(ACategory: ICategory);
     procedure Delete(AId: Integer);
 
+    procedure CopyDataFrom(ASource: ICategories); virtual; abstract;
+
     procedure Save(const APath, AName: string; ASaveOptions: TSaveOptions);
   end;
 
   TCategories_FibbageXL = class(TBaseCategories)
   private
-    FContent: TArray<TCategoryData>;
+    FContent: TArray<TCategoryData_FibbageXL>;
   protected
     procedure InitializeContentList; override;
     procedure InitializeContentArray; override;
     function GetJsonToSave(ASaveOptions: TSaveOptions): string; override;
+  public
+    procedure CopyDataFrom(ASource: ICategories); override;
   end;
 
-  TCategories_PartyPack1 = class(TBaseCategories)
+  TCategories_FibbageXLPartyPack1 = class(TBaseCategories)
   private
-    FQuestions: TArray<TCategoryData>;
+    FQuestions: TArray<TCategoryData_FibbageXL>;
   protected
     procedure InitializeContentList; override;
     procedure InitializeContentArray; override;
     function GetJsonToSave(ASaveOptions: TSaveOptions): string; override;
+  public
+    procedure CopyDataFrom(ASource: ICategories); override;
   end;
 
-  TFibbageCategories = class(TInterfacedObject, IFibbageCategories)
+  TCategories_Fibbage3PartyPack4 = class(TBaseCategories)
+  private
+    FContent: TArray<TCategoryData_Fibbage3PartyPack4>;
+  protected
+    procedure InitializeContentList; override;
+    procedure InitializeContentArray; override;
+    function GetJsonToSave(ASaveOptions: TSaveOptions): string; override;
+  public
+    procedure CopyDataFrom(ASource: ICategories); override;
+  end;
+
+  TFibbageCategoriesBase = class(TInterfacedObject, IFibbageCategories)
   private
     FContentDir: string;
-    FPartyPack1: Boolean;
     FShortieCategories: ICategories;
     FFinalCategories: ICategories;
     procedure LoadFinalCategories;
     procedure LoadShortieCategories;
-    function GetCategories(const APath: string): ICategories;
-    function CreateNewCategory: ICategory;
     function GetAvailableId: Word;
-    function GetShortiesJetPath: string;
     function GetFinalsJetPath: string;
+  protected
+    function GetShortiesJetPath: string; virtual;
+    function GetCategories(const APath: string): ICategories; virtual;
+    function CreateNewCategory: ICategory; virtual; abstract;
+    procedure DoLoadCategories; virtual;
+
+    function DoGetBestCategoryForQuestion(ACategories: ICategories; AQuestion: IQuestion): ICategory;
   public
+    procedure CopyDataFrom(ASource: IFibbageCategories);
     function ShortieCategories: ICategories;
     function FinalCategories: ICategories;
 
@@ -103,59 +138,115 @@ type
     function CreateNewFinalCategory: ICategory;
     procedure RemoveShortieCategory(AQuestion: IQuestion);
     procedure RemoveFinalCategory(AQuestion: IQuestion);
-    procedure Save(const APath: string; ASaveOptions: TSaveOptions);
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); virtual; abstract;
   end;
+
+  TFibbageCategories_FibbageXL = class(TFibbageCategoriesBase)
+  protected
+    function CreateNewCategory: ICategory; override;
+  public
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
+  end;
+
+  TFibbageCategories_FibbageXLPP1 = class(TFibbageCategories_FibbageXL)
+  private
+    procedure SaveDemoShortieCategories(const APath: string);
+    procedure SaveDemoFinalCategories(const APath: string);
+    function GetFibbageXLPartyPack1DataPath: string;
+  protected
+    function GetShortiesJetPath: string; override;
+    function GetCategories(const APath: string): ICategories; override;
+  public
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
+  end;
+
+  TFibbageCategories_Fibbage3PP4 = class(TFibbageCategories_FibbageXL)
+  private
+    function GetFibbage3DataPath: string;
+    procedure SaveSpecialCategories(const APath: string);
+    procedure SavePersonalShortieCategories(const APath: string);
+  protected
+    function GetCategories(const APath: string): ICategories; override;
+    function CreateNewCategory: ICategory; override;
+  public
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
+  end;
+
 
 implementation
 
-{ TFibbageCategories }
+{ TFibbageCategoriesBase }
 
-function TFibbageCategories.CreateNewCategory: ICategory;
+procedure TFibbageCategoriesBase.CopyDataFrom(ASource: IFibbageCategories);
 begin
-  Result := TCategoryData.Create;
-  Result.SetId(GetAvailableId);
+  FShortieCategories.CopyDataFrom(ASource.ShortieCategories);
+  FFinalCategories.CopyDataFrom(ASource.FinalCategories);
 end;
 
-function TFibbageCategories.CreateNewFinalCategory: ICategory;
+function TFibbageCategoriesBase.CreateNewFinalCategory: ICategory;
 begin
   var newCategory := CreateNewCategory;
   FFinalCategories.Add(newCategory);
   Result := newCategory;
 end;
 
-function TFibbageCategories.CreateNewShortieCategory: ICategory;
+function TFibbageCategoriesBase.CreateNewShortieCategory: ICategory;
 begin
   var newCategory := CreateNewCategory;
   FShortieCategories.Add(newCategory);
   Result := newCategory;
 end;
 
-function TFibbageCategories.FinalCategories: ICategories;
+function TFibbageCategoriesBase.DoGetBestCategoryForQuestion(ACategories: ICategories;
+  AQuestion: IQuestion): ICategory;
+var
+  bestCategory: ICategory;
+begin
+  bestCategory := nil;
+  for var idx := 0 to ACategories.Count - 1 do
+  begin
+    var category := ACategories.Category(idx);
+    if (AQuestion.GetId = category.GetId) then
+      if SameText(AQuestion.GetCategory, category.GetCategory) then
+        Exit(category)
+      else
+        bestCategory := category;
+  end;
+  Result := bestCategory;
+end;
+
+procedure TFibbageCategoriesBase.DoLoadCategories;
+begin
+  LoadShortieCategories;
+  LoadFinalCategories;
+end;
+
+function TFibbageCategoriesBase.FinalCategories: ICategories;
 begin
   Result := FFinalCategories;
 end;
 
-procedure TFibbageCategories.LoadShortieCategories;
+procedure TFibbageCategoriesBase.LoadShortieCategories;
 begin
   FShortieCategories := GetCategories(GetShortiesJetPath);
 end;
 
-procedure TFibbageCategories.RemoveShortieCategory(AQuestion: IQuestion);
+procedure TFibbageCategoriesBase.RemoveShortieCategory(AQuestion: IQuestion);
 begin
   FShortieCategories.Delete(AQuestion.GetId);
 end;
 
-procedure TFibbageCategories.RemoveFinalCategory(AQuestion: IQuestion);
+procedure TFibbageCategoriesBase.RemoveFinalCategory(AQuestion: IQuestion);
 begin
   FFinalCategories.Delete(AQuestion.GetId);
 end;
 
-procedure TFibbageCategories.LoadFinalCategories;
+procedure TFibbageCategoriesBase.LoadFinalCategories;
 begin
   FFinalCategories := GetCategories(GetFinalsJetPath);
 end;
 
-function TFibbageCategories.GetAvailableId: Word;
+function TFibbageCategoriesBase.GetAvailableId: Word;
 var
   res: Boolean;
   idx: Integer;
@@ -195,9 +286,7 @@ begin
   end;
 end;
 
-function TFibbageCategories.GetCategories(const APath: string): ICategories;
-var
-  res: TBaseCategories;
+function TFibbageCategoriesBase.GetCategories(const APath: string): ICategories;
 begin
   Result := nil;
   if FileExists(APath) then
@@ -205,90 +294,44 @@ begin
     var fs := TFileStream.Create(APath, fmOpenRead);
     var sr := TStreamReader.Create(fs);
     try
-      var data := sr.ReadToEnd;
-
-      if FPartyPack1 then
-        res := TJson.JsonToObject<TCategories_PartyPack1>(data)
-      else
-        res := TJSON.JsonToObject<TCategories_FibbageXL>(data);
-      Result := res;
+      Result := TJSON.JsonToObject<TCategories_FibbageXL>(sr.ReadToEnd);
     finally
       sr.Free;
       fs.Free;
     end;
   end
-  else if FPartyPack1 then
-    Result := TCategories_PartyPack1.Create
   else
     Result := TCategories_FibbageXL.Create;
 end;
 
-function TFibbageCategories.GetFinalCategory(AQuestion: IQuestion): ICategory;
-var
-  bestCategory: ICategory;
+function TFibbageCategoriesBase.GetFinalCategory(AQuestion: IQuestion): ICategory;
 begin
-  Result := nil;
-  for var idx := 0 to FFinalCategories.Count - 1 do
-  begin
-    var category := FFinalCategories.Category(idx);
-    if (AQuestion.GetId = category.GetId) then
-      if SameText(AQuestion.GetCategory, category.GetCategory) then
-        Exit(category)
-      else
-        bestCategory := category;
-  end;
-  Result := bestCategory;
+  Result := DoGetBestCategoryForQuestion(FFinalCategories, AQuestion);
 end;
 
-function TFibbageCategories.GetFinalsJetPath: string;
+function TFibbageCategoriesBase.GetFinalsJetPath: string;
 begin
   Result := IncludeTrailingPathDelimiter(FContentDir) + 'finalfibbage.jet';
 end;
 
-function TFibbageCategories.GetShortieCategory(AQuestion: IQuestion): ICategory;
-var
-  bestCategory: ICategory;
+function TFibbageCategoriesBase.GetShortieCategory(AQuestion: IQuestion): ICategory;
 begin
-  bestCategory := nil;
-  for var idx := 0 to FShortieCategories.Count - 1 do
-  begin
-    var category := FShortieCategories.Category(idx);
-    if (AQuestion.GetId = category.GetId) then
-      if SameText(AQuestion.GetCategory, category.GetCategory) then
-        Exit(category)
-      else
-        bestCategory := category;
-  end;
-  Result := bestCategory;
+  Result := DoGetBestCategoryForQuestion(FShortieCategories, AQuestion);
 end;
 
-function TFibbageCategories.GetShortiesJetPath: string;
+function TFibbageCategoriesBase.GetShortiesJetPath: string;
 begin
-  if FPartyPack1 then
-    Result := IncludeTrailingPathDelimiter(FContentDir) + 'shortie.jet'
-  else
-    Result := IncludeTrailingPathDelimiter(FContentDir) + 'fibbageshortie.jet';
+  Result := TPath.Combine(FContentDir, 'fibbageshortie.jet');
 end;
 
-procedure TFibbageCategories.LoadCategories(const AContentDir: string);
+procedure TFibbageCategoriesBase.LoadCategories(const AContentDir: string);
 begin
   FContentDir := AContentDir;
-  FPartyPack1 := TContentPathChecker.IsPartyPack1(AContentDir);
 
-  LoadShortieCategories;
-  LoadFinalCategories;
+  DoLoadCategories;
 end;
 
-procedure TFibbageCategories.Save(const APath: string; ASaveOptions: TSaveOptions);
-begin
-  if soPartyPack1 in ASaveOptions then
-    ShortieCategories.Save(APath, 'shortie', ASaveOptions)
-  else
-    ShortieCategories.Save(APath, 'fibbageshortie', ASaveOptions);
-  FinalCategories.Save(APath, 'finalfibbage', ASaveOptions);
-end;
-
-function TFibbageCategories.ShortieCategories: ICategories;
+function TFibbageCategoriesBase.ShortieCategories: ICategories;
 begin
   Result := FShortieCategories;
 end;
@@ -356,86 +399,88 @@ begin
     sw.Free;
     fs.Free;
   end;
-
-  if not (soPartyPack1 in ASaveOptions) then
-    Exit;
-
-  var demo := TCategories_PartyPack1.Create;
-  try
-    demo.FEpisodeId := FEpisodeId;
-    fs := TFileStream.Create(TPath.Combine(APath, 'demo' + AName + '.jet'), fmCreate);
-    sw := TStreamWriter.Create(fs);
-    try
-      sw.WriteLine(demo.GetJsonToSave(ASaveOptions));
-    finally
-      sw.Free;
-      fs.Free;
-    end;
-  finally
-    demo.Free;
-  end;
 end;
 
-{ TCategoryData }
+{ TCategoryDataBase }
 
-function TCategoryData.Bumper: string;
-begin
-  Result := FBumper;
-end;
-
-procedure TCategoryData.CloneFrom(AObj: ICategory);
+procedure TCategoryDataBase.CloneFrom(AObj: ICategory);
 begin
   SetId(AObj.GetId);
   SetCategory(AObj.GetCategory);
   SetIsFamilyFriendly(AObj.GetIsFamilyFriendly);
+  SetBumper(AObj.GetBumper);
+  SetIsPortrait(AObj.GetIsPortrait);
 end;
 
-function TCategoryData.GetCategory: string;
+function TCategoryDataBase.GetBumper: string;
+begin
+  Result := FBumper;
+end;
+
+function TCategoryDataBase.GetCategory: string;
 begin
   Result := FCategory;
 end;
 
-function TCategoryData.GetId: Integer;
+function TCategoryDataBase.GetId: Integer;
 begin
   Result := FId;
 end;
 
-function TCategoryData.GetIsFamilyFriendly: Boolean;
+function TCategoryDataBase.GetIsFamilyFriendly: Boolean;
 begin
   Result := not FX;
 end;
 
-procedure TCategoryData.SetCategory(const ACategory: string);
+function TCategoryDataBase.GetIsPortrait: Boolean;
+begin
+  Result := False;
+end;
+
+procedure TCategoryDataBase.SetBumper(const AValue: string);
+begin
+  FBumper := AValue;
+end;
+
+procedure TCategoryDataBase.SetCategory(const ACategory: string);
 begin
   FCategory := ACategory;
 end;
 
-procedure TCategoryData.SetId(AId: Integer);
+procedure TCategoryDataBase.SetId(AId: Integer);
 begin
   FId := AId;
 end;
 
-procedure TCategoryData.SetIsFamilyFriendly(AValue: Boolean);
+procedure TCategoryDataBase.SetIsFamilyFriendly(AValue: Boolean);
 begin
   FX := not AValue;
 end;
 
+procedure TCategoryDataBase.SetIsPortrait;
+begin
+  {}
+end;
+
 { TCategories_FibbageXL }
+
+procedure TCategories_FibbageXL.CopyDataFrom(ASource: ICategories);
+begin
+  for var idx := Length(FContent) - 1 downto 0 do
+    FContent[idx].Free;
+  SetLength(FContent, ASource.Count);
+  for var idx := 0 to ASource.Count - 1 do
+  begin
+    FContent[idx] := TCategoryData_FibbageXL.Create;
+    FContent[idx].CloneFrom(ASource.Category(idx));
+  end;
+  InitializeContentList;
+end;
 
 function TCategories_FibbageXL.GetJsonToSave(
   ASaveOptions: TSaveOptions): string;
 begin
-  if not (soPartyPack1 in ASaveOptions) then
-    Exit(TJson.ObjectToJsonString(Self));
-
-  var pp1Categories := TCategories_PartyPack1.Create;
-  try
-    pp1Categories.FEpisodeId := FEpisodeId;
-    pp1Categories.FQuestions := FContent;
-    Result := pp1Categories.GetJsonToSave(ASaveOptions);
-  finally
-    pp1Categories.Free;
-  end;
+  Result := TJson.ObjectToJsonString(Self);
 end;
 
 procedure TCategories_FibbageXL.InitializeContentArray;
@@ -443,7 +488,7 @@ begin
   SetLength(FContent, FContentList.Count);
   for var idx := 0 to FContentList.Count - 1 do
   begin
-    var item := TCategoryData.Create;
+    var item := TCategoryData_FibbageXL.Create;
     item.CloneFrom((FContentList[idx] as ICategory));
     FContent[idx] := item;
   end;
@@ -457,60 +502,269 @@ begin
   FContentListInitialized := True;
 end;
 
-{ TCategories_PartyPack1 }
+{ TCategories_FibbageXLPartyPack1 }
 
-function TCategories_PartyPack1.GetJsonToSave(
+procedure TCategories_FibbageXLPartyPack1.CopyDataFrom(ASource: ICategories);
+begin
+  for var idx := Length(FQuestions) - 1 downto 0 do
+    FQuestions[idx].Free;
+  SetLength(FQuestions, ASource.Count);
+  for var idx := 0 to ASource.Count - 1 do
+  begin
+    FQuestions[idx] := TCategoryData_FibbageXL.Create;
+    FQuestions[idx].CloneFrom(ASource.Category(idx));
+  end;
+  InitializeContentList;
+end;
+
+function TCategories_FibbageXLPartyPack1.GetJsonToSave(
   ASaveOptions: TSaveOptions): string;
 var
   questions: TJSONArray;
 begin
-  if soPartyPack1 in ASaveOptions then
-  begin
-    var jsonObj := TJson.ObjectToJsonObject(Self);
-    try
-      jsonObj.TryGetValue<TJSONArray>('questions', questions);
-      for var idx := 0 to questions.Count - 1 do
-      begin
-        if not (questions[idx] is TJSONObject) then
-          Continue;
-
-        (questions[idx] as TJSONObject).RemovePair('x');
-        (questions[idx] as TJSONObject).RemovePair('bumper');
-      end;
-
-      Exit(jsonObj.ToString);
-    finally
-      jsonObj.Free;
-    end;
-  end;
-
-  var fxlCategories := TCategories_FibbageXL.Create;
+  var jsonObj := TJson.ObjectToJsonObject(Self);
   try
-    fxlCategories.FEpisodeId := FEpisodeId;
-    fxlCategories.FContent := FQuestions;
-    Result := fxlCategories.GetJsonToSave(ASaveOptions);
+    jsonObj.TryGetValue<TJSONArray>('questions', questions);
+    for var idx := 0 to questions.Count - 1 do
+    begin
+      if not (questions[idx] is TJSONObject) then
+        Continue;
+
+      (questions[idx] as TJSONObject).RemovePair('x');
+      (questions[idx] as TJSONObject).RemovePair('bumper');
+    end;
+
+    Exit(jsonObj.ToString);
   finally
-    fxlCategories.Free;
+    jsonObj.Free;
   end;
 end;
 
-procedure TCategories_PartyPack1.InitializeContentArray;
+procedure TCategories_FibbageXLPartyPack1.InitializeContentArray;
 begin
   SetLength(FQuestions, FContentList.Count);
   for var idx := 0 to FContentList.Count - 1 do
   begin
-    var item := TCategoryData.Create;
+    var item := TCategoryData_FibbageXL.Create;
     item.CloneFrom((FContentList[idx] as ICategory));
     FQuestions[idx] := item;
   end;
 end;
 
-procedure TCategories_PartyPack1.InitializeContentList;
+procedure TCategories_FibbageXLPartyPack1.InitializeContentList;
 begin
   FContentList.Clear;
   for var item in FQuestions do
     FContentList.Add(item);
   FContentListInitialized := True;
+end;
+
+{ TFibbageCategories_FibbageXLPP1 }
+
+function TFibbageCategories_FibbageXLPP1.GetCategories(
+  const APath: string): ICategories;
+begin
+  Result := nil;
+  if FileExists(APath) then
+  begin
+    var fs := TFileStream.Create(APath, fmOpenRead);
+    var sr := TStreamReader.Create(fs);
+    try
+      Result := TJson.JsonToObject<TCategories_FibbageXLPartyPack1>(sr.ReadToEnd)
+    finally
+      sr.Free;
+      fs.Free;
+    end;
+  end
+  else
+    Result := TCategories_FibbageXLPartyPack1.Create
+end;
+
+function TFibbageCategories_FibbageXLPP1.GetFibbageXLPartyPack1DataPath: string;
+begin
+  var exePath := ExtractFilePath(ParamStr(0));
+  {$ifdef debug}
+  Result := TPath.Combine(exePath, '..\..\..\..\setup\data\FibbageXLPartyPack1');
+  {$else}
+  Result := TPath.Combine(exePath, 'data\FibbageXLPartyPack1');
+  {$endif}
+end;
+
+function TFibbageCategories_FibbageXLPP1.GetShortiesJetPath: string;
+begin
+  Result := IncludeTrailingPathDelimiter(FContentDir) + 'shortie.jet'
+end;
+
+procedure TFibbageCategories_FibbageXLPP1.Save(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  ShortieCategories.Save(APath, 'shortie', ASaveOptions);
+  FinalCategories.Save(APath, 'finalfibbage', ASaveOptions);
+  SaveDemoShortieCategories(APath);
+  SaveDemoFinalCategories(APath);
+end;
+
+procedure TFibbageCategories_FibbageXLPP1.SaveDemoFinalCategories(
+  const APath: string);
+begin
+  var dataPath := GetFibbageXLPartyPack1DataPath;
+  var filePath := TPath.Combine(dataPath, 'demofinalfibbage.jet');
+  var wantedPath := TPath.Combine(APath, 'demofinalfibbage.jet');
+
+  if FileExists(filePath) then
+    TFile.Copy(filePath, wantedPath, True)
+  else
+    Assert(False);
+end;
+
+procedure TFibbageCategories_FibbageXLPP1.SaveDemoShortieCategories(
+  const APath: string);
+begin
+  var dataPath := GetFibbageXLPartyPack1DataPath;
+  var filePath := TPath.Combine(dataPath, 'demoshortie.jet');
+  var wantedPath := TPath.Combine(APath, 'demoshortie.jet');
+
+  if FileExists(filePath) then
+    TFile.Copy(filePath, wantedPath, True)
+  else
+    Assert(False);
+end;
+
+{ TFibbageCategories_Fibbage3PP4 }
+
+function TFibbageCategories_Fibbage3PP4.CreateNewCategory: ICategory;
+begin
+  Result := TCategoryData_Fibbage3PartyPack4.Create;
+  Result.SetId(GetAvailableId);
+end;
+
+function TFibbageCategories_Fibbage3PP4.GetCategories(
+  const APath: string): ICategories;
+begin
+  Result := nil;
+  if FileExists(APath) then
+  begin
+    var fs := TFileStream.Create(APath, fmOpenRead);
+    var sr := TStreamReader.Create(fs);
+    try
+      Result := TJSON.JsonToObject<TCategories_Fibbage3PartyPack4>(sr.ReadToEnd);
+    finally
+      sr.Free;
+      fs.Free;
+    end;
+  end
+  else
+    Result := TCategories_Fibbage3PartyPack4.Create;
+end;
+
+function TFibbageCategories_Fibbage3PP4.GetFibbage3DataPath: string;
+begin
+  var exePath := ExtractFilePath(ParamStr(0));
+  {$ifdef debug}
+  Result := TPath.Combine(exePath, '..\..\..\..\setup\data\Fibbage3');
+  {$else}
+  Result := TPath.Combine(exePath, 'data\Fibbage3');
+  {$endif}
+end;
+
+procedure TFibbageCategories_Fibbage3PP4.Save(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  inherited;
+  SaveSpecialCategories(APath);
+  SavePersonalShortieCategories(APath);
+end;
+
+procedure TFibbageCategories_Fibbage3PP4.SavePersonalShortieCategories(
+  const APath: string);
+begin
+  var dataPath := GetFibbage3DataPath;
+  var filePath := TPath.Combine(dataPath, 'tmishortie.jet');
+  var wantedPath := TPath.Combine(APath, 'tmishortie.jet');
+
+  if FileExists(filePath) then
+    TFile.Copy(filePath, wantedPath, True)
+  else
+    Assert(False);
+end;
+
+procedure TFibbageCategories_Fibbage3PP4.SaveSpecialCategories(const APath: string);
+begin
+  var dataPath := GetFibbage3DataPath;
+  var filePath := TPath.Combine(dataPath, 'fibbagespecial.jet');
+  var wantedPath := TPath.Combine(APath, 'fibbagespecial.jet');
+
+  if FileExists(filePath) then
+    TFile.Copy(filePath, wantedPath, True)
+  else
+    Assert(False);
+end;
+
+{ TFibbageCategories_FibbageXL }
+
+function TFibbageCategories_FibbageXL.CreateNewCategory: ICategory;
+begin
+  Result := TCategoryData_FibbageXL.Create;
+  Result.SetId(GetAvailableId);
+end;
+
+procedure TFibbageCategories_FibbageXL.Save(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  ShortieCategories.Save(APath, 'fibbageshortie', ASaveOptions);
+  FinalCategories.Save(APath, 'finalfibbage', ASaveOptions);
+end;
+
+{ TCategories_Fibbage3PartyPack4 }
+
+procedure TCategories_Fibbage3PartyPack4.CopyDataFrom(ASource: ICategories);
+begin
+  for var idx := Length(FContent) - 1 downto 0 do
+    FContent[idx].Free;
+  SetLength(FContent, ASource.Count);
+  for var idx := 0 to ASource.Count - 1 do
+  begin
+    FContent[idx] := TCategoryData_Fibbage3PartyPack4.Create;
+    FContent[idx].CloneFrom(ASource.Category(idx));
+  end;
+  InitializeContentList;
+end;
+
+function TCategories_Fibbage3PartyPack4.GetJsonToSave(
+  ASaveOptions: TSaveOptions): string;
+begin
+  Result := TJson.ObjectToJsonString(Self);
+end;
+
+procedure TCategories_Fibbage3PartyPack4.InitializeContentArray;
+begin
+  SetLength(FContent, FContentList.Count);
+  for var idx := 0 to FContentList.Count - 1 do
+  begin
+    var item := TCategoryData_Fibbage3PartyPack4.Create;
+    item.CloneFrom((FContentList[idx] as ICategory));
+    FContent[idx] := item;
+  end;
+end;
+
+procedure TCategories_Fibbage3PartyPack4.InitializeContentList;
+begin
+  FContentList.Clear;
+  for var item in FContent do
+    FContentList.Add(item);
+  FContentListInitialized := True;
+end;
+
+{ TCategoryData_Fibbage3PartyPack4 }
+
+function TCategoryData_Fibbage3PartyPack4.GetIsPortrait: Boolean;
+begin
+  Result := FPortrait;
+end;
+
+procedure TCategoryData_Fibbage3PartyPack4.SetIsPortrait(AValue: Boolean);
+begin
+  FPortrait := AValue;
 end;
 
 end.
