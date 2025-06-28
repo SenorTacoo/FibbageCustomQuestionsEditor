@@ -358,6 +358,7 @@ type
 
     FProjectVisItems: TProjectScrollItems;
 
+    procedure OnUnhandledException(Sender: TObject; E: Exception);
     procedure GoToQuestionDetails;
     procedure AddLastChoosenProject;
     procedure InitializeLastQuestionProjects;
@@ -1590,7 +1591,12 @@ begin
       destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.Fibbage3PartyPack4Path, 'content');
   end;
 
-  TProjectActivator.Activate(FActiveConfiguration, destPath);
+  try
+    TProjectActivator.Activate(FActiveConfiguration, destPath);
+  except
+    on E: EActivateError do
+      ShowSimpleInfo(E.Message);
+  end;
 end;
 
 procedure TFrmMain.OnPreSave;
@@ -1915,6 +1921,11 @@ begin
   var selCnt := FShortieVisItems.SelectedCount;
   aRemoveQuestions.Enabled :=  selCnt > 0;
   aRemoveQuestions.Text := IfThen(selCnt > 1, 'Remove questions', 'Remove question');
+end;
+
+procedure TFrmMain.OnUnhandledException(Sender: TObject; E: Exception);
+begin
+  ShowSimpleInfo(Format('Unhandled exception, %s/%s', [E.Message, E.ClassName]));
 end;
 
 procedure TFrmMain.PrepareMultiViewButtons(AActTab: TAppTab);
@@ -2311,6 +2322,7 @@ end;
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
   Randomize;
+  Application.OnException := OnUnhandledException;
 
   PrepareMultiViewButtons(atHomeBeforeImport);
 

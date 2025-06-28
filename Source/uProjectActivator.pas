@@ -25,7 +25,7 @@ begin
   var content := TFibbageContent.Create;
   try
     content.Initialize(AConfig);
-    content.Save(APath, [soDoNotSaveConfig]);
+    content.Save(APath, [soActivatingProject]);
   finally
     content.Free;
   end;

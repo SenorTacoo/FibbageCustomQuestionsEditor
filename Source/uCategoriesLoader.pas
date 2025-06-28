@@ -6,6 +6,8 @@ uses
   REST.JSON,
   REST.Json.Types,
   System.JSON,
+  System.JSON.Builders,
+  System.JSON.Writers,
   System.Classes,
   System.SysUtils,
   System.IOUtils,
@@ -66,7 +68,7 @@ type
 
     function Count: Integer;
     function Category(AIdx: Integer): ICategory;
-    function EpisodeId: Integer;
+    function GetEpisodeId: Integer;
 
     procedure Add(ACategory: ICategory);
     procedure Delete(AId: Integer);
@@ -123,6 +125,7 @@ type
     function GetCategories(const APath: string): ICategories; virtual;
     function CreateNewCategory: ICategory; virtual; abstract;
     procedure DoLoadCategories; virtual;
+    function GetBackupPath(const APath: string): string;
 
     function DoGetBestCategoryForQuestion(ACategories: ICategories; AQuestion: IQuestion): ICategory;
   public
@@ -152,7 +155,6 @@ type
   private
     procedure SaveDemoShortieCategories(const APath: string);
     procedure SaveDemoFinalCategories(const APath: string);
-    function GetFibbageXLPartyPack1DataPath: string;
   protected
     function GetShortiesJetPath: string; override;
     function GetCategories(const APath: string): ICategories; override;
@@ -162,9 +164,8 @@ type
 
   TFibbageCategories_Fibbage3PP4 = class(TFibbageCategories_FibbageXL)
   private
-    function GetFibbage3DataPath: string;
-    procedure SaveSpecialCategories(const APath: string);
-    procedure SavePersonalShortieCategories(const APath: string);
+    procedure SaveSpecialCategories(const APath: string; ASaveOptions: TSaveOptions);
+    procedure SavePersonalShortieCategories(const APath: string; ASaveOptions: TSaveOptions);
   protected
     function GetCategories(const APath: string): ICategories; override;
     function CreateNewCategory: ICategory; override;
@@ -286,6 +287,11 @@ begin
   end;
 end;
 
+function TFibbageCategoriesBase.GetBackupPath(const APath: string): string;
+begin
+  Result := APath + '_backup';
+end;
+
 function TFibbageCategoriesBase.GetCategories(const APath: string): ICategories;
 begin
   Result := nil;
@@ -379,7 +385,7 @@ begin
   inherited;
 end;
 
-function TBaseCategories.EpisodeId: Integer;
+function TBaseCategories.GetEpisodeId: Integer;
 begin
   Result := FEpisodeId;
 end;
@@ -580,16 +586,6 @@ begin
     Result := TCategories_FibbageXLPartyPack1.Create
 end;
 
-function TFibbageCategories_FibbageXLPP1.GetFibbageXLPartyPack1DataPath: string;
-begin
-  var exePath := ExtractFilePath(ParamStr(0));
-  {$ifdef debug}
-  Result := TPath.Combine(exePath, '..\..\..\..\setup\data\FibbageXLPartyPack1');
-  {$else}
-  Result := TPath.Combine(exePath, 'data\FibbageXLPartyPack1');
-  {$endif}
-end;
-
 function TFibbageCategories_FibbageXLPP1.GetShortiesJetPath: string;
 begin
   Result := IncludeTrailingPathDelimiter(FContentDir) + 'shortie.jet'
@@ -607,27 +603,39 @@ end;
 procedure TFibbageCategories_FibbageXLPP1.SaveDemoFinalCategories(
   const APath: string);
 begin
-  var dataPath := GetFibbageXLPartyPack1DataPath;
-  var filePath := TPath.Combine(dataPath, 'demofinalfibbage.jet');
-  var wantedPath := TPath.Combine(APath, 'demofinalfibbage.jet');
-
-  if FileExists(filePath) then
-    TFile.Copy(filePath, wantedPath, True)
-  else
-    Assert(False);
+  var fs := TFileStream.Create(TPath.Combine(APath, 'demofinalfibbage.jet'), fmCreate);
+  var jw := TJsonTextWriter.Create(fs);
+  var job := TJSONObjectBuilder.Create(jw);
+  try
+    job.BeginObject
+      .Add('episodeid', FShortieCategories.GetEpisodeId)
+      .BeginArray('questions')
+      .EndArray
+    .EndObject;
+  finally
+    job.Free;
+    jw.Free;
+    fs.Free;
+  end;
 end;
 
 procedure TFibbageCategories_FibbageXLPP1.SaveDemoShortieCategories(
   const APath: string);
 begin
-  var dataPath := GetFibbageXLPartyPack1DataPath;
-  var filePath := TPath.Combine(dataPath, 'demoshortie.jet');
-  var wantedPath := TPath.Combine(APath, 'demoshortie.jet');
-
-  if FileExists(filePath) then
-    TFile.Copy(filePath, wantedPath, True)
-  else
-    Assert(False);
+  var fs := TFileStream.Create(TPath.Combine(APath, 'demoshortie.jet'), fmCreate);
+  var jw := TJsonTextWriter.Create(fs);
+  var job := TJSONObjectBuilder.Create(jw);
+  try
+    job.BeginObject
+      .Add('episodeid', FShortieCategories.GetEpisodeId)
+      .BeginArray('questions')
+      .EndArray
+    .EndObject;
+  finally
+    job.Free;
+    jw.Free;
+    fs.Free;
+  end;
 end;
 
 { TFibbageCategories_Fibbage3PP4 }
@@ -657,47 +665,36 @@ begin
     Result := TCategories_Fibbage3PartyPack4.Create;
 end;
 
-function TFibbageCategories_Fibbage3PP4.GetFibbage3DataPath: string;
-begin
-  var exePath := ExtractFilePath(ParamStr(0));
-  {$ifdef debug}
-  Result := TPath.Combine(exePath, '..\..\..\..\setup\data\Fibbage3');
-  {$else}
-  Result := TPath.Combine(exePath, 'data\Fibbage3');
-  {$endif}
-end;
-
 procedure TFibbageCategories_Fibbage3PP4.Save(const APath: string;
   ASaveOptions: TSaveOptions);
 begin
   inherited;
-  SaveSpecialCategories(APath);
-  SavePersonalShortieCategories(APath);
+  SaveSpecialCategories(APath, ASaveOptions);
+  SavePersonalShortieCategories(APath, ASaveOptions);
 end;
 
-procedure TFibbageCategories_Fibbage3PP4.SavePersonalShortieCategories(
-  const APath: string);
+procedure TFibbageCategories_Fibbage3PP4.SavePersonalShortieCategories(const APath: string; ASaveOptions: TSaveOptions);
 begin
-  var dataPath := GetFibbage3DataPath;
+  var dataPath := GetBackupPath(APath);
   var filePath := TPath.Combine(dataPath, 'tmishortie.jet');
   var wantedPath := TPath.Combine(APath, 'tmishortie.jet');
 
   if FileExists(filePath) then
     TFile.Copy(filePath, wantedPath, True)
-  else
-    Assert(False);
+  else if soActivatingProject in ASaveOptions then
+    raise EActivateError.CreateFmt('Missing file %s, check for files integrity', [filePath]);
 end;
 
-procedure TFibbageCategories_Fibbage3PP4.SaveSpecialCategories(const APath: string);
+procedure TFibbageCategories_Fibbage3PP4.SaveSpecialCategories(const APath: string; ASaveOptions: TSaveOptions);
 begin
-  var dataPath := GetFibbage3DataPath;
+  var dataPath := GetBackupPath(APath);
   var filePath := TPath.Combine(dataPath, 'fibbagespecial.jet');
   var wantedPath := TPath.Combine(APath, 'fibbagespecial.jet');
 
   if FileExists(filePath) then
     TFile.Copy(filePath, wantedPath, True)
-  else
-    Assert(False);
+  else if soActivatingProject in ASaveOptions then
+    raise EActivateError.CreateFmt('Missing file %s, check for files integrity', [filePath]);
 end;
 
 { TFibbageCategories_FibbageXL }

@@ -33,7 +33,7 @@ type
     procedure CloneFrom(AObj: ICategory);
   end;
 
-  TSaveOption = (soDoNotSaveConfig);
+  TSaveOption = (soActivatingProject);
   TSaveOptions = set of TSaveOption;
 
   ICategories = interface
@@ -44,6 +44,7 @@ type
     procedure Delete(AId: Integer);
     procedure Save(const APath, AName: string; ASaveOptions: TSaveOptions);
     procedure CopyDataFrom(ASource: ICategories);
+    function GetEpisodeId: Int32;
   end;
 
   IFibbageCategories = interface
@@ -183,6 +184,7 @@ type
     procedure Activate(AConfig: IContentConfiguration; const APath: string);
   end;
 
+  EActivateError = class(Exception);
 
 implementation
 

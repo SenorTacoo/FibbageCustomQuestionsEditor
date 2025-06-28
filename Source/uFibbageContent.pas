@@ -291,7 +291,7 @@ procedure TFibbageContent.InnerSave(const APath: string; ASaveOptions: TSaveOpti
 begin
   PreSave(APath);
   try
-    if not (soDoNotSaveConfig in ASaveOptions) then
+    if not (soActivatingProject in ASaveOptions) then
       FConfig.Save(APath);
     
     FQuestions.Save(APath, ASaveOptions);
@@ -304,6 +304,7 @@ begin
     begin
       LogE('save exception %s/%s', [E.Message, E.ClassName]);
       PostSaveFailed(APath);
+      raise;
     end;
   end;
 end;

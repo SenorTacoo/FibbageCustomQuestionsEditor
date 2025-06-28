@@ -125,6 +125,7 @@ type
   protected
     procedure DoLoadQuestions; virtual;
     procedure LoadShorties; virtual;
+    function GetBackupPath(const APath: string): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -157,10 +158,8 @@ type
 
   TQuestionsFibbage3PP4 = class(TQuestionsFibbageXL)
   private
-    function GetFibbage3DataPath: string;
-
-    procedure SaveSpecialQuestions(const APath: string);
-    procedure SavePersonalShortieQuestions(const APath: string);
+    procedure SaveSpecialQuestions(const APath: string; ASaveOptions: TSaveOptions);
+    procedure SavePersonalShortieQuestions(const APath: string; ASaveOptions: TSaveOptions);
   public
     procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
   end;
@@ -831,6 +830,11 @@ begin
   Result := FFinalQuestions;
 end;
 
+function TQuestionsBase.GetBackupPath(const APath: string): string;
+begin
+  Result := APath + '_backup';
+end;
+
 function TQuestionsBase.ReadFileData(const APath: string): TBytes;
 begin
   Result := nil;
@@ -900,34 +904,24 @@ end;
 
 { TQuestionsFibbage3PP4 }
 
-function TQuestionsFibbage3PP4.GetFibbage3DataPath: string;
-begin
-  var exePath := ExtractFilePath(ParamStr(0));
-  {$ifdef debug}
-  Result := TPath.Combine(exePath, '..\..\..\..\setup\data\Fibbage3');
-  {$else}
-  Result := TPath.Combine(exePath, 'data\Fibbage3');
-  {$endif}
-end;
-
 procedure TQuestionsFibbage3PP4.Save(const APath: string;
   ASaveOptions: TSaveOptions);
 begin
   inherited;
-  SaveSpecialQuestions(APath);
-  SavePersonalShortieQuestions(APath);
+  SaveSpecialQuestions(APath, ASaveOptions);
+  SavePersonalShortieQuestions(APath, ASaveOptions);
 end;
 
-procedure TQuestionsFibbage3PP4.SavePersonalShortieQuestions(
-  const APath: string);
+procedure TQuestionsFibbage3PP4.SavePersonalShortieQuestions(const APath: string; ASaveOptions: TSaveOptions);
 begin
-  var dataPath := GetFibbage3DataPath;
+  var dataPath := GetBackupPath(APath);
   var dirPath := TPath.Combine(dataPath, 'tmishortie');
   var wantedPath := TPath.Combine(APath, 'tmishortie');
 
   if not DirectoryExists(dirPath) then
   begin
-    Assert(False);
+    if soActivatingProject in ASaveOptions then
+      raise EActivateError.CreateFmt('Missing directory %s, check for files integrity', [dirPath]);
     Exit;
   end;
 
@@ -937,15 +931,16 @@ begin
   TDirectory.Copy(dirPath, wantedPath);
 end;
 
-procedure TQuestionsFibbage3PP4.SaveSpecialQuestions(const APath: string);
+procedure TQuestionsFibbage3PP4.SaveSpecialQuestions(const APath: string; ASaveOptions: TSaveOptions);
 begin
-  var dataPath := GetFibbage3DataPath;
+  var dataPath := GetBackupPath(APath);
   var dirPath := TPath.Combine(dataPath, 'fibbagespecial');
   var wantedPath := TPath.Combine(APath, 'fibbagespecial');
 
   if not DirectoryExists(dirPath) then
   begin
-    Assert(False);
+    if soActivatingProject in ASaveOptions then
+      raise EActivateError.CreateFmt('Missing directory %s, check for files integrity', [dirPath]);
     Exit;
   end;
 
