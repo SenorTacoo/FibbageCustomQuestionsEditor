@@ -1,7 +1,7 @@
 ; -- FibbageQE.iss --
 [Setup]
 AppName=FibbageQE
-AppVersion=0.3
+AppVersion=0.5
 DefaultDirName={localappdata}\FibbageCQE
 DisableDirPage=yes
 DefaultGroupName=FibbageQE
@@ -20,12 +20,10 @@ Source: "ogg.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "vorbis.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "vorbisenc.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "vorbisfile.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\data\*"; DestDir: "{app}\data\"; Flags: recursesubdirs createallsubdirs
 
 [UninstallDelete]
 Type: files; Name: "{app}\.lasts"
 Type: files; Name: "{app}\FibbageQE.ini"
-Type: filesandordirs; Name: "{app}"
 Type: dirifempty; Name: "{app}"
 
 [Icons]
