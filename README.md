@@ -7,3 +7,6 @@ Currently working game versions:
 - Fibbage XL (individual game)
 - Fibbage XL (from Party Pack 1)
 - Fibbage 3 (from Party Pack 4)
+    - Fibbage enough about you, not supported
+    - One question from a "Special" category may appear during the gameplay (to my knowledge, these questions cannot be altered because the game freezes randomly, so I decided to keep the original questions)
+  
