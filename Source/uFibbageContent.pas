@@ -143,6 +143,11 @@ begin
         FCategories := TFibbageCategories_Fibbage3PP4.Create;
         FQuestions := TQuestionsFibbage3PP4.Create;
       end;
+    TGameType.Fibbage4PartyPack9:
+      begin
+        FCategories := TFibbageCategories_Fibbage4PP9.Create;
+        FQuestions := TQuestionsFibbage4PP9.Create;
+      end;
     else
       raise Exception.Create('Unknown game type');
   end;

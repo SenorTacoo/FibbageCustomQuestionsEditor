@@ -56,6 +56,8 @@ begin
           IncludeTrailingPathDelimiter('fibbagespecial')) then
           Exit;
       end;
+    Fibbage4PartyPack9:
+      Exit(True);
     else
       Exit;
   end;

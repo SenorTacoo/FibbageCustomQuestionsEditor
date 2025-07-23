@@ -26,6 +26,7 @@ type
   private
     FDetails: TLabel;
     FQuestion: TLabel;
+    FContent: IFibbageContent;
     FOrgQuestion: IQuestion;
     FOrgCategory: ICategory;
     FSelected: Boolean;
@@ -33,7 +34,7 @@ type
   protected
     procedure Resize; override;
   public
-    constructor CreateItem(AOwner: TComponent; AQuestion: IQuestion);
+    constructor CreateItem(AOwner: TComponent; AContent: IFibbageContent; AQuestion: IQuestion);
     procedure RefreshData;
 
     property Selected: Boolean read FSelected write SetSelected;
@@ -128,7 +129,7 @@ type
     tiQuestions: TTabItem;
     tcQuestions: TTabControl;
     aGoToAllQuestions: TChangeTabAction;
-    GridPanelLayout1: TGridPanelLayout;
+    gplSingleItemAudio: TGridPanelLayout;
     bSingleItemQuestionAudio: TButton;
     bSingleItemCorrectAudio: TButton;
     pSingleItemId: TPanel;
@@ -279,6 +280,22 @@ type
     MenuItem4: TMenuItem;
     aMigrateToFibbageXLPartyPack1: TAction;
     aSaveProjectAndInitialize: TAction;
+    lySingleItemQuestion2: TLayout;
+    pSingleItemQuestion2: TPanel;
+    lSingleItemQuestion2: TLabel;
+    mSingleItemQuestion2: TMemo;
+    lySingleItemPossibleAnswers2: TLayout;
+    lySingleItemAnswer2: TLayout;
+    pSingleItemAnswer2: TPanel;
+    lSingleItemAnswer2: TLabel;
+    mSingleItemAnswer2: TMemo;
+    lySingleItemAlternateSpelling2: TLayout;
+    pSingleItemAlternateSpelling2: TPanel;
+    lSingleItemAlternateSpelling2: TLabel;
+    mSingleItemAlternateSpelling2: TMemo;
+    Splitter4: TSplitter;
+    bSingleItemQuestionAudio2: TButton;
+    bSingleItemCorrectAudio2: TButton;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -334,6 +351,8 @@ type
     procedure aMigrateToFibbage3Execute(Sender: TObject);
     procedure aMigrateToFibbageXLPartyPack1Execute(Sender: TObject);
     procedure aSaveProjectAndInitializeExecute(Sender: TObject);
+    procedure bSingleItemQuestionAudio2Click(Sender: TObject);
+    procedure bSingleItemCorrectAudio2Click(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -360,6 +379,10 @@ type
 
     procedure OnUnhandledException(Sender: TObject; E: Exception);
     procedure GoToQuestionDetails;
+    procedure HideUnusedSingleQuestionControls;
+    procedure FillControlsFromQuestion;
+    procedure FillControlsFromCategory;
+
     procedure AddLastChoosenProject;
     procedure InitializeLastQuestionProjects;
     procedure SetButtonPressed(AButton: TButton);
@@ -502,7 +525,7 @@ begin
       begin
         FContent.CopyToFinalQuestions(item.OrgQuestion, newQuestion);
 
-        var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, newQuestion);
+        var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, newQuestion);
         qItem.Parent := sbxFinalQuestions;
         qItem.Align := TAlignLayout.Top;
         qItem.Position.Y := MaxInt;
@@ -526,7 +549,7 @@ begin
       begin
         FContent.CopyToShortieQuestions(item.OrgQuestion, newQuestion);
 
-        var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, newQuestion);
+        var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FContent, newQuestion);
         qItem.Parent := sbxShortieQuestions;
         qItem.Align := TAlignLayout.Top;
         qItem.Position.Y := MaxInt;
@@ -760,7 +783,7 @@ begin
 
       FContent.MoveToFinalQuestions(item.OrgQuestion);
 
-      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, item.OrgQuestion);
+      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, item.OrgQuestion);
       qItem.Parent := sbxFinalQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
@@ -790,7 +813,7 @@ begin
 
       FContent.MoveToShortieQuestions(item.OrgQuestion);
 
-      var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, item.OrgQuestion);
+      var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FContent, item.OrgQuestion);
       qItem.Parent := sbxShortieQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
@@ -1944,7 +1967,7 @@ begin
   try
     for var item in FContent.Questions.ShortieQuestions do
     begin
-      var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, item);
+      var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FContent, item);
       qItem.Parent := sbxShortieQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
@@ -1957,13 +1980,50 @@ begin
   end;
 end;
 
+procedure TFrmMain.FillControlsFromCategory;
+begin
+  if FSelectedQuestion.GetQuestionType = TQuestionType.qtShortie then
+  begin
+    mSingleItemQuestion.Text := FSelectedCategory.GetQuestionText;
+    mSingleItemAnswer.Text := FSelectedCategory.GetCorrectText;
+    mSingleItemAlternateSpelling.Text := FSelectedCategory.GetAlternateSpelling.Replace(',', ', ');
+    mSingleItemSuggestions.Text := FSelectedCategory.GetSuggestions.Replace(',', ', ');
+    eSingleItemId.Text := FSelectedCategory.GetId.ToString;
+    eSingleItemCategory.Text := FSelectedCategory.GetCategory;
+    sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+  end
+  else
+  begin
+    mSingleItemQuestion.Text := FSelectedCategory.GetQuestionText1;
+    mSingleItemQuestion2.Text := FSelectedCategory.GetQuestionText2;
+    mSingleItemAnswer.Text := FSelectedCategory.GetCorrectText1;
+    mSingleItemAnswer2.Text := FSelectedCategory.GetCorrectText2;
+    mSingleItemAlternateSpelling.Text := FSelectedCategory.GetAlternateSpelling1.Replace(',', ', ');
+    mSingleItemAlternateSpelling2.Text := FSelectedCategory.GetAlternateSpelling2.Replace(',', ', ');
+    mSingleItemSuggestions.Text := FSelectedCategory.GetSuggestions.Replace(',', ', ');
+    eSingleItemId.Text := FSelectedCategory.GetId.ToString;
+    sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+  end;
+end;
+
+procedure TFrmMain.FillControlsFromQuestion;
+begin
+  mSingleItemQuestion.Text := FSelectedQuestion.GetQuestion;
+  mSingleItemAnswer.Text := FSelectedQuestion.GetAnswer;
+  mSingleItemAlternateSpelling.Text :=  FSelectedQuestion.GetAlternateSpelling.Replace(',', ', ');
+  mSingleItemSuggestions.Text := FSelectedQuestion.GetSuggestions.Replace(',', ', ');
+  eSingleItemId.Text := FSelectedCategory.GetId.ToString;
+  eSingleItemCategory.Text := FSelectedCategory.GetCategory;
+  sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+end;
+
 procedure TFrmMain.FillFinalScrollBox;
 begin
   sbxFinalQuestions.BeginUpdate;
   try
     for var item in FContent.Questions.FinalQuestions do
     begin
-      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, item);
+      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, item);
       qItem.Parent := sbxFinalQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
@@ -2045,7 +2105,7 @@ begin
   sbxShortieQuestions.BeginUpdate;
   try
     FShortieVisItems.ClearSelection;
-    var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FSelectedQuestion);
+    var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FContent, FSelectedQuestion);
     qItem.Parent := sbxShortieQuestions;
     qItem.Align := TAlignLayout.Top;
     qItem.Position.Y := MaxInt;
@@ -2075,7 +2135,7 @@ begin
   sbxFinalQuestions.BeginUpdate;
   try
     FFinalVisItems.ClearSelection;
-    var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FSelectedQuestion);
+    var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, FSelectedQuestion);
     qItem.Parent := sbxFinalQuestions;
     qItem.Align := TAlignLayout.Top;
     qItem.Position.Y := MaxInt;
@@ -2265,6 +2325,26 @@ begin
   DisableButton(bShortieQuestions);
 end;
 
+procedure TFrmMain.HideUnusedSingleQuestionControls;
+begin
+  lySingleItemQuestion2.Visible := (FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9) and (FSelectedQuestion.GetQuestionType = TQuestionType.qtFinal);
+  lySingleItemPossibleAnswers2.Visible := lySingleItemQuestion2.Visible;
+  bSingleItemQuestionAudio2.Visible := lySingleItemQuestion2.Visible;
+  bSingleItemCorrectAudio2.Visible := bSingleItemQuestionAudio2.Visible;
+  if lySingleItemQuestion2.Visible then
+  begin
+    gplSingleItemAudio.ColumnCollection.Items[2].Value := 100/3;
+    gplSingleItemAudio.ColumnCollection.Items[3].Value := 100/4;
+  end
+  else
+  begin
+    gplSingleItemAudio.ColumnCollection.Items[2].Value := 0;
+    gplSingleItemAudio.ColumnCollection.Items[3].Value := 0;
+  end;
+
+  lySingleItemCategory.Visible := not lySingleItemQuestion2.Visible;
+end;
+
 procedure TFrmMain.bSingleItemBumperAudioClick(Sender: TObject);
 begin
   rDim.Visible := True;
@@ -2277,12 +2357,36 @@ begin
   end;
 end;
 
+procedure TFrmMain.bSingleItemCorrectAudio2Click(Sender: TObject);
+begin
+  rDim.Visible := True;
+  var form := TRecordForm.Create(Self);
+  try
+    form.EditAnswer2Audio(FSelectedQuestion);
+  finally
+    form.Free;
+    rDim.Visible := False;
+  end;
+end;
+
 procedure TFrmMain.bSingleItemCorrectAudioClick(Sender: TObject);
 begin
   rDim.Visible := True;
   var form := TRecordForm.Create(Self);
   try
     form.EditAnswerAudio(FSelectedQuestion);
+  finally
+    form.Free;
+    rDim.Visible := False;
+  end;
+end;
+
+procedure TFrmMain.bSingleItemQuestionAudio2Click(Sender: TObject);
+begin
+  rDim.Visible := True;
+  var form := TRecordForm.Create(Self);
+  try
+    form.EditQuestion2Audio(FSelectedQuestion);
   finally
     form.Free;
     rDim.Visible := False;
@@ -2488,13 +2592,12 @@ end;
 
 procedure TFrmMain.GoToQuestionDetails;
 begin
-  mSingleItemQuestion.Text := FSelectedQuestion.GetQuestion;
-  mSingleItemAnswer.Text := FSelectedQuestion.GetAnswer;
-  mSingleItemAlternateSpelling.Text :=  FSelectedQuestion.GetAlternateSpelling.Replace(',', ', ');
-  mSingleItemSuggestions.Text := FSelectedQuestion.GetSuggestions.Replace(',', ', ');
-  eSingleItemId.Text := FSelectedCategory.GetId.ToString;
-  eSingleItemCategory.Text := FSelectedCategory.GetCategory;
-  sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+  HideUnusedSingleQuestionControls;
+
+  if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+    FillControlsFromCategory
+  else
+    FillControlsFromQuestion;
 
   FChangingTab := True;
   try
@@ -2631,13 +2734,14 @@ end;
 
 { TQuestionScrollItem }
 
-constructor TQuestionScrollItem.CreateItem(AOwner: TComponent; AQuestion: IQuestion);
+constructor TQuestionScrollItem.CreateItem(AOwner: TComponent; AContent: IFibbageContent; AQuestion: IQuestion);
 begin
   inherited Create(AOwner);
 
   StyleLookup := 'rScrollItemStyle';
   HitTest := True;
 
+  FContent := AContent;
   FOrgQuestion := AQuestion;
   FOrgCategory := AQuestion.GetCategoryObj;
 
@@ -2667,7 +2771,15 @@ end;
 procedure TQuestionScrollItem.RefreshData;
 begin
   FDetails.Text := Format('Id: %d, Category: %s', [FOrgCategory.GetId, FOrgCategory.GetCategory]);
-  FQuestion.Text := FOrgQuestion.GetQuestion;
+  if FContent.Configuration.GetGameType <> TGameType.Fibbage4PartyPack9 then
+    FQuestion.Text := FOrgQuestion.GetQuestion
+  else if FOrgQuestion.GetQuestionType = TQuestionType.qtShortie then
+    FQuestion.Text := FOrgCategory.GetQuestionText
+  else
+  begin
+    FDetails.Text := Format('Id: %d', [FOrgCategory.GetId]);
+    FQuestion.Text := Trim(FOrgCategory.GetQuestionText1 + sLineBreak + sLineBreak + FOrgCategory.GetQuestionText2);
+  end;
 end;
 
 procedure TQuestionScrollItem.Resize;

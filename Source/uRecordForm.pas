@@ -10,7 +10,7 @@ uses
   ACS_Converters, NewACDSAudio, FMX.Media, uConfig, System.IOUtils, System.Math;
 
 type
-  TAudioType = (atQuestion, atAnswer, atBumper, atRecorded);
+  TAudioType = (atQuestion, atAnswer, atBumper, atRecorded, atQuestion2, atAnswer2);
 
   TRecordForm = class(TForm)
     DXAudioIn1: TDXAudioIn;
@@ -70,7 +70,9 @@ type
     function ShowModal: TModalResult; overload;
 
     procedure EditQuestionAudio(AQuestion: IQuestion);
+    procedure EditQuestion2Audio(AQuestion: IQuestion);
     procedure EditAnswerAudio(AQuestion: IQuestion);
+    procedure EditAnswer2Audio(AQuestion: IQuestion);
     procedure EditBumperAudio(AQuestion: IQuestion);
   end;
 
@@ -198,6 +200,14 @@ begin
   end);
 end;
 
+procedure TRecordForm.EditAnswer2Audio(AQuestion: IQuestion);
+begin
+  FAudioType := atAnswer2;
+  FQuestion := AQuestion;
+  if ShowModal = mrOk then
+    SaveAudio
+end;
+
 procedure TRecordForm.EditAnswerAudio(AQuestion: IQuestion);
 begin
   FAudioType := atAnswer;
@@ -209,6 +219,14 @@ end;
 procedure TRecordForm.EditBumperAudio(AQuestion: IQuestion);
 begin
   FAudioType := atBumper;
+  FQuestion := AQuestion;
+  if ShowModal = mrOk then
+    SaveAudio
+end;
+
+procedure TRecordForm.EditQuestion2Audio(AQuestion: IQuestion);
+begin
+  FAudioType := atQuestion2;
   FQuestion := AQuestion;
   if ShowModal = mrOk then
     SaveAudio
@@ -398,6 +416,10 @@ begin
       FQuestion.SetAnswerAudioData(FRecordedData);
     atBumper:
       FQuestion.SetBumperAudioData(FRecordedData);
+    atQuestion2:
+      FQuestion.SetQuestionAudioData2(FRecordedData);
+    atAnswer2:
+      FQuestion.SetAnswerAudioData2(FRecordedData);
   end;
 end;
 

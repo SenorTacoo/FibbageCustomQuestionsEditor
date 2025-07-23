@@ -39,7 +39,11 @@ type
     [JSONMarshalledAttribute(False)]
     FQuestionAudioBytes: TBytes;
     [JSONMarshalledAttribute(False)]
+    FQuestionAudioBytes2: TBytes;
+    [JSONMarshalledAttribute(False)]
     FAnswerAudioBytes: TBytes;
+    [JSONMarshalledAttribute(False)]
+    FAnswerAudioBytes2: TBytes;
     [JSONMarshalledAttribute(False)]
     FBumperAudioBytes: TBytes;
     [JSONMarshalledAttribute(False)]
@@ -95,6 +99,9 @@ type
     procedure SetBumperAudioData(const AData: TBytes);
     procedure SetPortraitData(const AData: TBytes);
 
+    procedure SetQuestionAudioData2(const AData: TBytes);
+    procedure SetAnswerAudioData2(const AData: TBytes);
+
     function GetCategoryObj: ICategory;
     procedure SetCategoryObj(ACategory: ICategory);
 
@@ -119,12 +126,12 @@ type
     FShortieQuestions: TQuestionList;
     FFinalQuestions: TQuestionList;
     function InnerCreateNewQuestion: IQuestion;
-    procedure LoadFinals;
     procedure FillQuestions(const AMainDir: string; AQuestionsList: TList<IQuestion>);
     function ReadFileData(const APath: string): TBytes;
   protected
     procedure DoLoadQuestions; virtual;
     procedure LoadShorties; virtual;
+    procedure LoadFinals; virtual;
     function GetBackupPath(const APath: string): string;
   public
     constructor Create;
@@ -160,6 +167,17 @@ type
   private
     procedure SaveSpecialQuestions(const APath: string; ASaveOptions: TSaveOptions);
     procedure SavePersonalShortieQuestions(const APath: string; ASaveOptions: TSaveOptions);
+  public
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
+  end;
+
+  TQuestionsFibbage4PP9 = class(TQuestionsBase)
+  private
+    procedure SaveCelebritiesQuestions(const APath: string; ASaveOptions: TSaveOptions);
+    procedure SaveFanQuestions(const APath: string; ASaveOptions: TSaveOptions);
+  protected
+    procedure LoadShorties; override;
+    procedure LoadFinals; override;
   public
     procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
   end;
@@ -253,6 +271,14 @@ end;
 function TQuestionItem.GetHavePortrait: Boolean;
 begin
   Result := False;
+
+  for var field in FFields do
+    if SameText('HasPic', field.N) then
+    begin
+      Result := StrToBoolDef(field.v, False);
+      Break;
+    end;
+
   for var field in FFields do
     if SameText('Pic', field.N) then
     begin
@@ -439,6 +465,12 @@ begin
     SetAnswerAudioName('')
   else
     SetAnswerAudioName(ChangeFileExt(TPath.GetRandomFileName, ''));
+end;
+
+procedure TQuestionItem.SetAnswerAudioData2(const AData: TBytes);
+begin
+  SetLength(FAnswerAudioBytes2, Length(AData));
+  Move(AData[0], FAnswerAudioBytes2[0], Length(AData));
 end;
 
 procedure TQuestionItem.SetAnswerAudioName(const AName: string);
@@ -635,6 +667,12 @@ begin
     SetQuestionAudioName('')
   else
     SetQuestionAudioName(ChangeFileExt(TPath.GetRandomFileName, ''));
+end;
+
+procedure TQuestionItem.SetQuestionAudioData2(const AData: TBytes);
+begin
+  SetLength(FQuestionAudioBytes2, Length(AData));
+  Move(AData[0], FQuestionAudioBytes2[0], Length(AData));
 end;
 
 procedure TQuestionItem.SetQuestionAudioName(const AName: string);
@@ -957,6 +995,83 @@ procedure TQuestionsFibbageXL.Save(const APath: string;
 begin
   FShortieQuestions.Save(APath, 'fibbageshortie');
   FFinalQuestions.Save(APath, 'finalfibbage');
+end;
+
+{ TQuestionsFibbage4PP9 }
+
+procedure TQuestionsFibbage4PP9.LoadFinals;
+begin
+  var finalDir := TDirectory.GetDirectories(FContentDir, '*fibbagefinalround*');
+
+  if Length(finalDir) = 0 then
+    Exit;
+
+  FillQuestions(finalDir[0], FFinalQuestions);
+
+  for var item in FFinalQuestions do
+    item.SetQuestionType(qtFinal);
+end;
+
+procedure TQuestionsFibbage4PP9.LoadShorties;
+begin
+  var shortieDir := TDirectory.GetDirectories(FContentDir, '*fibbageblankie*');
+
+  if Length(shortieDir) = 0 then
+    Exit;
+
+  FillQuestions(shortieDir[0], FShortieQuestions);
+
+  for var item in FShortieQuestions do
+    item.SetQuestionType(qtShortie);
+end;
+
+procedure TQuestionsFibbage4PP9.Save(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  FShortieQuestions.Save(APath, 'fibbageblankie');
+  FFinalQuestions.Save(APath, 'fibbagefinalround');
+  SaveCelebritiesQuestions(APath, ASaveOptions);
+  SaveFanQuestions(APath, ASaveOptions);
+end;
+
+procedure TQuestionsFibbage4PP9.SaveCelebritiesQuestions(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  var dataPath := GetBackupPath(APath);
+  var dirPath := TPath.Combine(dataPath, 'celebrityblankie');
+  var wantedPath := TPath.Combine(APath, 'celebrityblankie');
+
+  if not DirectoryExists(dirPath) then
+  begin
+    if soActivatingProject in ASaveOptions then
+      raise EActivateError.CreateFmt('Missing directory %s, check for files integrity', [dirPath]);
+    Exit;
+  end;
+
+  if DirectoryExists(wantedPath) then
+    TDirectory.Delete(wantedPath, True);
+
+  TDirectory.Copy(dirPath, wantedPath);
+end;
+
+procedure TQuestionsFibbage4PP9.SaveFanQuestions(const APath: string;
+  ASaveOptions: TSaveOptions);
+begin
+  var dataPath := GetBackupPath(APath);
+  var dirPath := TPath.Combine(dataPath, 'fanblankie');
+  var wantedPath := TPath.Combine(APath, 'fanblankie');
+
+  if not DirectoryExists(dirPath) then
+  begin
+    if soActivatingProject in ASaveOptions then
+      raise EActivateError.CreateFmt('Missing directory %s, check for files integrity', [dirPath]);
+    Exit;
+  end;
+
+  if DirectoryExists(wantedPath) then
+    TDirectory.Delete(wantedPath, True);
+
+  TDirectory.Copy(dirPath, wantedPath);
 end;
 
 end.
