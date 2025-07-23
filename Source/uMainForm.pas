@@ -294,7 +294,6 @@ type
     lSingleItemAlternateSpelling2: TLabel;
     mSingleItemAlternateSpelling2: TMemo;
     Splitter4: TSplitter;
-    bSingleItemQuestionAudio2: TButton;
     bSingleItemCorrectAudio2: TButton;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -352,7 +351,6 @@ type
     procedure aMigrateToFibbageXLPartyPack1Execute(Sender: TObject);
     procedure aSaveProjectAndInitializeExecute(Sender: TObject);
     procedure bSingleItemQuestionAudio2Click(Sender: TObject);
-    procedure bSingleItemCorrectAudio2Click(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -465,6 +463,7 @@ type
     function CheckForTooFewShortieQuestions: Boolean;
     procedure InsertNewProject(AConfig: IContentConfiguration);
     function CheckIfFinalQuestionForFibbage3Ok: Boolean;
+    function CheckIfFinalQuestionForFibbage4Ok: Boolean;
     function ShowSimpleInfoWithQuestion(const AInfo: string): Boolean;
     procedure ShowSimpleInfo(const AInfo: string);
   public
@@ -1213,6 +1212,9 @@ begin
       end;
     end;
 
+  if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+    Exit;
+
   for var idx := 0 to FContent.Questions.FinalQuestions.Count - 2 do
     for var jdx := idx + 1 to FContent.Questions.FinalQuestions.Count - 1 do
     begin
@@ -1319,7 +1321,7 @@ begin
     ShowSimpleInfo('Question is missing at least two <BLANK> entries, question won''t work');
     Exit;
   end;
-  
+
   if (not mSingleItemAnswer.Text.IsEmpty) and (not mSingleItemAnswer.Text.Contains('|')) then
   begin
     ShowSimpleInfo('Answer is missing | (it should look like this: answer_part1|answer_part2), question won''t work');
@@ -1346,6 +1348,26 @@ begin
   finally
     sl.Free;
   end;
+  Result := True;
+end;
+
+function TFrmMain.CheckIfFinalQuestionForFibbage4Ok: Boolean;
+begin
+  Result := False;
+  var blankPos := mSingleItemQuestion.Text.IndexOf('{{BLANK}}');
+  if blankPos = -1 then
+  begin
+    ShowSimpleInfo('Question is missing {{BLANK}} entry, question won''t work');
+    Exit;
+  end;
+
+  blankPos := mSingleItemQuestion2.Text.IndexOf('{{BLANK}}');
+  if blankPos = -1 then
+  begin
+    ShowSimpleInfo('Question2 is missing {{BLANK}} entry, question won''t work');
+    Exit;
+  end;
+
   Result := True;
 end;
 
@@ -1525,6 +1547,11 @@ begin
      (FSelectedQuestion.GetQuestionType = qtFinal) and
      not CheckIfFinalQuestionForFibbage3Ok then
      Exit;
+
+  if (FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9) and
+     (FSelectedQuestion.GetQuestionType = qtFinal) and
+     not CheckIfFinalQuestionForFibbage4Ok then
+      Exit;
 
   FQuestionsChanged := True;
 
@@ -2329,18 +2356,11 @@ procedure TFrmMain.HideUnusedSingleQuestionControls;
 begin
   lySingleItemQuestion2.Visible := (FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9) and (FSelectedQuestion.GetQuestionType = TQuestionType.qtFinal);
   lySingleItemPossibleAnswers2.Visible := lySingleItemQuestion2.Visible;
-  bSingleItemQuestionAudio2.Visible := lySingleItemQuestion2.Visible;
-  bSingleItemCorrectAudio2.Visible := bSingleItemQuestionAudio2.Visible;
+  bSingleItemCorrectAudio2.Visible := lySingleItemQuestion2.Visible;
   if lySingleItemQuestion2.Visible then
-  begin
-    gplSingleItemAudio.ColumnCollection.Items[2].Value := 100/3;
-    gplSingleItemAudio.ColumnCollection.Items[3].Value := 100/4;
-  end
+    gplSingleItemAudio.ColumnCollection.Items[2].Value := 100/3
   else
-  begin
     gplSingleItemAudio.ColumnCollection.Items[2].Value := 0;
-    gplSingleItemAudio.ColumnCollection.Items[3].Value := 0;
-  end;
 
   lySingleItemCategory.Visible := not lySingleItemQuestion2.Visible;
 end;
@@ -2351,18 +2371,6 @@ begin
   var form := TRecordForm.Create(Self);
   try
     form.EditBumperAudio(FSelectedQuestion);
-  finally
-    form.Free;
-    rDim.Visible := False;
-  end;
-end;
-
-procedure TFrmMain.bSingleItemCorrectAudio2Click(Sender: TObject);
-begin
-  rDim.Visible := True;
-  var form := TRecordForm.Create(Self);
-  try
-    form.EditAnswer2Audio(FSelectedQuestion);
   finally
     form.Free;
     rDim.Visible := False;

@@ -17,19 +17,14 @@ uses
 
 type
   TCategoryDataBase = class(TInterfacedObject, ICategory)
-  private
-    FX: Boolean;
-    FId: Integer;
-    FCategory: string;
-    FBumper: string;
   public
     procedure CloneFrom(AObj: ICategory);
 
-    function GetId: Integer;
-    function GetCategory: string;
-    function GetIsFamilyFriendly: Boolean;
+    function GetId: Integer; virtual;
+    function GetCategory: string; virtual;
+    function GetIsFamilyFriendly: Boolean; virtual;
     function GetIsPortrait: Boolean; virtual;
-    function GetBumper: string;
+    function GetBumper: string; virtual;
     function GetQuestionText: string; virtual;
 
     function GetCorrectText: string; virtual;
@@ -43,20 +38,46 @@ type
     function GetAlternateSpelling1: string; virtual;
     function GetAlternateSpelling2: string; virtual;
 
-    procedure SetId(AId: Integer);
-    procedure SetCategory(const ACategory: string);
-    procedure SetIsFamilyFriendly(AValue: Boolean);
+    procedure SetId(AId: Integer); virtual;
+    procedure SetCategory(const ACategory: string); virtual;
+    procedure SetIsFamilyFriendly(AValue: Boolean); virtual;
     procedure SetIsPortrait(AValue: Boolean); virtual;
-    procedure SetBumper(const AValue: string);
+    procedure SetBumper(const AValue: string); virtual;
     procedure SetQuestionText(const AValue: string); virtual;
 
     procedure SetQuestionText1(const AValue: string); virtual;
     procedure SetQuestionText2(const AValue: string); virtual;
+    procedure SetCorrectText1(const AValue: string); virtual;
+    procedure SetCorrectText2(const AValue: string); virtual;
+    procedure SetAlternateSpelling1(const AValue: string); virtual;
+    procedure SetAlternateSpelling2(const AValue: string); virtual;
+
+    procedure SetCorrectText(const AValue: string); virtual;
+    procedure SetSuggestions(const AValue: string); virtual;
+    procedure SetAlternateSpelling(const AValue: string); virtual;
   end;
 
-  TCategoryData_FibbageXL = class(TCategoryDataBase);
+  TCategoryData = class(TCategoryDataBase)
+  private
+    FX: Boolean;
+    FId: Integer;
+    FCategory: string;
+    FBumper: string;
+  public
+    function GetId: Integer; override;
+    function GetCategory: string; override;
+    function GetIsFamilyFriendly: Boolean; override;
+    function GetBumper: string; override;
 
-  TCategoryData_Fibbage3PartyPack4 = class(TCategoryDataBase)
+    procedure SetId(AId: Integer); override;
+    procedure SetCategory(const ACategory: string); override;
+    procedure SetIsFamilyFriendly(AValue: Boolean); override;
+    procedure SetBumper(const AValue: string); override;
+  end;
+
+  TCategoryData_FibbageXL = class(TCategoryData);
+
+  TCategoryData_Fibbage3PartyPack4 = class(TCategoryData)
   private
     FPersonal: string;
     FPortrait: Boolean;
@@ -66,46 +87,81 @@ type
     function GetIsPortrait: Boolean; override;
   end;
 
-  TCategoryDataShortie_Fibbage4PartyPack9 = class(TCategoryData_Fibbage3PartyPack4)
+  TCategoryDataShortie_Fibbage4PartyPack9 = class(TCategoryDataBase)
   private
+    FId: string;
+    FBumper: string;
+    FCategory: string;
+    FX: Boolean;
+    FUs: Boolean;
     FAlternateSpellings: TArray<string>;
     FCorrectText: string;
     FExtraCategories: TArray<string>;
     FIsValid: string;
+    FPersonal: string;
     FQuestionText: string;
     FSuggestions: TArray<string>;
   public
+    function GetId: Integer; override;
+    function GetIsFamilyFriendly: Boolean; override;
+
+    procedure SetId(AId: Integer); override;
+    procedure SetIsFamilyFriendly(AValue: Boolean); override;
+
     function GetQuestionText: string; override;
     procedure SetQuestionText(const AValue: string); override;
 
     function GetCorrectText: string; override;
+    procedure SetCorrectText(const AValue: string); override;
+
     function GetSuggestions: string; override;
+    procedure SetSuggestions(const AValue: string); override;
+
     function GetAlternateSpelling: string; override;
+    procedure SetAlternateSpelling(const AValue: string); override;
   end;
 
-  TCategoryDataFinal_Fibbage4PartyPack9 = class(TCategoryData_Fibbage3PartyPack4)
+  TCategoryDataFinal_Fibbage4PartyPack9 = class(TCategoryDataBase)
   private
+    FUs: Boolean;
+    FX: Boolean;
     FAlternateSpellings1: TArray<string>;
     FAlternateSpellings2: TArray<string>;
     FCorrectText1: string;
     FCorrectText2: string;
+    FId: string;
     FExtraCategories: TArray<string>;
     FIsValid: string;
     FQuestionText1: string;
     FQuestionText2: string;
     FSuggestions: TArray<string>;
   public
+    function GetId: Integer; override;
+    function GetIsFamilyFriendly: Boolean; override;
+
+    procedure SetId(AId: Integer); override;
+    procedure SetIsFamilyFriendly(AValue: Boolean); override;
+
     function GetQuestionText1: string; override;
-    function GetQuestionText2: string; override;
     procedure SetQuestionText1(const AValue: string); override;
+
+    function GetQuestionText2: string; override;
     procedure SetQuestionText2(const AValue: string); override;
 
     function GetCorrectText1: string; override;
+    procedure SetCorrectText1(const AValue: string); override;
+
     function GetCorrectText2: string; override;
+    procedure SetCorrectText2(const AValue: string); override;
 
     function GetSuggestions: string; override;
+    procedure SetSuggestions(const AValue: string); override;
+
     function GetAlternateSpelling1: string; override;
+    procedure SetAlternateSpelling1(const AValue: string); override;
+
     function GetAlternateSpelling2: string; override;
+    procedure SetAlternateSpelling2(const AValue: string); override;
   end;
 
   TBaseCategories = class(TInterfacedObject, ICategories)
@@ -510,6 +566,20 @@ begin
   SetIsFamilyFriendly(AObj.GetIsFamilyFriendly);
   SetBumper(AObj.GetBumper);
   SetIsPortrait(AObj.GetIsPortrait);
+
+  SetQuestionText(AObj.GetQuestionText);
+  SetQuestionText1(AObj.GetQuestionText1);
+  SetQuestionText2(AObj.GetQuestionText2);
+
+  SetCorrectText(AObj.GetCorrectText);
+  SetCorrectText1(AObj.GetCorrectText1);
+  SetCorrectText2(AObj.GetCorrectText2);
+
+  SetAlternateSpelling(AObj.GetAlternateSpelling);
+  SetAlternateSpelling1(AObj.GetAlternateSpelling1);
+  SetAlternateSpelling2(AObj.GetAlternateSpelling2);
+
+  SetSuggestions(AObj.GetSuggestions);
 end;
 
 function TCategoryDataBase.GetAlternateSpelling: string;
@@ -529,12 +599,12 @@ end;
 
 function TCategoryDataBase.GetBumper: string;
 begin
-  Result := FBumper;
+  Result := '';
 end;
 
 function TCategoryDataBase.GetCategory: string;
 begin
-  Result := FCategory;
+  Result := ''
 end;
 
 function TCategoryDataBase.GetCorrectText: string;
@@ -554,12 +624,12 @@ end;
 
 function TCategoryDataBase.GetId: Integer;
 begin
-  Result := FId;
+  Result := -1;
 end;
 
 function TCategoryDataBase.GetIsFamilyFriendly: Boolean;
 begin
-  Result := not FX;
+  Result := False;
 end;
 
 function TCategoryDataBase.GetIsPortrait: Boolean;
@@ -587,24 +657,54 @@ begin
   Result := '';
 end;
 
-procedure TCategoryDataBase.SetBumper(const AValue: string);
+procedure TCategoryDataBase.SetAlternateSpelling;
 begin
-  FBumper := AValue;
+  {}
 end;
 
-procedure TCategoryDataBase.SetCategory(const ACategory: string);
+procedure TCategoryDataBase.SetAlternateSpelling1;
 begin
-  FCategory := ACategory;
+  {}
 end;
 
-procedure TCategoryDataBase.SetId(AId: Integer);
+procedure TCategoryDataBase.SetAlternateSpelling2;
 begin
-  FId := AId;
+  {}
 end;
 
-procedure TCategoryDataBase.SetIsFamilyFriendly(AValue: Boolean);
+procedure TCategoryDataBase.SetBumper;
 begin
-  FX := not AValue;
+  {}
+end;
+
+procedure TCategoryDataBase.SetCategory;
+begin
+  {}
+end;
+
+procedure TCategoryDataBase.SetCorrectText;
+begin
+  {}
+end;
+
+procedure TCategoryDataBase.SetCorrectText1;
+begin
+  {}
+end;
+
+procedure TCategoryDataBase.SetCorrectText2;
+begin
+  {}
+end;
+
+procedure TCategoryDataBase.SetId;
+begin
+  {}
+end;
+
+procedure TCategoryDataBase.SetIsFamilyFriendly;
+begin
+  {}
 end;
 
 procedure TCategoryDataBase.SetIsPortrait;
@@ -623,6 +723,11 @@ begin
 end;
 
 procedure TCategoryDataBase.SetQuestionText2;
+begin
+  {}
+end;
+
+procedure TCategoryDataBase.SetSuggestions;
 begin
   {}
 end;
@@ -943,7 +1048,8 @@ begin
     var fs := TFileStream.Create(APath, fmOpenRead);
     var sr := TStreamReader.Create(fs);
     try
-      Result := TJson.JsonToObject<TCategoriesShortie_Fibbage4PartyPack9>(sr.ReadToEnd)
+      var res := TJson.JsonToObject<TCategoriesShortie_Fibbage4PartyPack9>(sr.ReadToEnd);
+      Result := res;
     finally
       sr.Free;
       fs.Free;
@@ -1070,6 +1176,16 @@ begin
   Result := FCorrectText;
 end;
 
+function TCategoryDataShortie_Fibbage4PartyPack9.GetId: Integer;
+begin
+  Result := StrToIntDef(FId, 0);
+end;
+
+function TCategoryDataShortie_Fibbage4PartyPack9.GetIsFamilyFriendly: Boolean;
+begin
+  Result := not FX;
+end;
+
 function TCategoryDataShortie_Fibbage4PartyPack9.GetQuestionText: string;
 begin
   Result := FQuestionText;
@@ -1080,10 +1196,39 @@ begin
   Result := string.Join(',', FSuggestions);
 end;
 
+procedure TCategoryDataShortie_Fibbage4PartyPack9.SetAlternateSpelling(
+  const AValue: string);
+begin
+  FAlternateSpellings := AValue.Split([',']);
+end;
+
+procedure TCategoryDataShortie_Fibbage4PartyPack9.SetCorrectText(
+  const AValue: string);
+begin
+  FCorrectText := AValue;
+end;
+
+procedure TCategoryDataShortie_Fibbage4PartyPack9.SetId(AId: Integer);
+begin
+  FId := IntToStr(AId);
+end;
+
+procedure TCategoryDataShortie_Fibbage4PartyPack9.SetIsFamilyFriendly(
+  AValue: Boolean);
+begin
+  FX := AValue;
+end;
+
 procedure TCategoryDataShortie_Fibbage4PartyPack9.SetQuestionText(
   const AValue: string);
 begin
   FQuestionText := AValue;
+end;
+
+procedure TCategoryDataShortie_Fibbage4PartyPack9.SetSuggestions(
+  const AValue: string);
+begin
+  FSuggestions := AValue.Split([',']);
 end;
 
 { TCategoryDataFinal_Fibbage4PartyPack9 }
@@ -1108,6 +1253,16 @@ begin
   Result := FCorrectText2;
 end;
 
+function TCategoryDataFinal_Fibbage4PartyPack9.GetId: Integer;
+begin
+  Result := StrToIntDef(FId, 0);
+end;
+
+function TCategoryDataFinal_Fibbage4PartyPack9.GetIsFamilyFriendly: Boolean;
+begin
+  Result := not FX;
+end;
+
 function TCategoryDataFinal_Fibbage4PartyPack9.GetQuestionText1: string;
 begin
   Result := FQuestionText1;
@@ -1123,6 +1278,41 @@ begin
   Result := string.Join(',', FSuggestions);
 end;
 
+procedure TCategoryDataFinal_Fibbage4PartyPack9.SetAlternateSpelling1(
+  const AValue: string);
+begin
+  FAlternateSpellings1 := AValue.Split([',']);
+end;
+
+procedure TCategoryDataFinal_Fibbage4PartyPack9.SetAlternateSpelling2(
+  const AValue: string);
+begin
+  FAlternateSpellings2 := AValue.Split([',']);
+end;
+
+procedure TCategoryDataFinal_Fibbage4PartyPack9.SetCorrectText1(
+  const AValue: string);
+begin
+  FCorrectText1 := AValue;
+end;
+
+procedure TCategoryDataFinal_Fibbage4PartyPack9.SetCorrectText2(
+  const AValue: string);
+begin
+  FCorrectText2 := AValue;
+end;
+
+procedure TCategoryDataFinal_Fibbage4PartyPack9.SetId(AId: Integer);
+begin
+  FId := IntToStr(AId);
+end;
+
+procedure TCategoryDataFinal_Fibbage4PartyPack9.SetIsFamilyFriendly(
+  AValue: Boolean);
+begin
+  FX := AValue;
+end;
+
 procedure TCategoryDataFinal_Fibbage4PartyPack9.SetQuestionText1(
   const AValue: string);
 begin
@@ -1133,6 +1323,54 @@ procedure TCategoryDataFinal_Fibbage4PartyPack9.SetQuestionText2(
   const AValue: string);
 begin
   FQuestionText2 := AValue;
+end;
+
+procedure TCategoryDataFinal_Fibbage4PartyPack9.SetSuggestions(
+  const AValue: string);
+begin
+  FSuggestions := AValue.Split([',']);
+end;
+
+{ TCategoryData }
+
+function TCategoryData.GetBumper: string;
+begin
+  Result := FBumper;
+end;
+
+function TCategoryData.GetCategory: string;
+begin
+  Result := FCategory;
+end;
+
+function TCategoryData.GetId: Integer;
+begin
+  Result := FId;
+end;
+
+function TCategoryData.GetIsFamilyFriendly: Boolean;
+begin
+  Result := not FX;
+end;
+
+procedure TCategoryData.SetBumper(const AValue: string);
+begin
+  FBumper := AValue;
+end;
+
+procedure TCategoryData.SetCategory(const ACategory: string);
+begin
+  FCategory := ACategory;
+end;
+
+procedure TCategoryData.SetId(AId: Integer);
+begin
+  FId := AId;
+end;
+
+procedure TCategoryData.SetIsFamilyFriendly(AValue: Boolean);
+begin
+  FX := AValue;
 end;
 
 end.

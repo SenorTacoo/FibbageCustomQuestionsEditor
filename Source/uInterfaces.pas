@@ -44,6 +44,10 @@ type
 
     procedure SetQuestionText1(const AValue: string);
     procedure SetQuestionText2(const AValue: string);
+    procedure SetCorrectText1(const AValue: string);
+    procedure SetCorrectText2(const AValue: string);
+    procedure SetAlternateSpelling1(const AValue: string);
+    procedure SetAlternateSpelling2(const AValue: string);
 
     procedure CloneFrom(AObj: ICategory);
   end;
@@ -92,6 +96,7 @@ type
     function GetHaveBumperAudio: Boolean;
 
     function GetQuestionAudioData: TBytes;
+    function GetQuestionAudioData2: TBytes;
     function GetAnswerAudioData: TBytes;
     function GetBumperAudioData: TBytes;
     function GetCategoryObj: ICategory;
@@ -105,7 +110,6 @@ type
     procedure SetQuestionAudioData(const AData: TBytes);
     procedure SetQuestionAudioData2(const AData: TBytes);
     procedure SetAnswerAudioData(const AData: TBytes);
-    procedure SetAnswerAudioData2(const AData: TBytes);
     procedure SetBumperAudioData(const AData: TBytes);
     procedure SetCategoryObj(ACategory: ICategory);
 

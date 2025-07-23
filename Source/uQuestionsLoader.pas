@@ -43,8 +43,6 @@ type
     [JSONMarshalledAttribute(False)]
     FAnswerAudioBytes: TBytes;
     [JSONMarshalledAttribute(False)]
-    FAnswerAudioBytes2: TBytes;
-    [JSONMarshalledAttribute(False)]
     FBumperAudioBytes: TBytes;
     [JSONMarshalledAttribute(False)]
     FPortraitBytes: TBytes;
@@ -55,8 +53,9 @@ type
     procedure SetHaveQuestionAudio(AHave: Boolean);
     procedure SetHaveAnswerAudio(AHave: Boolean);
     procedure SetHaveBumperAudio(AHave: Boolean);
-    
+
     function GetQuestionAudioName: string;
+    function GetQuestionAudioName2: string;
     function GetAnswerAudioName: string;
     function GetBumperAudioName: string;
     function GetPortraitName: string;
@@ -80,6 +79,7 @@ type
     function GetAnswer: string;
     function GetAlternateSpelling: string;
     function GetHaveQuestionAudio: Boolean;
+    function GetHaveQuestionAudio2: Boolean;
     function GetHaveAnswerAudio: Boolean;
     function GetHaveBumperAudio: Boolean;
     function GetHavePortrait: Boolean;
@@ -90,6 +90,7 @@ type
     procedure SetAlternateSpelling(const AAlternateSpelling: string);
 
     function GetQuestionAudioData: TBytes;
+    function GetQuestionAudioData2: TBytes;
     function GetAnswerAudioData: TBytes;
     function GetBumperAudioData: TBytes;
     function GetPortraitData: TBytes;
@@ -100,7 +101,6 @@ type
     procedure SetPortraitData(const AData: TBytes);
 
     procedure SetQuestionAudioData2(const AData: TBytes);
-    procedure SetAnswerAudioData2(const AData: TBytes);
 
     function GetCategoryObj: ICategory;
     procedure SetCategoryObj(ACategory: ICategory);
@@ -125,7 +125,6 @@ type
     FContentDir: string;
     FShortieQuestions: TQuestionList;
     FFinalQuestions: TQuestionList;
-    function InnerCreateNewQuestion: IQuestion;
     procedure FillQuestions(const AMainDir: string; AQuestionsList: TList<IQuestion>);
     function ReadFileData(const APath: string): TBytes;
   protected
@@ -276,7 +275,7 @@ begin
     if SameText('HasPic', field.N) then
     begin
       Result := StrToBoolDef(field.v, False);
-      Break;
+      Exit;
     end;
 
   for var field in FFields do
@@ -292,6 +291,24 @@ begin
   Result := False;
   for var field in FFields do
     if SameText('HasQuestionAudio', field.N) then
+    begin
+      Result := StrToBoolDef(field.V, False);
+      Exit;
+    end;
+
+  for var field in FFields do
+    if SameText('HasQuestionAudio1', field.N) then
+    begin
+      Result := StrToBoolDef(field.V, False);
+      Break;
+    end;
+end;
+
+function TQuestionItem.GetHaveQuestionAudio2: Boolean;
+begin
+  Result := False;
+  for var field in FFields do
+    if SameText('HasQuestionAudio2', field.N) then
     begin
       Result := StrToBoolDef(field.V, False);
       Break;
@@ -342,9 +359,24 @@ begin
       Exit(field.V);
 end;
 
+function TQuestionItem.GetQuestionAudioName2: string;
+begin
+  for var field in FFields do
+    if SameText('QuestionAudio2', field.N) then
+    begin
+      Result := field.V;
+      Exit;
+    end;
+end;
+
 function TQuestionItem.GetQuestionAudioData: TBytes;
 begin
   Result := FQuestionAudioBytes;
+end;
+
+function TQuestionItem.GetQuestionAudioData2: TBytes;
+begin
+  Result := FQuestionAudioBytes2;
 end;
 
 function TQuestionItem.GetQuestionAudioName: string;
@@ -354,7 +386,13 @@ begin
     if SameText('QuestionAudio', field.N) then
     begin
       Result := field.V;
-      Break;
+      Exit;
+    end;
+  for var field in FFields do
+    if SameText('QuestionAudio1', field.N) then
+    begin
+      Result := field.V;
+      Exit;
     end;
 end;
 
@@ -389,6 +427,12 @@ begin
     else
       LogE('Have question audio but audio file is empty');
 
+  if GetHaveQuestionAudio2 then
+    if Length(GetQuestionAudioData2) > 0 then
+      CreateFile(TPath.Combine(dir, GetQuestionAudioName2 + '.ogg'), GetQuestionAudioData2)
+    else
+      LogE('Have question audio but audio file is empty');
+
   if GetHaveAnswerAudio then
     if Length(GetAnswerAudioData) > 0 then
       CreateFile(TPath.Combine(dir, GetAnswerAudioName + '.ogg'), GetAnswerAudioData)
@@ -416,6 +460,7 @@ begin
   SetAnswer(AObj.GetAnswer);
   SetAlternateSpelling(AObj.GetAlternateSpelling);
   SetQuestionAudioData(AObj.GetQuestionAudioData);
+  SetQuestionAudioData2(AObj.GetQuestionAudioData2);
   SetAnswerAudioData(AObj.GetAnswerAudioData);
   SetBumperAudioData(AObj.GetBumperAudioData);
   SetQuestionType(AObj.GetQuestionType);
@@ -465,12 +510,6 @@ begin
     SetAnswerAudioName('')
   else
     SetAnswerAudioName(ChangeFileExt(TPath.GetRandomFileName, ''));
-end;
-
-procedure TQuestionItem.SetAnswerAudioData2(const AData: TBytes);
-begin
-  SetLength(FAnswerAudioBytes2, Length(AData));
-  Move(AData[0], FAnswerAudioBytes2[0], Length(AData));
 end;
 
 procedure TQuestionItem.SetAnswerAudioName(const AName: string);
@@ -711,9 +750,16 @@ end;
 procedure TQuestionItem.PrepareEmptyValues;
 begin
   for var field in Fields do
+  begin
     if SameText('AlternateSpellings', field.N) then
       if field.V.IsEmpty then
         field.V := EMPTY_STRING;
+
+    if SameText('SetupVideo', field.N) or SameText('RevealVideo', field.N) or
+      SameText('RevealSubtitles', field.N) or SameText('SetupSubtitles', field.N) then
+      if field.T.IsEmpty then
+        field.T := EMPTY_STRING;
+  end;
 end;
 
 { TQuestionsBase }
@@ -743,14 +789,6 @@ begin
   inherited;
   FShortieQuestions := TList<IQuestion>.Create;
   FFinalQuestions := TList<IQuestion>.Create;
-end;
-
-function TQuestionsBase.InnerCreateNewQuestion: IQuestion;
-begin
-  var res := TQuestionItem.Create;
-  res.SetDefaults;
-
-  Result := res;
 end;
 
 procedure TQuestionsBase.LoadFinals;
@@ -787,17 +825,21 @@ end;
 
 function TQuestionsBase.CreateNewFinalQuestion: IQuestion;
 begin
-  Result := InnerCreateNewQuestion;
-  Result.SetQuestionType(qtFinal);
+  var res := TQuestionItem.Create;
+  res.SetDefaults;
+  res.SetQuestionType(qtFinal);
 
+  Result := res;
   FFinalQuestions.Add(Result);
 end;
 
 function TQuestionsBase.CreateNewShortieQuestion: IQuestion;
 begin
-  Result := InnerCreateNewQuestion;
-  Result.SetQuestionType(qtShortie);
+  var res := TQuestionItem.Create;
+  res.SetDefaults;
+  res.SetQuestionType(qtShortie);
 
+  Result := res;
   FShortieQuestions.Add(Result);
 end;
 
@@ -840,6 +882,9 @@ begin
 
         if singleQuestion.GetHaveQuestionAudio then
           singleQuestion.FQuestionAudioBytes := ReadFileData(TPath.Combine(dir, singleQuestion.GetQuestionAudioName + '.ogg'));
+
+        if singleQuestion.GetHaveQuestionAudio2 then
+          singleQuestion.FQuestionAudioBytes2 := ReadFileData(TPath.Combine(dir, singleQuestion.GetQuestionAudioName2 + '.ogg'));
 
         if singleQuestion.GetHaveAnswerAudio then
           singleQuestion.FAnswerAudioBytes := ReadFileData(TPath.Combine(dir, singleQuestion.GetAnswerAudioName + '.ogg'));
