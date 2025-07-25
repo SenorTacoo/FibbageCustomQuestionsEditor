@@ -38,6 +38,14 @@ type
     procedure SetShowInfoAboutDuplicatedCategories(const Value: Boolean);
     function GetShowInfoAboutTooFewSuggestions: Boolean;
     procedure SetShowInfoAboutTooFewSuggestions(const Value: Boolean);
+    function GetShowInfoAboutTooFewShortieQuestions: Boolean;
+    procedure SetShowInfoAboutTooFewShortieQuestions(const Value: Boolean);
+    function GetFibbage3PartyPack4Path: string;
+    function GetFibbageXLPartyPack1Path: string;
+    procedure SetFibbage3PartyPack4Path(const Value: string);
+    procedure SetFibbageXLPartyPack1Path(const Value: string);
+    function GetFibbage4PartyPack9Path: string;
+    procedure SetFibbage4PartyPack9Path(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -48,9 +56,15 @@ type
     property InputDeviceName: string read GetInputDeviceName write SetInputDeviceName;
     property LogBroker: string read GetLogBroker write SetLogBroker;
     property LogService: string read GetLogService write SetLogService;
-    property FibbagePath: string read GetFibbagePath write SetFibbagePath;
+
+    property FibbageXLPath: string read GetFibbagePath write SetFibbagePath;
+    property FibbageXLPartyPack1Path: string read GetFibbageXLPartyPack1Path write SetFibbageXLPartyPack1Path;
+    property Fibbage3PartyPack4Path: string read GetFibbage3PartyPack4Path write SetFibbage3PartyPack4Path;
+    property Fibbage4PartyPack9Path: string read GetFibbage4PartyPack9Path write SetFibbage4PartyPack9Path;
+
     property ShowInfoAboutDuplicatedCategories: Boolean read GetShowInfoAboutDuplicatedCategories write SetShowInfoAboutDuplicatedCategories;
     property ShowInfoAboutTooFewSuggestions: Boolean read GetShowInfoAboutTooFewSuggestions write SetShowInfoAboutTooFewSuggestions;
+    property ShowInfoAboutTooFewShortieQuestions: Boolean read GetShowInfoAboutTooFewShortieQuestions write SetShowInfoAboutTooFewShortieQuestions;
   end;
 
 implementation
@@ -80,9 +94,24 @@ begin
   Result := FIniFile.ReadBool('Style', 'DarkMode', False);
 end;
 
+function TAppConfig.GetFibbage3PartyPack4Path: string;
+begin
+  Result := FIniFile.ReadString('General', 'Fibbage3PartyPack4Path', '');
+end;
+
+function TAppConfig.GetFibbage4PartyPack9Path: string;
+begin
+  Result := FIniFile.ReadString('General', 'Fibbage4PartyPack9Path', '');
+end;
+
 function TAppConfig.GetFibbagePath: string;
 begin
   Result := FIniFile.ReadString('General', 'FibbagePath', '');
+end;
+
+function TAppConfig.GetFibbageXLPartyPack1Path: string;
+begin
+  Result := FIniFile.ReadString('General', 'FibbageXLPartyPack1Path', '');
 end;
 
 function TAppConfig.GetInputDeviceName: string;
@@ -122,6 +151,11 @@ begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutDuplicatedCategories', True);
 end;
 
+function TAppConfig.GetShowInfoAboutTooFewShortieQuestions: Boolean;
+begin
+  Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewShortieQuestions', True);
+end;
+
 function TAppConfig.GetShowInfoAboutTooFewSuggestions: Boolean;
 begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewSuggestions', True);
@@ -132,9 +166,24 @@ begin
   FIniFile.WriteBool('Style', 'DarkMode', Value);
 end;
 
+procedure TAppConfig.SetFibbage3PartyPack4Path(const Value: string);
+begin
+  FIniFile.WriteString('General', 'Fibbage3PartyPack4Path', Value);
+end;
+
+procedure TAppConfig.SetFibbage4PartyPack9Path(const Value: string);
+begin
+  FIniFile.WriteString('General', 'Fibbage4PartyPack9Path', Value);
+end;
+
 procedure TAppConfig.SetFibbagePath(const Value: string);
 begin
   FIniFile.WriteString('General', 'FibbagePath', Value);
+end;
+
+procedure TAppConfig.SetFibbageXLPartyPack1Path(const Value: string);
+begin
+  FIniFile.WriteString('General', 'FibbageXLPartyPack1Path', Value);
 end;
 
 procedure TAppConfig.SetInputDeviceName(const Value: string);
@@ -165,6 +214,12 @@ end;
 procedure TAppConfig.SetShowInfoAboutDuplicatedCategories(const Value: Boolean);
 begin
   FIniFile.WriteBool('General', 'ShowInfoAboutDuplicatedCategories', Value);
+end;
+
+procedure TAppConfig.SetShowInfoAboutTooFewShortieQuestions(
+  const Value: Boolean);
+begin
+  FIniFile.WriteBool('General', 'ShowInfoAboutTooFewShortieQuestions', Value);
 end;
 
 procedure TAppConfig.SetShowInfoAboutTooFewSuggestions(const Value: Boolean);

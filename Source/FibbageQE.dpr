@@ -10,7 +10,6 @@ uses
   uQuestionsLoader in 'uQuestionsLoader.pas',
   uCategoriesLoader in 'uCategoriesLoader.pas',
   uFibbageContent in 'uFibbageContent.pas',
-  uSpringContainer in 'uSpringContainer.pas',
   uRecordForm in 'uRecordForm.pas' {RecordForm},
   uLastQuestionsLoader in 'uLastQuestionsLoader.pas',
   uLog in 'uLog.pas',
@@ -18,7 +17,8 @@ uses
   uContentConfiguration in 'uContentConfiguration.pas',
   uAsyncAction in 'uAsyncAction.pas',
   uProjectActivator in 'uProjectActivator.pas',
-  uUserDialog in 'uUserDialog.pas' {UserDialog};
+  uUserDialog in 'uUserDialog.pas' {UserDialog},
+  uGetGameTypeDlg in 'uGetGameTypeDlg.pas' {GetGameTypeDlg};
 
 {$R *.res}
 

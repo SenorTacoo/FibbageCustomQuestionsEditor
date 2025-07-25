@@ -7,24 +7,26 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
   FMX.Edit, FMX.Controls.Presentation, FMX.MultiView, FMX.TabControl,
   System.Actions, FMX.ActnList, FMX.StdActns, FMX.Layouts, uConfig,
-  Spring.Container, uInterfaces, uPathChecker, System.IOUtils,
+  uInterfaces, uPathChecker, System.IOUtils,
   FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView.Adapters.Base,
   FMX.ListView, Data.Bind.GenData, System.Rtti, System.Bindings.Outputs,
   Fmx.Bind.Editors, Data.Bind.EngExt, Fmx.Bind.DBEngExt, Data.Bind.Components,
-  Data.Bind.ObjectScope, FMX.Platform, uQuestionsLoader, uSpringContainer, System.Math,
+  Data.Bind.ObjectScope, FMX.Platform, uQuestionsLoader, System.Math,
   FMX.Memo.Types, FMX.ScrollBox, FMX.Memo, FMX.Media,
   ACS_Classes, ACS_DXAudio, ACS_Vorbis, ACS_Converters, ACS_Wave,
   NewACDSAudio, System.Generics.Collections, uRecordForm, FMX.ListBox, 
   System.Messaging, System.DateUtils, uLog, uCategoriesLoader,
   FMX.Menus, System.StrUtils, uGetTextDlg, FMX.Objects, FMX.DialogService, uAsyncAction,
+  uContentConfiguration, uFibbageContent, uProjectActivator, uLastQuestionsLoader,
   FMX.Effects, Winapi.Windows, Winapi.ShellAPI, FMX.Platform.Win, Grijjy.CloudLogging,
-  uUserDialog;
+  uUserDialog, uGetGameTypeDlg;
 
 type
   TQuestionScrollItem = class(TPanel)
   private
     FDetails: TLabel;
     FQuestion: TLabel;
+    FContent: IFibbageContent;
     FOrgQuestion: IQuestion;
     FOrgCategory: ICategory;
     FSelected: Boolean;
@@ -32,7 +34,7 @@ type
   protected
     procedure Resize; override;
   public
-    constructor CreateItem(AOwner: TComponent; AQuestion: IQuestion);
+    constructor CreateItem(AOwner: TComponent; AContent: IFibbageContent; AQuestion: IQuestion);
     procedure RefreshData;
 
     property Selected: Boolean read FSelected write SetSelected;
@@ -49,6 +51,7 @@ type
     procedure SelectPrev;
     function Selected: TQuestionScrollItem;
     procedure SelectQuestionWithId(AId: Integer);
+    procedure SelectCategoryWithId(AId: Int32);
   end;
 
   TProjectScrollItem = class(TPanel)
@@ -127,7 +130,7 @@ type
     tiQuestions: TTabItem;
     tcQuestions: TTabControl;
     aGoToAllQuestions: TChangeTabAction;
-    GridPanelLayout1: TGridPanelLayout;
+    gplSingleItemAudio: TGridPanelLayout;
     bSingleItemQuestionAudio: TButton;
     bSingleItemCorrectAudio: TButton;
     pSingleItemId: TPanel;
@@ -151,7 +154,7 @@ type
     lProjectQuestions: TLabel;
     ToolBar3: TToolBar;
     lNewQuestion: TLabel;
-    GridPanelLayout2: TGridPanelLayout;
+    gplQuestions: TGridPanelLayout;
     bShortieQuestions: TButton;
     bFinalQuestions: TButton;
     bNewProject: TButton;
@@ -244,9 +247,9 @@ type
     aSaveChangesSettings: TAction;
     aCancelChangesSettings: TAction;
     Layout2: TLayout;
-    lSettingsGamePath: TLabel;
-    eSettingsGamePath: TEdit;
-    bSettingsGamePath: TButton;
+    lSettingsFibbageXLPath: TLabel;
+    eSettingsFibbageXLPath: TEdit;
+    bSettingsFibbageXLPath: TButton;
     aGetGamePath: TAction;
     Layout3: TLayout;
     bRefreshQuestionId: TButton;
@@ -261,6 +264,42 @@ type
     cbShowCategoryDuplicatedInfo: TCheckBox;
     cbShowDialogAboutTooFewSuggestions: TCheckBox;
     rDim: TRectangle;
+    cbShowDialogAboutTooFewShortieQuestions: TCheckBox;
+    Layout4: TLayout;
+    bSettingsFibbage3PP4Path: TButton;
+    lSettingsFibbage3PP4Path: TLabel;
+    eSettingsFibbage3PP4Path: TEdit;
+    Layout5: TLayout;
+    bSettingsFibbageXLPP1Path: TButton;
+    lSettingsFibbagePP1Path: TLabel;
+    eSettingsFibbageXLPP1Path: TEdit;
+    miMigrate: TMenuItem;
+    miMigrateToFibbageXL: TMenuItem;
+    miMigrateToFibbage3: TMenuItem;
+    aMigrateToFibbageXL: TAction;
+    aMigrateToFibbage3: TAction;
+    MenuItem4: TMenuItem;
+    aMigrateToFibbageXLPartyPack1: TAction;
+    aSaveProjectAndInitialize: TAction;
+    lySingleItemQuestion2: TLayout;
+    pSingleItemQuestion2: TPanel;
+    lSingleItemQuestion2: TLabel;
+    mSingleItemQuestion2: TMemo;
+    lySingleItemPossibleAnswers2: TLayout;
+    lySingleItemAnswer2: TLayout;
+    pSingleItemAnswer2: TPanel;
+    lSingleItemAnswer2: TLabel;
+    mSingleItemAnswer2: TMemo;
+    lySingleItemAlternateSpelling2: TLayout;
+    pSingleItemAlternateSpelling2: TPanel;
+    lSingleItemAlternateSpelling2: TLabel;
+    mSingleItemAlternateSpelling2: TMemo;
+    Splitter4: TSplitter;
+    bSingleItemQuestionAudio2: TButton;
+    Layout6: TLayout;
+    bSettingsFibbage4PP9Path: TButton;
+    lSettingsFibbage4PP9Path: TLabel;
+    eSettingsFibbage4PP9Path: TEdit;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -305,11 +344,19 @@ type
     procedure aSaveChangesSettingsExecute(Sender: TObject);
     procedure aCancelChangesSettingsExecute(Sender: TObject);
     procedure bSettingsClick(Sender: TObject);
-    procedure aGetGamePathExecute(Sender: TObject);
     procedure bRefreshQuestionIdClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure aSaveProjectAndCloseExecute(Sender: TObject);
     procedure lFamilyFriendlyClick(Sender: TObject);
+    procedure bSettingsFibbageXLPathClick(Sender: TObject);
+    procedure bSettingsFibbageXLPP1PathClick(Sender: TObject);
+    procedure bSettingsFibbage3PP4PathClick(Sender: TObject);
+    procedure aMigrateToFibbageXLExecute(Sender: TObject);
+    procedure aMigrateToFibbage3Execute(Sender: TObject);
+    procedure aMigrateToFibbageXLPartyPack1Execute(Sender: TObject);
+    procedure aSaveProjectAndInitializeExecute(Sender: TObject);
+    procedure bSingleItemQuestionAudio2Click(Sender: TObject);
+    procedure bSettingsFibbage4PP9PathClick(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -334,11 +381,23 @@ type
 
     FProjectVisItems: TProjectScrollItems;
 
+    procedure OnUnhandledException(Sender: TObject; E: Exception);
     procedure GoToQuestionDetails;
+    procedure HideUnusedSingleQuestionControls;
+    procedure FillControlsFromQuestion;
+    procedure FillControlsFromCategory;
+
     procedure AddLastChoosenProject;
     procedure InitializeLastQuestionProjects;
+    procedure SetButtonPressed(AButton: TButton);
+    procedure DisableButton(AButton: TButton);
+
+    procedure FillQuestionFromControls;
+    procedure FillCategoryFromControls;
+
     procedure GoToFinalQuestions;
     procedure GoToShortieQuestions;
+
     procedure GoToAllQuestions;
     procedure GoToHome;
     procedure GoToSettings;
@@ -346,21 +405,30 @@ type
     procedure PrepareMultiViewButtons(AActTab: TAppTab);
     procedure OnProjectItemDoubleClick(Sender: TObject);
     procedure OnProjectItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+
     procedure OnShortieQuestionItemDoubleClick(Sender: TObject);
     procedure OnFinalQuestionItemDoubleClick(Sender: TObject);
+
     procedure OnShortieQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure OnFinalQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+
     procedure RemoveSelectedShortieQuestions;
     procedure RemoveSelectedFinalQuestions;
+
     procedure FillFinalScrollBox;
     procedure FillShortiesScrollBox;
+
     procedure RefreshSelectedFinalQuestion;
     procedure RefreshSelectedShortieQuestion;
+
     procedure CreateNewFinalQuestion;
     procedure CreateNewShortieQuestion;
+
     procedure SetDarkMode(AEnabled: Boolean);
     function GetProjectName(out AName: string): Boolean;
+    function GetGameType(out AType: TGameType): Boolean;
     function GetProjectPath(out APath: string): Boolean;
+    function GetDestinationPath(out APath: string): Boolean;
     procedure ProcessInitializeProject;
     procedure ClearPreviousData;
     procedure ClearPreviousProjects;
@@ -380,8 +448,11 @@ type
     procedure ActivateProjectProc;
     procedure OnActivateEnd;
     procedure OnActivateStart;
-    function GetFibbagePath(out APath: string): Boolean;
+    function GetFibbageXLPath(out APath: string): Boolean;
+    function GetFibbage3Path(out APath: string): Boolean;
+    function GetFibbage4Path(out APath: string): Boolean;
     procedure OnPostSaveClose;
+    procedure OnPostSaveInitialize;
     procedure ProcessKeyDown_Questions(var Key: Word; Shift: TShiftState);
     procedure ProcessKeyDown_QuestionsProject(var Key: Word;
       Shift: TShiftState);
@@ -390,6 +461,7 @@ type
     function IsCategoryDuplicated: Boolean;
     function ShowInfoAboutDuplicatedCategories(const AInfo: string): Boolean;
     function ShowInfoAboutTooFewSuggestions(const AInfo: string): Boolean;
+    function ShowInfoAboutTooFewShortieQuestions(const AInfo: string): Boolean;
     function IsTooFewSuggestions: Boolean;
     function GetSingleQuestionSuggestions: string;
     function GetFirstDuplicatedCategoryQuestionId(out AIsShortie: Boolean; out AId: Integer): Boolean;
@@ -398,6 +470,12 @@ type
     function CheckForDuplicatedCategoriesPreSave: Boolean;
     function CheckForTooFewSuggestions: Boolean;
     function ShouldSaveProject: Boolean;
+    function CheckForTooFewShortieQuestions: Boolean;
+    procedure InsertNewProject(AConfig: IContentConfiguration);
+    function CheckIfFinalQuestionForFibbage3Ok: Boolean;
+    function CheckIfFinalQuestionForFibbage4Ok: Boolean;
+    function ShowSimpleInfoWithQuestion(const AInfo: string): Boolean;
+    procedure ShowSimpleInfo(const AInfo: string);
   public
     { Public declarations }
   end;
@@ -407,6 +485,7 @@ var
 
 const
   OPTIMAL_NR_OF_SUGGESTIONS = 17;
+  MIN_NR_OF_SHORTIE_QUESTIONS = 6;
 
 implementation
 
@@ -419,8 +498,10 @@ begin
 
   if tcQuestions.ActiveTab = tiShortieQuestions then
     CreateNewShortieQuestion
+  else if tcQuestions.ActiveTab = tiFinalQuestions then
+    CreateNewFinalQuestion
   else
-    CreateNewFinalQuestion;
+    Assert(False);
 
   lNewQuestion.Text := 'New question';
   GoToQuestionDetails;
@@ -453,7 +534,7 @@ begin
       begin
         FContent.CopyToFinalQuestions(item.OrgQuestion, newQuestion);
 
-        var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, newQuestion);
+        var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, newQuestion);
         qItem.Parent := sbxFinalQuestions;
         qItem.Align := TAlignLayout.Top;
         qItem.Position.Y := MaxInt;
@@ -477,7 +558,7 @@ begin
       begin
         FContent.CopyToShortieQuestions(item.OrgQuestion, newQuestion);
 
-        var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, newQuestion);
+        var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FContent, newQuestion);
         qItem.Parent := sbxShortieQuestions;
         qItem.Align := TAlignLayout.Top;
         qItem.Position.Y := MaxInt;
@@ -537,17 +618,22 @@ begin
   GoToQuestionDetails;
 end;
 
-procedure TFrmMain.aGetGamePathExecute(Sender: TObject);
-var
-  path: string;
+function TFrmMain.GetDestinationPath(out APath: string): Boolean;
 begin
-  if not GetFibbagePath(path) then
-    Exit;
-
-  eSettingsGamePath.Text := path;
+  Result := SelectDirectory('Select destination directory', '', APath);
 end;
 
-function TFrmMain.GetFibbagePath(out APath: string): Boolean;
+function TFrmMain.GetFibbage3Path(out APath: string): Boolean;
+begin
+  Result := SelectDirectory('Select Fibbage3 directory', '', APath);
+end;
+
+function TFrmMain.GetFibbage4Path(out APath: string): Boolean;
+begin
+  Result := SelectDirectory('Select Fibbage4 directory', '', APath);
+end;
+
+function TFrmMain.GetFibbageXLPath(out APath: string): Boolean;
 begin
   Result := SelectDirectory('Select FibbageXL directory', '', APath);
 end;
@@ -555,42 +641,38 @@ end;
 procedure TFrmMain.aImportProjectExecute(Sender: TObject);
 var
   str: string;
+  gameType: TGameType;
 begin
-  var pathChecker := GlobalContainer.Resolve<IContentPathChecker>;
-  var cfg := GlobalContainer.Resolve<IContentConfiguration>;
-  while True do
-    if not GetProjectPath(str) then
-      Exit
-    else if pathChecker.IsValid(str) then
-      Break
-    else
-      ShowMessage('Invalid path, question directories not found');
+  var cfg: IContentConfiguration := TContentConfiguration.Create;
 
-  if not cfg.Initialize(str) then
+  while True do
   begin
-    cfg.SetPath(str);
+      if not GetProjectPath(str) then
+      Exit;
+    if cfg.Initialize(str) then
+      Break;
+    if not GetGameType(gameType) then
+      Exit;
+    if not TContentPathChecker.IsValid(str, gameType) then
+    begin
+      ShowMessage('Invalid path, needed directories for this game not found');
+      Continue;
+    end;
+    if (gameType = TGameType.Fibbage4PartyPack9) and DirectoryExists(System.IOUtils.TPath.Combine(str, 'en')) then
+      cfg.SetPath(System.IOUtils.TPath.Combine(str, 'en'));
+
     if not GetProjectName(str) then
       Exit;
+
     cfg.SetName(str);
+    cfg.SetGameType(gameType);
     cfg.Save(cfg.GetPath);
+
+    Break;
   end;
 
-  sbxProjects.BeginUpdate;
-  try
-    FProjectVisItems.ClearSelection;
-    var pItem := TProjectScrollItem.CreateItem(sbxProjects, cfg);
-    pItem.Parent := sbxProjects;
-    pItem.Align := TAlignLayout.Top;
-    pItem.Position.Y := -999;
-    pItem.OnMouseDown := OnProjectItemMouseDown;
-    pItem.OnDblClick := OnProjectItemDoubleClick;
-    FLastClickedConfigurationToEdit := pItem;
-    FProjectVisItems.Add(pItem);
-    pItem.Selected := True;
-  finally
-    sbxProjects.EndUpdate;
-  end;
-
+  InsertNewProject(cfg);
+  
   aInitializeProject.Execute;
 end;
 
@@ -603,7 +685,11 @@ begin
       procedure (const AResult: TModalResult)
       begin
         case AResult of
-          mrYes: aSaveProject.Execute;
+          mrYes:
+          begin
+            aSaveProjectAndInitialize.Execute;
+            Exit;
+          end;
           mrCancel: Exit;
         end;
         ProcessInitializeProject;
@@ -611,6 +697,93 @@ begin
   end
   else
     ProcessInitializeProject;
+end;
+
+procedure TFrmMain.aMigrateToFibbage3Execute(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetDestinationPath(path) then
+    Exit;
+
+  var content: IFibbageContent := TFibbageContent.Create;
+  content.Initialize(FLastClickedConfigurationToEdit.OrgConfiguration);
+
+  var newCfg := FLastClickedConfigurationToEdit.OrgConfiguration.GetClone;
+  newCfg.SetPath(path);
+  newCfg.SetGameType(TGameType.Fibbage3PartyPack4);
+
+  if FLastClickedConfigurationToEdit.OrgConfiguration.GetGameType in [TGameType.FibbageXL, TGameType.FibbageXLPartyPack1] then
+    if ShowSimpleInfoWithQuestion('Migration to Fibbage3 will remove all final questions, continue?') then
+      content.Questions.FinalQuestions.Clear
+    else
+      Exit;
+
+  var newContent: IFibbageContent := TFibbageContent.Create;
+  newContent.Initialize(newCfg);
+  newContent.CopyDataFrom(content);
+  newContent.Save(path);
+
+  InsertNewProject(newCfg);
+  aInitializeProject.Execute;
+end;
+
+procedure TFrmMain.aMigrateToFibbageXLExecute(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetDestinationPath(path) then
+    Exit;
+
+  var content: IFibbageContent := TFibbageContent.Create;
+  content.Initialize(FLastClickedConfigurationToEdit.OrgConfiguration);
+
+  var newCfg := FLastClickedConfigurationToEdit.OrgConfiguration.GetClone;
+  newCfg.SetPath(path);
+  newCfg.SetGameType(TGameType.FibbageXL);
+
+  if FLastClickedConfigurationToEdit.OrgConfiguration.GetGameType = TGameType.Fibbage3PartyPack4 then
+    if ShowSimpleInfoWithQuestion('Migration to FibbageXL will remove all final questions, continue?') then
+      content.Questions.FinalQuestions.Clear
+    else
+      Exit;
+
+  var newContent: IFibbageContent := TFibbageContent.Create;
+  newContent.Initialize(newCfg);
+  newContent.CopyDataFrom(content);
+  newContent.Save(path);
+
+  InsertNewProject(newCfg);
+  aInitializeProject.Execute;
+end;
+
+procedure TFrmMain.aMigrateToFibbageXLPartyPack1Execute(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetDestinationPath(path) then
+    Exit;
+
+  var content: IFibbageContent := TFibbageContent.Create;
+  content.Initialize(FLastClickedConfigurationToEdit.OrgConfiguration);
+
+  var newCfg := FLastClickedConfigurationToEdit.OrgConfiguration.GetClone;
+  newCfg.SetPath(path);
+  newCfg.SetGameType(TGameType.FibbageXLPartyPack1);
+
+  if FLastClickedConfigurationToEdit.OrgConfiguration.GetGameType = TGameType.Fibbage3PartyPack4 then
+    if ShowSimpleInfoWithQuestion('Migration to FibbageXL Party Pack 1 will remove all final questions, continue?') then
+      content.Questions.FinalQuestions.Clear
+    else
+      Exit;
+
+  var newContent: IFibbageContent := TFibbageContent.Create;
+  newContent.Initialize(newCfg);
+  newContent.CopyDataFrom(content);
+  newContent.Save(path);
+
+  InsertNewProject(newCfg);
+  aInitializeProject.Execute;
 end;
 
 procedure TFrmMain.aMoveToFinalQuestionsExecute(Sender: TObject);
@@ -626,7 +799,7 @@ begin
 
       FContent.MoveToFinalQuestions(item.OrgQuestion);
 
-      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, item.OrgQuestion);
+      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, item.OrgQuestion);
       qItem.Parent := sbxFinalQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
@@ -656,7 +829,7 @@ begin
 
       FContent.MoveToShortieQuestions(item.OrgQuestion);
 
-      var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, item.OrgQuestion);
+      var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FContent, item.OrgQuestion);
       qItem.Parent := sbxShortieQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
@@ -721,7 +894,7 @@ end;
 
 procedure TFrmMain.InitializeContentTask;
 begin
-  FContent := GlobalContainer.Resolve<IFibbageContent>;
+  FContent := TFibbageContent.Create;
   FContent.Initialize(FSelectedConfiguration);
 end;
 
@@ -767,32 +940,22 @@ end;
 procedure TFrmMain.aNewProjectExecute(Sender: TObject);
 var
   str: string;
+  gameType: TGameType;
 begin
-  var cfg := GlobalContainer.Resolve<IContentConfiguration>;
+  var cfg: IContentConfiguration := TContentConfiguration.Create;
   if not GetProjectName(str) then
     Exit;
-  cfg.SetName(str);
+  if not GetGameType(gameType) then
+    Exit;
   if not GetProjectPath(str) then
     Exit;
+
+  cfg.SetName(str);
   cfg.SetPath(str);
+  cfg.SetGameType(gameType);
   cfg.Save(cfg.GetPath);
 
-  sbxProjects.BeginUpdate;
-  try
-    FProjectVisItems.ClearSelection;
-    var pItem := TProjectScrollItem.CreateItem(sbxProjects, cfg);
-    pItem.Parent := sbxProjects;
-    pItem.Align := TAlignLayout.Top;
-    pItem.Position.Y := -999;
-    pItem.OnMouseDown := OnProjectItemMouseDown;
-    pItem.OnDblClick := OnProjectItemDoubleClick;
-    FLastClickedConfigurationToEdit := pItem;
-    FProjectVisItems.Add(pItem);
-    pItem.Selected := True;
-    aRemoveProjects.Enabled := True;
-  finally
-    sbxProjects.EndUpdate;
-  end;
+  InsertNewProject(cfg);
 
   aInitializeProject.Execute;
 end;
@@ -915,8 +1078,10 @@ procedure TFrmMain.aRemoveQuestionsExecute(Sender: TObject);
 begin
   if tcQuestions.ActiveTab = tiShortieQuestions then
     RemoveSelectedShortieQuestions
+  else if tcQuestions.ActiveTab = tiFinalQuestions then
+    RemoveSelectedFinalQuestions
   else
-    RemoveSelectedFinalQuestions;
+    Assert(False);
 end;
 
 procedure TFrmMain.aSaveChangesSettingsExecute(Sender: TObject);
@@ -924,9 +1089,13 @@ begin
   if FChangingTab then
     Exit;
 
-  TAppConfig.GetInstance.FibbagePath := eSettingsGamePath.Text;
+  TAppConfig.GetInstance.FibbageXLPath := eSettingsFibbageXLPath.Text;
+  TAppConfig.GetInstance.FibbageXLPartyPack1Path := eSettingsFibbageXLPP1Path.Text;
+  TAppConfig.GetInstance.Fibbage3PartyPack4Path := eSettingsFibbage3PP4Path.Text;
+  TAppConfig.GetInstance.Fibbage4PartyPack9Path := eSettingsFibbage4PP9Path.Text;
   TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := cbShowCategoryDuplicatedInfo.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := cbShowDialogAboutTooFewSuggestions.IsChecked;
+  TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions := cbShowDialogAboutTooFewShortieQuestions.IsChecked;
 
   GoToHome;
 end;
@@ -935,9 +1104,18 @@ procedure TFrmMain.aSaveProjectAndCloseExecute(Sender: TObject);
 begin
   if not ShouldSaveProject then
     Exit;
-    
+
   FQuestionsChanged := False;
   TAsyncAction.Create(OnPreSave, OnPostSaveClose, SaveProc).Start;
+end;
+
+procedure TFrmMain.aSaveProjectAndInitializeExecute(Sender: TObject);
+begin
+  if not ShouldSaveProject then
+    Exit;
+
+  FQuestionsChanged := False;
+  TAsyncAction.Create(OnPreSave, OnPostSaveInitialize, SaveProc).Start;
 end;
 
 procedure TFrmMain.OnPostSaveClose;
@@ -946,13 +1124,19 @@ begin
   Close;
 end;
 
+procedure TFrmMain.OnPostSaveInitialize;
+begin
+  OnPostSave;
+  ProcessInitializeProject;
+end;
+
 procedure TFrmMain.aSaveProjectAsExecute(Sender: TObject);
 var
   path: string;
 begin
   if not ShouldSaveProject then
     Exit
-  else if not GetProjectPath(path) then
+  else if not GetDestinationPath(path) then
     Exit;
 
   FSelectedConfiguration.SetPath(path);
@@ -980,73 +1164,161 @@ end;
 function TFrmMain.GetFirstTooFewSuggestionsQuestionId(out AIsShortie: Boolean; out AId: Integer): Boolean;
 begin
   Result := False;
-  for var idx := 0 to FContent.Questions.ShortieQuestions.Count - 1 do
+
+  if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
   begin
-    var fQuestion := FContent.Questions.ShortieQuestions[idx];
-    var suggestions := TStringList.Create;
-    try
-      suggestions.StrictDelimiter := True;
-      suggestions.DelimitedText := fQuestion.GetSuggestions;
-      if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
-      begin
-        AIsShortie := True;
-        AId := fQuestion.GetId;
-        Exit(True);
+    for var idx := 0 to FContent.Categories.ShortieCategories.Count - 1 do
+    begin
+      var fCategory := FContent.Categories.ShortieCategories.Category(idx);
+      var suggestions := TStringList.Create;
+      try
+        suggestions.StrictDelimiter := True;
+        suggestions.DelimitedText := fCategory.GetSuggestions;
+        if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
+        begin
+          AIsShortie := True;
+          AId := fCategory.GetId;
+          Exit(True);
+        end;
+      finally
+        suggestions.Free;
       end;
-    finally
-      suggestions.Free;
+    end;
+
+    for var idx := 0 to FContent.Categories.FinalCategories.Count - 1 do
+    begin
+      var fCategory := FContent.Categories.FinalCategories.Category(idx);
+      var suggestions := TStringList.Create;
+      try
+        suggestions.StrictDelimiter := True;
+        suggestions.DelimitedText := fCategory.GetSuggestions;
+        if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
+        begin
+          AIsShortie := False;
+          AId := fCategory.GetId;
+          Exit(True);
+        end;
+      finally
+        suggestions.Free;
+      end;
+    end;
+  end
+  else
+  begin
+    for var idx := 0 to FContent.Questions.ShortieQuestions.Count - 1 do
+    begin
+      var fQuestion := FContent.Questions.ShortieQuestions[idx];
+      var suggestions := TStringList.Create;
+      try
+        suggestions.StrictDelimiter := True;
+        suggestions.DelimitedText := fQuestion.GetSuggestions;
+        if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
+        begin
+          AIsShortie := True;
+          AId := fQuestion.GetId;
+          Exit(True);
+        end;
+      finally
+        suggestions.Free;
+      end;
+    end;
+
+    for var idx := 0 to FContent.Questions.FinalQuestions.Count - 1 do
+    begin
+      var fQuestion := FContent.Questions.FinalQuestions[idx];
+      var suggestions := TStringList.Create;
+      try
+        suggestions.StrictDelimiter := True;
+        suggestions.DelimitedText := fQuestion.GetSuggestions;
+        if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
+        begin
+          AIsShortie := False;
+          AId := fQuestion.GetId;
+          Exit(True);
+        end;
+      finally
+        suggestions.Free;
+      end;
     end;
   end;
+end;
 
-  for var idx := 0 to FContent.Questions.FinalQuestions.Count - 1 do
-  begin
-    var fQuestion := FContent.Questions.FinalQuestions[idx];
-    var suggestions := TStringList.Create;
-    try
-      suggestions.StrictDelimiter := True;
-      suggestions.DelimitedText := fQuestion.GetSuggestions;
-      if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
-      begin
-        AIsShortie := False;
-        AId := fQuestion.GetId;
-        Exit(True);
-      end;
-    finally
-      suggestions.Free;
-    end;
+function TFrmMain.GetGameType(out AType: TGameType): Boolean;
+begin
+  rDim.Visible := True;
+  var dlg := TGetGameTypeDlg.Create(Self);
+  try
+    Result := dlg.GetGameType(AType);
+  finally
+    dlg.Free;
+    rDim.Visible := False;
   end;
 end;
 
 function TFrmMain.GetFirstDuplicatedCategoryQuestionId(out AIsShortie: Boolean; out AId: Integer): Boolean;
 begin
   Result := False;
-  for var idx := 0 to FContent.Questions.ShortieQuestions.Count - 2 do
-    for var jdx := idx + 1 to FContent.Questions.ShortieQuestions.Count - 1 do
-    begin
-      var fQuestion := FContent.Questions.ShortieQuestions[idx];
-      var sQuestion := FContent.Questions.ShortieQuestions[jdx];
 
-      if fQuestion.GetCategory.Equals(sQuestion.GetCategory) then
+  if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+  begin
+    for var idx := 0 to FContent.Categories.ShortieCategories.Count - 2 do
+      for var jdx := idx + 1 to FContent.Categories.ShortieCategories.Count - 1 do
       begin
-        AIsShortie := True;
-        AId := fQuestion.GetId;
-        Exit(True);
+        var fCategory := FContent.Categories.ShortieCategories.Category(idx);
+        var sCategory := FContent.Categories.ShortieCategories.Category(jdx);
+
+        if fCategory.GetCategory.Equals(sCategory.GetCategory) then
+        begin
+          AIsShortie := True;
+          AId := fCategory.GetId;
+          Exit(True);
+        end;
       end;
-    end;
 
-  for var idx := 0 to FContent.Questions.FinalQuestions.Count - 2 do
-    for var jdx := idx + 1 to FContent.Questions.FinalQuestions.Count - 1 do
-    begin
-      var fQuestion := FContent.Questions.FinalQuestions[idx];
-      var sQuestion := FContent.Questions.FinalQuestions[jdx];
-
-      if fQuestion.GetCategory.Equals(sQuestion.GetCategory) then
+    for var idx := 0 to FContent.Categories.FinalCategories.Count - 2 do
+      for var jdx := idx + 1 to FContent.Categories.FinalCategories.Count - 1 do
       begin
-        AIsShortie := False;
-        AId := fQuestion.GetId;
-        Exit(True);
+        var fCategory := FContent.Categories.FinalCategories.Category(idx);
+        var sCategory := FContent.Categories.FinalCategories.Category(jdx);
+
+        if fCategory.GetCategory.Equals(sCategory.GetCategory) then
+        begin
+          AIsShortie := False;
+          AId := fCategory.GetId;
+          Exit(True);
+        end;
       end;
-    end;
+  end
+  else
+  begin
+    for var idx := 0 to FContent.Questions.ShortieQuestions.Count - 2 do
+      for var jdx := idx + 1 to FContent.Questions.ShortieQuestions.Count - 1 do
+      begin
+        var fQuestion := FContent.Questions.ShortieQuestions[idx];
+        var sQuestion := FContent.Questions.ShortieQuestions[jdx];
+
+        if fQuestion.GetCategory.Equals(sQuestion.GetCategory) then
+        begin
+          AIsShortie := True;
+          AId := fQuestion.GetId;
+          Exit(True);
+        end;
+      end;
+
+    for var idx := 0 to FContent.Questions.FinalQuestions.Count - 2 do
+      for var jdx := idx + 1 to FContent.Questions.FinalQuestions.Count - 1 do
+      begin
+        var fQuestion := FContent.Questions.FinalQuestions[idx];
+        var sQuestion := FContent.Questions.FinalQuestions[jdx];
+
+        if fQuestion.GetCategory.Equals(sQuestion.GetCategory) then
+        begin
+          AIsShortie := False;
+          AId := fQuestion.GetId;
+          Exit(True);
+        end;
+      end;
+  end;
 end;
 
 procedure TFrmMain.SaveProc;
@@ -1068,17 +1340,37 @@ begin
       if isShortie then
       begin
         GoToShortieQuestions;
-        FShortieVisItems.SelectQuestionWithId(qId);
+        if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+          FShortieVisItems.SelectCategoryWithId(qId)
+        else
+          FShortieVisItems.SelectQuestionWithId(qId);
         sbxShortieQuestions.ViewportPosition := TPointF.Create(0, FShortieVisItems.Selected.Top);
         FLastClickedItemToEdit := FShortieVisItems.Selected;
       end
       else
       begin
         GoToFinalQuestions;
-        FFinalVisItems.SelectQuestionWithId(qId);
+        if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+          FFinalVisItems.SelectCategoryWithId(qId)
+        else
+          FFinalVisItems.SelectQuestionWithId(qId);
         sbxFinalQuestions.ViewportPosition := TPointF.Create(0, FFinalVisItems.Selected.Top);
         FLastClickedItemToEdit := FFinalVisItems.Selected;
       end;
+      Result := False;
+    end;
+end;
+
+function TFrmMain.CheckForTooFewShortieQuestions: Boolean;
+begin
+  Result := True;
+
+  if FContent.Questions.ShortieQuestions.Count < MIN_NR_OF_SHORTIE_QUESTIONS then
+    if not ShowInfoAboutTooFewShortieQuestions(
+      Format('Too few shortie questions. Game may freeze on start or during gameplay. A minimum of %u questions is required. Continue?', [MIN_NR_OF_SHORTIE_QUESTIONS])) then
+    begin
+      GoToAllQuestions;
+      GoToShortieQuestions;
       Result := False;
     end;
 end;
@@ -1097,14 +1389,20 @@ begin
       if isShortie then
       begin
         GoToShortieQuestions;
-        FShortieVisItems.SelectQuestionWithId(qId);
+        if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+          FShortieVisItems.SelectCategoryWithId(qId)
+        else
+          FShortieVisItems.SelectQuestionWithId(qId);
         sbxShortieQuestions.ViewportPosition := TPointF.Create(0, FShortieVisItems.Selected.Top);
         FLastClickedItemToEdit := FShortieVisItems.Selected;
       end
       else
       begin
         GoToFinalQuestions;
-        FFinalVisItems.SelectQuestionWithId(qId);
+        if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+          FFinalVisItems.SelectCategoryWithId(qId)
+        else
+          FFinalVisItems.SelectQuestionWithId(qId);
         sbxFinalQuestions.ViewportPosition := TPointF.Create(0, FFinalVisItems.Selected.Top);
         FLastClickedItemToEdit := FFinalVisItems.Selected;
       end;
@@ -1112,13 +1410,77 @@ begin
     end;
 end;
 
+function TFrmMain.CheckIfFinalQuestionForFibbage3Ok: Boolean;
+begin
+  Result := False;
+  var firstBlank := mSingleItemQuestion.Text.IndexOf('<BLANK>');
+  var secondBlank := mSingleItemQuestion.Text.IndexOf('<BLANK>', firstBlank + 1);
+
+  if (firstBlank = -1) or (secondBlank = -1) then
+  begin
+    ShowSimpleInfo('Question is missing at least two <BLANK> entries, question won''t work');
+    Exit;
+  end;
+
+  if (not mSingleItemAnswer.Text.IsEmpty) and (not mSingleItemAnswer.Text.Contains('|')) then
+  begin
+    ShowSimpleInfo('Answer is missing | (it should look like this: answer_part1|answer_part2), question won''t work');
+    Exit;
+  end;
+
+  var sl := TStringList.Create;
+  try
+    sl.CommaText := mSingleItemAlternateSpelling.Text;
+    for var idx := 0 to sl.Count - 1 do
+      if not sl[idx].Contains('|') then
+      begin
+        ShowSimpleInfo(Format('Alternate spelling (%s) is missing | (it should look like this: altspell_part1|altspell_part2), question won''t work', [sl[idx]]));
+        Exit;
+      end;
+
+    sl.CommaText := mSingleItemSuggestions.Text;
+    for var idx := 0 to sl.Count - 1 do
+      if not sl[idx].Contains('|') then
+      begin
+        ShowSimpleInfo(Format('Suggestion (%s) is missing | (it should look like this: sugg_part1|sugg_part2), question won''t work', [sl[idx]]));
+        Exit;
+      end;
+  finally
+    sl.Free;
+  end;
+  Result := True;
+end;
+
+function TFrmMain.CheckIfFinalQuestionForFibbage4Ok: Boolean;
+begin
+  Result := False;
+  var blankPos := mSingleItemQuestion.Text.IndexOf('{{BLANK}}');
+  if blankPos = -1 then
+  begin
+    ShowSimpleInfo('Question is missing {{BLANK}} entry, question won''t work');
+    Exit;
+  end;
+
+  blankPos := mSingleItemQuestion2.Text.IndexOf('{{BLANK}}');
+  if blankPos = -1 then
+  begin
+    ShowSimpleInfo('Question2 is missing {{BLANK}} entry, question won''t work');
+    Exit;
+  end;
+
+  Result := True;
+end;
+
 function TFrmMain.ShouldSaveProject: Boolean;
-begin            
+begin
   Result := False;
   if not CheckForDuplicatedCategoriesPreSave then
-    Exit
-  else if not CheckForTooFewSuggestions then
     Exit;
+  if not CheckForTooFewSuggestions then
+    Exit;
+  if not CheckForTooFewShortieQuestions then
+    Exit;
+
   Result := True;
 end;
 
@@ -1163,6 +1525,27 @@ begin
       Exit(True);
 end;
 
+function TFrmMain.ShowInfoAboutTooFewShortieQuestions(
+  const AInfo: string): Boolean;
+var
+  dontAskAgain: Boolean;
+begin
+  Result := False;
+  rDim.Visible := True;
+  var dlg := TUserDialog.Create(Self);
+  try
+    if dlg.MakeInfo(AInfo, dontAskAgain) then
+    begin
+      Result := True;
+      if dontAskAgain then
+        TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions := False;
+    end;
+  finally
+    dlg.Free;
+    rDim.Visible := False;
+  end;
+end;
+
 function TFrmMain.ShowInfoAboutTooFewSuggestions(const AInfo: string): Boolean;
 var
   dontAskAgain: Boolean;
@@ -1177,6 +1560,30 @@ begin
       if dontAskAgain then
         TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := False;
     end;
+  finally
+    dlg.Free;
+    rDim.Visible := False;
+  end;
+end;
+
+procedure TFrmMain.ShowSimpleInfo(const AInfo: string);
+begin
+  rDim.Visible := True;
+  var dlg := TUserDialog.Create(Self);
+  try
+    dlg.MakeSimpleInfo(AInfo)
+  finally
+    dlg.Free;
+    rDim.Visible := False;
+  end;
+end;
+
+function TFrmMain.ShowSimpleInfoWithQuestion(const AInfo: string): Boolean;
+begin
+  rDim.Visible := True;
+  var dlg := TUserDialog.Create(Self);
+  try
+    Result := dlg.MakeSimpleInfoWithResult(AInfo);
   finally
     dlg.Free;
     rDim.Visible := False;
@@ -1236,22 +1643,29 @@ begin
     if not ShowInfoAboutTooFewSuggestions('Too few suggestions, the game can freeze because of this. The optimal number of suggestions is 17 (Max number of players * 2 + 1). Continue?') then
       Exit;
 
+  if (FContent.Configuration.GetGameType = TGameType.Fibbage3PartyPack4) and
+     (FSelectedQuestion.GetQuestionType = qtFinal) and
+     not CheckIfFinalQuestionForFibbage3Ok then
+     Exit;
+
+  if (FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9) and
+     (FSelectedQuestion.GetQuestionType = qtFinal) and
+     not CheckIfFinalQuestionForFibbage4Ok then
+      Exit;
+
   FQuestionsChanged := True;
 
-  FSelectedQuestion.SetQuestion(mSingleItemQuestion.Text.Trim);
-  FSelectedQuestion.SetAnswer(mSingleItemAnswer.Text.Trim);
-  FSelectedQuestion.SetAlternateSpelling(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
-  FSelectedQuestion.SetSuggestions(GetSingleQuestionSuggestions);
+  FillQuestionFromControls;
+  FillCategoryFromControls;
 
-  FSelectedCategory.SetId(StrToInt(eSingleItemId.Text));
-  FSelectedCategory.SetCategory(eSingleItemCategory.Text.Trim);
-  FSelectedCategory.SetIsFamilyFriendly(sFamilyFriendly.IsChecked);
   FSelectedQuestion.SetCategoryObj(FSelectedCategory);
 
   if FSelectedQuestion.GetQuestionType = qtShortie then
     RefreshSelectedShortieQuestion
+  else if FSelectedQuestion.GetQuestionType = qtFinal then
+    RefreshSelectedFinalQuestion
   else
-    RefreshSelectedFinalQuestion;
+    Assert(False);
 
   GoToAllQuestions;
 end;
@@ -1260,18 +1674,48 @@ procedure TFrmMain.aSetProjectAsActiveExecute(Sender: TObject);
 var
   path: string;
 begin
-  if TAppConfig.GetInstance.FibbagePath.IsEmpty then
-    if GetFibbagePath(path) then
-      TAppConfig.GetInstance.FibbagePath := path
-    else
-      Exit;
-
   for var item in FProjectVisItems do
     if item.Selected then
     begin
       FActiveConfiguration := item.OrgConfiguration;
       Break;
     end;
+
+  case FActiveConfiguration.GetGameType of
+    TGameType.FibbageXL:
+      begin
+        if TAppConfig.GetInstance.FibbageXLPath.IsEmpty then
+          if GetFibbageXLPath(path) then
+            TAppConfig.GetInstance.FibbageXLPath := path
+          else
+            Exit;
+      end;
+    TGameType.FibbageXLPartyPack1:
+      begin
+        if TAppConfig.GetInstance.FibbageXLPartyPack1Path.IsEmpty then
+          if GetFibbageXLPath(path) then
+            TAppConfig.GetInstance.FibbageXLPartyPack1Path := path
+          else
+            Exit;
+      end;
+    TGameType.Fibbage3PartyPack4:
+      begin
+        if TAppConfig.GetInstance.Fibbage3PartyPack4Path.IsEmpty then
+          if GetFibbage3Path(path) then
+            TAppConfig.GetInstance.Fibbage3PartyPack4Path := path
+          else
+            Exit;
+      end;
+    TGameType.Fibbage4PartyPack9:
+      begin
+        if TAppConfig.GetInstance.Fibbage4PartyPack9Path.IsEmpty then
+          if GetFibbage4Path(path) then
+            TAppConfig.GetInstance.Fibbage4PartyPack9Path := path
+          else
+            Exit;
+      end;
+
+  end;
 
   TAsyncAction.Create(OnActivateStart, OnActivateEnd, ActivateProjectProc).Start;
 end;
@@ -1289,9 +1733,26 @@ begin
 end;
 
 procedure TFrmMain.ActivateProjectProc;
+var
+  destPath: string;
 begin
-  var activator := GlobalContainer.Resolve<IProjectActivator>;
-  activator.Activate(FActiveConfiguration, System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbagePath, 'content'));
+  case FActiveConfiguration.GetGameType of
+    TGameType.FibbageXL:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbageXLPath, 'content');
+    TGameType.FibbageXLPartyPack1:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbageXLPartyPack1Path, 'content');
+    TGameType.Fibbage3PartyPack4:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.Fibbage3PartyPack4Path, 'content');
+    TGameType.Fibbage4PartyPack9:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.Fibbage4PartyPack9Path, 'content', 'en');
+  end;
+
+  try
+    TProjectActivator.Activate(FActiveConfiguration, destPath);
+  except
+    on E: EActivateError do
+      ShowSimpleInfo(E.Message);
+  end;
 end;
 
 procedure TFrmMain.OnPreSave;
@@ -1365,7 +1826,7 @@ end;
 
 function TFrmMain.GetProjectPath(out APath: string): Boolean;
 begin
-  Result := SelectDirectory('Select directory', '', APath);
+  Result := SelectDirectory('Select content directory', '', APath);
 end;
 
 function TFrmMain.GetProjectName(out AName: string): Boolean;
@@ -1618,11 +2079,16 @@ begin
   aRemoveQuestions.Text := IfThen(selCnt > 1, 'Remove questions', 'Remove question');
 end;
 
+procedure TFrmMain.OnUnhandledException(Sender: TObject; E: Exception);
+begin
+  ShowSimpleInfo(Format('Unhandled exception, %s/%s', [E.Message, E.ClassName]));
+end;
+
 procedure TFrmMain.PrepareMultiViewButtons(AActTab: TAppTab);
 begin
   mvHomeOptions.BeginUpdate;
   try
-    bQuestions.Enabled := AActTab <> atHomeBeforeImport;
+    bQuestions.Enabled := Assigned(FContent);
   finally
     mvHomeOptions.EndUpdate;
   end;
@@ -1634,7 +2100,7 @@ begin
   try
     for var item in FContent.Questions.ShortieQuestions do
     begin
-      var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, item);
+      var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FContent, item);
       qItem.Parent := sbxShortieQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
@@ -1647,13 +2113,69 @@ begin
   end;
 end;
 
+procedure TFrmMain.FillCategoryFromControls;
+begin
+  FSelectedCategory.SetId(StrToInt(eSingleItemId.Text));
+  FSelectedCategory.SetFamilyFriendly(sFamilyFriendly.IsChecked);
+  FSelectedCategory.SetQuestionText(mSingleItemQuestion.Text);
+  FSelectedCategory.SetQuestionText1(mSingleItemQuestion.Text);
+  FSelectedCategory.SetQuestionText2(mSingleItemQuestion2.Text);
+  FSelectedCategory.SetCorrectText(mSingleItemAnswer.Text);
+  FSelectedCategory.SetCorrectText1(mSingleItemAnswer.Text);
+  FSelectedCategory.SetCorrectText1(mSingleItemAnswer.Text);
+  FSelectedCategory.SetCorrectText2(mSingleItemAnswer2.Text);
+  FSelectedCategory.SetSuggestions(GetSingleQuestionSuggestions);
+  FSelectedCategory.SetAlternateSpelling(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
+  FSelectedCategory.SetAlternateSpelling1(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
+  FSelectedCategory.SetAlternateSpelling2(mSingleItemAlternateSpelling2.Text.Replace(', ', ',').Trim);
+  FSelectedCategory.SetCategory(eSingleItemCategory.Text.Trim);
+  FSelectedCategory.SetIsFamilyFriendly(sFamilyFriendly.IsChecked);
+end;
+
+procedure TFrmMain.FillControlsFromCategory;
+begin
+  if FSelectedQuestion.GetQuestionType = TQuestionType.qtShortie then
+  begin
+    mSingleItemQuestion.Text := FSelectedCategory.GetQuestionText;
+    mSingleItemAnswer.Text := FSelectedCategory.GetCorrectText;
+    mSingleItemAlternateSpelling.Text := FSelectedCategory.GetAlternateSpelling.Replace(',', ', ');
+    mSingleItemSuggestions.Text := FSelectedCategory.GetSuggestions.Replace(',', ', ');
+    eSingleItemId.Text := FSelectedCategory.GetId.ToString;
+    eSingleItemCategory.Text := FSelectedCategory.GetCategory;
+    sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+  end
+  else
+  begin
+    mSingleItemQuestion.Text := FSelectedCategory.GetQuestionText1;
+    mSingleItemQuestion2.Text := FSelectedCategory.GetQuestionText2;
+    mSingleItemAnswer.Text := FSelectedCategory.GetCorrectText1;
+    mSingleItemAnswer2.Text := FSelectedCategory.GetCorrectText2;
+    mSingleItemAlternateSpelling.Text := FSelectedCategory.GetAlternateSpelling1.Replace(',', ', ');
+    mSingleItemAlternateSpelling2.Text := FSelectedCategory.GetAlternateSpelling2.Replace(',', ', ');
+    mSingleItemSuggestions.Text := FSelectedCategory.GetSuggestions.Replace(',', ', ');
+    eSingleItemId.Text := FSelectedCategory.GetId.ToString;
+    sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+  end;
+end;
+
+procedure TFrmMain.FillControlsFromQuestion;
+begin
+  mSingleItemQuestion.Text := FSelectedQuestion.GetQuestion;
+  mSingleItemAnswer.Text := FSelectedQuestion.GetAnswer;
+  mSingleItemAlternateSpelling.Text :=  FSelectedQuestion.GetAlternateSpelling.Replace(',', ', ');
+  mSingleItemSuggestions.Text := FSelectedQuestion.GetSuggestions.Replace(',', ', ');
+  eSingleItemId.Text := FSelectedCategory.GetId.ToString;
+  eSingleItemCategory.Text := FSelectedCategory.GetCategory;
+  sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+end;
+
 procedure TFrmMain.FillFinalScrollBox;
 begin
   sbxFinalQuestions.BeginUpdate;
   try
     for var item in FContent.Questions.FinalQuestions do
     begin
-      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, item);
+      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, item);
       qItem.Parent := sbxFinalQuestions;
       qItem.Align := TAlignLayout.Top;
       qItem.Position.Y := MaxInt;
@@ -1664,6 +2186,14 @@ begin
   finally
     sbxFinalQuestions.EndUpdate;
   end;
+end;
+
+procedure TFrmMain.FillQuestionFromControls;
+begin
+  FSelectedQuestion.SetQuestion(mSingleItemQuestion.Text.Trim);
+  FSelectedQuestion.SetAnswer(mSingleItemAnswer.Text.Trim);
+  FSelectedQuestion.SetAlternateSpelling(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
+  FSelectedQuestion.SetSuggestions(GetSingleQuestionSuggestions);
 end;
 
 procedure TFrmMain.RefreshProjectFormActions;
@@ -1678,6 +2208,10 @@ begin
   aSetProjectAsActive.Visible := selCnt > 0;
   aSetProjectAsActive.Enabled := selCnt = 1;
   MenuItem1.Visible := aOpenInWindowsExplorer.Visible or aSetProjectAsActive.Visible;
+  miMigrate.Enabled := selCnt = 1;
+  aMigrateToFibbageXL.Enabled := miMigrate.Enabled and Assigned(FLastClickedConfigurationToEdit) and (FLastClickedConfiguration.OrgConfiguration.GetGameType <> TGameType.FibbageXL);
+  aMigrateToFibbageXLPartyPack1.Enabled := miMigrate.Enabled and Assigned(FLastClickedConfigurationToEdit) and (FLastClickedConfiguration.OrgConfiguration.GetGameType <> TGameType.FibbageXLPartyPack1);
+  aMigrateToFibbage3.Enabled := miMigrate.Enabled and Assigned(FLastClickedConfigurationToEdit) and (FLastClickedConfiguration.OrgConfiguration.GetGameType <> TGameType.Fibbage3PartyPack4);
 end;
 
 procedure TFrmMain.RefreshQuestionsFormActions;
@@ -1686,8 +2220,14 @@ var
 begin
   if tcQuestions.ActiveTab = tiShortieQuestions then
     selCnt := FShortieVisItems.SelectedCount
+  else if tcQuestions.ActiveTab = tiFinalQuestions then
+    selCnt := FFinalVisItems.SelectedCount
   else
-    selCnt := FFinalVisItems.SelectedCount;
+  begin
+    Assert(False);
+    Exit;
+  end;
+
   aRemoveQuestions.Text := IfThen(selCnt > 1, 'Remove questions', 'Remove question');
   aRemoveQuestions.Enabled := selCnt > 0;
   aEditQuestion.Enabled := Assigned(FLastClickedItemToEdit) and (selCnt = 1);
@@ -1697,11 +2237,13 @@ begin
     aCopyToFinalQuestions.Enabled := selCnt > 0;
     aMoveToFinalQuestions.Enabled := selCnt > 0;
   end
-  else
+  else if tcQuestions.ActiveTab = tiFinalQuestions then
   begin
     aCopyToShortieQuestions.Enabled := selCnt > 0;
     aMoveToShortieQuestions.Enabled := selCnt > 0;
-  end;
+  end
+  else
+    Assert(False);
 end;
 
 procedure TFrmMain.pmProjectsPopup(Sender: TObject);
@@ -1723,7 +2265,7 @@ begin
   sbxShortieQuestions.BeginUpdate;
   try
     FShortieVisItems.ClearSelection;
-    var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FSelectedQuestion);
+    var qItem := TQuestionScrollItem.CreateItem(sbxShortieQuestions, FContent, FSelectedQuestion);
     qItem.Parent := sbxShortieQuestions;
     qItem.Align := TAlignLayout.Top;
     qItem.Position.Y := MaxInt;
@@ -1738,6 +2280,12 @@ begin
   end;
 end;
 
+procedure TFrmMain.DisableButton(AButton: TButton);
+begin
+  for var item in [bShortieQuestions, bFinalQuestions] do
+    item.Enabled := item <> AButton;
+end;
+
 procedure TFrmMain.CreateNewFinalQuestion;
 begin
   FContent.AddFinalQuestion;
@@ -1747,7 +2295,7 @@ begin
   sbxFinalQuestions.BeginUpdate;
   try
     FFinalVisItems.ClearSelection;
-    var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FSelectedQuestion);
+    var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, FSelectedQuestion);
     qItem.Parent := sbxFinalQuestions;
     qItem.Align := TAlignLayout.Top;
     qItem.Position.Y := MaxInt;
@@ -1767,9 +2315,9 @@ begin
   if FChangingTab then
     Exit;
 
-  LogEnter(Self, 'bShortieQuestionsClick');
+  LogEnter(Self, 'bFinalQuestionsClick');
   GoToFinalQuestions;
-  LogExit(Self, 'bShortieQuestionsClick');
+  LogExit(Self, 'bFinalQuestionsClick');
 end;
 
 procedure TFrmMain.GoToAllQuestions;
@@ -1785,8 +2333,7 @@ end;
 
 procedure TFrmMain.GoToFinalQuestions;
 begin
-  bShortieQuestions.IsPressed := False;
-  bFinalQuestions.IsPressed := True;
+  SetButtonPressed(bFinalQuestions);
   sbxFinalQuestions.BeginUpdate;
   try
     FFinalVisItems.ClearSelection;
@@ -1802,8 +2349,7 @@ begin
     FChangingTab := False;
   end;
 
-  bFinalQuestions.Enabled := False;
-  bShortieQuestions.Enabled := True;
+  DisableButton(bFinalQuestions);
 end;
 
 procedure TFrmMain.GoToHome;
@@ -1862,6 +2408,46 @@ begin
   GoToSettings;
 end;
 
+procedure TFrmMain.bSettingsFibbage3PP4PathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetFibbage3Path(path) then
+    Exit;
+
+  eSettingsFibbage3PP4Path.Text := path;
+end;
+
+procedure TFrmMain.bSettingsFibbage4PP9PathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetFibbage4Path(path) then
+    Exit;
+
+  eSettingsFibbage4PP9Path.Text := path;
+end;
+
+procedure TFrmMain.bSettingsFibbageXLPathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetFibbageXLPath(path) then
+    Exit;
+
+  eSettingsFibbageXLPath.Text := path;
+end;
+
+procedure TFrmMain.bSettingsFibbageXLPP1PathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetFibbageXLPath(path) then
+    Exit;
+
+  eSettingsFibbageXLPP1Path.Text := path;
+end;
+
 procedure TFrmMain.bShortieQuestionsClick(Sender: TObject);
 begin
   if FChangingTab then
@@ -1876,9 +2462,13 @@ procedure TFrmMain.GoToSettings;
 begin
   FChangingTab := True;
   try
-    eSettingsGamePath.Text := TAppConfig.GetInstance.FibbagePath;
+    eSettingsFibbageXLPath.Text := TAppConfig.GetInstance.FibbageXLPath;
+    eSettingsFibbageXLPP1Path.Text := TAppConfig.GetInstance.FibbageXLPartyPack1Path;
+    eSettingsFibbage3PP4Path.Text := TAppConfig.GetInstance.Fibbage3PartyPack4Path;
+    eSettingsFibbage4PP9Path.Text := TAppConfig.GetInstance.Fibbage4PartyPack9Path;
     cbShowCategoryDuplicatedInfo.IsChecked := TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories;
     cbShowDialogAboutTooFewSuggestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions;
+    cbShowDialogAboutTooFewShortieQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions;
 
     aGoToSettings.Execute;
   finally
@@ -1888,8 +2478,7 @@ end;
 
 procedure TFrmMain.GoToShortieQuestions;
 begin
-  bFinalQuestions.IsPressed := False;
-  bShortieQuestions.IsPressed := True;
+  SetButtonPressed(bShortieQuestions);
   sbxShortieQuestions.BeginUpdate;
   try
     FShortieVisItems.ClearSelection;
@@ -1904,8 +2493,20 @@ begin
   finally
     FChangingTab := False;
   end;
-  bShortieQuestions.Enabled := False;
-  bFinalQuestions.Enabled := True;
+  DisableButton(bShortieQuestions);
+end;
+
+procedure TFrmMain.HideUnusedSingleQuestionControls;
+begin
+  lySingleItemQuestion2.Visible := (FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9) and (FSelectedQuestion.GetQuestionType = TQuestionType.qtFinal);
+  lySingleItemPossibleAnswers2.Visible := lySingleItemQuestion2.Visible;
+  bSingleItemQuestionAudio2.Visible := lySingleItemQuestion2.Visible;
+  if lySingleItemQuestion2.Visible then
+    gplSingleItemAudio.ColumnCollection.Items[2].Value := 100/3
+  else
+    gplSingleItemAudio.ColumnCollection.Items[2].Value := 0;
+
+  lySingleItemCategory.Visible := not lySingleItemQuestion2.Visible;
 end;
 
 procedure TFrmMain.bSingleItemBumperAudioClick(Sender: TObject);
@@ -1926,6 +2527,18 @@ begin
   var form := TRecordForm.Create(Self);
   try
     form.EditAnswerAudio(FSelectedQuestion);
+  finally
+    form.Free;
+    rDim.Visible := False;
+  end;
+end;
+
+procedure TFrmMain.bSingleItemQuestionAudio2Click(Sender: TObject);
+begin
+  rDim.Visible := True;
+  var form := TRecordForm.Create(Self);
+  try
+    form.EditQuestion2Audio(FSelectedQuestion);
   finally
     form.Free;
     rDim.Visible := False;
@@ -1965,6 +2578,7 @@ end;
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
   Randomize;
+  Application.OnException := OnUnhandledException;
 
   PrepareMultiViewButtons(atHomeBeforeImport);
 
@@ -1972,13 +2586,13 @@ begin
 
   FShortieVisItems := TQuestionScrollItems.Create;
   FFinalVisItems := TQuestionScrollItems.Create;
-
+  
   sDarkMode.IsChecked := TAppConfig.GetInstance.DarkModeEnabled;
 
   tcEditTabs.ActiveTab := tiQuestionProjects;
   tcQuestions.ActiveTab := tiShortieQuestions;
 
-  FLastQuestionProjects := GlobalContainer.Resolve<ILastQuestionProjects>;
+  FLastQuestionProjects := TLastQuestionsLoader.Create;
   FLastQuestionProjects.Initialize;
   InitializeLastQuestionProjects;
 
@@ -2047,7 +2661,9 @@ begin
     if tcQuestions.ActiveTab = tiShortieQuestions then
       FShortieVisItems.SelectAll
     else if tcQuestions.ActiveTab = tiFinalQuestions then
-      FFinalVisItems.SelectAll;
+      FFinalVisItems.SelectAll
+    else
+      Assert(False);
   end;
 
   if Key = vkDown then
@@ -2075,7 +2691,9 @@ begin
         sbxShortieQuestions.ScrollBy(0, -FFinalVisItems.Selected.Height);
       FFinalVisItems.SelectNext;
       FLastClickedItemToEdit := FFinalVisItems.Selected;
-    end;
+    end
+    else
+      Assert(False);
   end
   else if Key = vkUp then
   begin
@@ -2097,15 +2715,18 @@ begin
         Exit;
 
       if FFinalVisItems.Selected = FFinalVisItems[0] then
-        sbxShortieQuestions.ViewportPosition := TPointF.Create(0, MaxInt)
+        sbxFinalQuestions.ViewportPosition := TPointF.Create(0, MaxInt)
       else
-        sbxShortieQuestions.ScrollBy(0, FFinalVisItems.Selected.Height);
+        sbxFinalQuestions.ScrollBy(0, FFinalVisItems.Selected.Height);
       FFinalVisItems.SelectPrev;
       FLastClickedItemToEdit := FFinalVisItems.Selected;
-    end;
+    end
+    else
+      Assert(False);
   end
   else if Key = vkRight then
-    if ((tcQuestions.ActiveTab = tiShortieQuestions) and (FShortieVisItems.SelectedCount = 1)) or ((tcQuestions.ActiveTab = tiFinalQuestions) and (FFinalVisItems.SelectedCount = 1)) then
+    if ((tcQuestions.ActiveTab = tiShortieQuestions) and (FShortieVisItems.SelectedCount = 1)) or
+       ((tcQuestions.ActiveTab = tiFinalQuestions) and (FFinalVisItems.SelectedCount = 1)) then
     begin
       RefreshQuestionsFormActions;
       aEditQuestion.Execute;
@@ -2123,13 +2744,12 @@ end;
 
 procedure TFrmMain.GoToQuestionDetails;
 begin
-  mSingleItemQuestion.Text := FSelectedQuestion.GetQuestion;
-  mSingleItemAnswer.Text := FSelectedQuestion.GetAnswer;
-  mSingleItemAlternateSpelling.Text :=  FSelectedQuestion.GetAlternateSpelling.Replace(',', ', ');
-  mSingleItemSuggestions.Text := FSelectedQuestion.GetSuggestions.Replace(',', ', ');
-  eSingleItemId.Text := FSelectedCategory.GetId.ToString;
-  eSingleItemCategory.Text := FSelectedCategory.GetCategory;
-  sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+  HideUnusedSingleQuestionControls;
+
+  if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+    FillControlsFromCategory
+  else
+    FillControlsFromQuestion;
 
   FChangingTab := True;
   try
@@ -2164,6 +2784,26 @@ begin
   end;
 end;
 
+procedure TFrmMain.InsertNewProject(AConfig: IContentConfiguration);
+begin
+  sbxProjects.BeginUpdate;
+  try
+    FProjectVisItems.ClearSelection;
+    var pItem := TProjectScrollItem.CreateItem(sbxProjects, AConfig);
+    pItem.Parent := sbxProjects;
+    pItem.Align := TAlignLayout.Top;
+    pItem.Position.Y := -999;
+    pItem.OnMouseDown := OnProjectItemMouseDown;
+    pItem.OnDblClick := OnProjectItemDoubleClick;
+    FLastClickedConfigurationToEdit := pItem;
+    FProjectVisItems.Add(pItem);
+    pItem.Selected := True;
+    aRemoveProjects.Enabled := True;
+  finally
+    sbxProjects.EndUpdate;
+  end;
+end;
+
 procedure TFrmMain.lDarkModeClick(Sender: TObject);
 begin
   sDarkMode.IsChecked := not sDarkMode.IsChecked;
@@ -2177,6 +2817,12 @@ end;
 procedure TFrmMain.lFamilyFriendlyClick(Sender: TObject);
 begin
   sFamilyFriendly.IsChecked := not sFamilyFriendly.IsChecked;
+end;
+
+procedure TFrmMain.SetButtonPressed(AButton: TButton);
+begin
+  for var item in [bShortieQuestions, bFinalQuestions] do
+    item.IsPressed := item = AButton;
 end;
 
 procedure TFrmMain.SetDarkMode(AEnabled: Boolean);
@@ -2240,13 +2886,14 @@ end;
 
 { TQuestionScrollItem }
 
-constructor TQuestionScrollItem.CreateItem(AOwner: TComponent; AQuestion: IQuestion);
+constructor TQuestionScrollItem.CreateItem(AOwner: TComponent; AContent: IFibbageContent; AQuestion: IQuestion);
 begin
   inherited Create(AOwner);
 
   StyleLookup := 'rScrollItemStyle';
   HitTest := True;
 
+  FContent := AContent;
   FOrgQuestion := AQuestion;
   FOrgCategory := AQuestion.GetCategoryObj;
 
@@ -2276,7 +2923,15 @@ end;
 procedure TQuestionScrollItem.RefreshData;
 begin
   FDetails.Text := Format('Id: %d, Category: %s', [FOrgCategory.GetId, FOrgCategory.GetCategory]);
-  FQuestion.Text := FOrgQuestion.GetQuestion;
+  if FContent.Configuration.GetGameType <> TGameType.Fibbage4PartyPack9 then
+    FQuestion.Text := FOrgQuestion.GetQuestion
+  else if FOrgQuestion.GetQuestionType = TQuestionType.qtShortie then
+    FQuestion.Text := FOrgCategory.GetQuestionText
+  else
+  begin
+    FDetails.Text := Format('Id: %d', [FOrgCategory.GetId]);
+    FQuestion.Text := Trim(FOrgCategory.GetQuestionText1 + sLineBreak + sLineBreak + FOrgCategory.GetQuestionText2);
+  end;
 end;
 
 procedure TQuestionScrollItem.Resize;
@@ -2315,6 +2970,17 @@ procedure TQuestionScrollItems.SelectAll;
 begin
   for var item in Self do
     item.Selected := True;
+end;
+
+procedure TQuestionScrollItems.SelectCategoryWithId(AId: Int32);
+begin
+  for var question in Self do
+    if question.OrgCategory.GetId = AId then
+    begin
+      ClearSelection;
+      question.SetSelected(True);
+      Break;
+    end;
 end;
 
 function TQuestionScrollItems.Selected: TQuestionScrollItem;
@@ -2413,7 +3079,7 @@ end;
 
 procedure TProjectScrollItem.RefreshData;
 begin
-  FName.Text := FOrgConfiguration.GetName;
+  FName.Text := Format('%s (%s)', [FOrgConfiguration.GetName, FOrgConfiguration.GetGameType.ToString]);
   FPath.Text := FOrgConfiguration.GetPath;
 end;
 

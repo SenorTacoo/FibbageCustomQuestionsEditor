@@ -5,6 +5,7 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.Rtti,
   System.Generics.Collections;
 
 type
@@ -20,13 +21,43 @@ type
     function GetId: Integer;
     function GetCategory: string;
     function GetIsFamilyFriendly: Boolean;
+    function GetIsPortrait: Boolean;
+    function GetBumper: string;
+    function GetQuestionText: string;
+    function GetCorrectText: string;
+    function GetSuggestions: string;
+    function GetAlternateSpelling: string;
+
+    function GetQuestionText1: string;
+    function GetQuestionText2: string;
+    function GetCorrectText1: string;
+    function GetCorrectText2: string;
+    function GetAlternateSpelling1: string;
+    function GetAlternateSpelling2: string;
 
     procedure SetId(AId: Integer);
     procedure SetCategory(const ACategory: string);
     procedure SetIsFamilyFriendly(AValue: Boolean);
+    procedure SetIsPortrait(AValue: Boolean);
+    procedure SetBumper(const AValue: string);
+    procedure SetQuestionText(const AValue: string);
+    procedure SetFamilyFriendly(AValue: Boolean);
+
+    procedure SetQuestionText1(const AValue: string);
+    procedure SetQuestionText2(const AValue: string);
+    procedure SetCorrectText(const AValue: string);
+    procedure SetCorrectText1(const AValue: string);
+    procedure SetCorrectText2(const AValue: string);
+    procedure SetSuggestions(const AValue: string);
+    procedure SetAlternateSpelling(const AValue: string);
+    procedure SetAlternateSpelling1(const AValue: string);
+    procedure SetAlternateSpelling2(const AValue: string);
 
     procedure CloneFrom(AObj: ICategory);
   end;
+
+  TSaveOption = (soActivatingProject);
+  TSaveOptions = set of TSaveOption;
 
   ICategories = interface
     ['{705D1649-BB15-41E4-BBFE-8DB36E16C3F8}']
@@ -34,11 +65,15 @@ type
     function Category(AIdx: Integer): ICategory;
     procedure Add(ACategory: ICategory);
     procedure Delete(AId: Integer);
-    procedure Save(const APath, AName: string);
+    procedure Save(const APath, AName: string; ASaveOptions: TSaveOptions);
+    procedure CopyDataFrom(ASource: ICategories);
+    function GetEpisodeId: Int32;
   end;
 
   IFibbageCategories = interface
     ['{C079C47F-9F11-4CEA-B404-FC1393155440}']
+    function ShortieCategories: ICategories;
+    function FinalCategories: ICategories;
     function GetShortieCategory(AQuestion: IQuestion): ICategory;
     function GetFinalCategory(AQuestion: IQuestion): ICategory;
     procedure LoadCategories(const AContentDir: string);
@@ -47,10 +82,11 @@ type
     function CreateNewFinalCategory: ICategory;
     procedure RemoveShortieCategory(AQuestion: IQuestion);
     procedure RemoveFinalCategory(AQuestion: IQuestion);
-    procedure Save(const APath: string);
+    procedure CopyDataFrom(ASource: IFibbageCategories);
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions);
   end;
 
-  TQuestionType = (qtShortie, qtFinal);
+  TQuestionType = (qtShortie, qtFinal, qtSpecial, qtPersonalShortie, qtUnknown);
 
   IQuestion = interface
    ['{EE283E65-E86A-4FCF-952F-4C9FAC7CBD69}']
@@ -60,20 +96,24 @@ type
     function GetAnswer: string;
     function GetAlternateSpelling: string;
     function GetHaveQuestionAudio: Boolean;
+    function GetHaveQuestionAudio2: Boolean;
     function GetHaveAnswerAudio: Boolean;
     function GetHaveBumperAudio: Boolean;
 
     function GetQuestionAudioData: TBytes;
+    function GetQuestionAudioData2: TBytes;
     function GetAnswerAudioData: TBytes;
     function GetBumperAudioData: TBytes;
     function GetCategoryObj: ICategory;
     function GetCategory: string;
+    function GetPortraitData: TBytes;
 
     procedure SetQuestion(const AQuestion: string);
     procedure SetSuggestions(const ASuggestions: string);
     procedure SetAnswer(const AAnswer: string);
     procedure SetAlternateSpelling(const AAlternateSpelling: string);
     procedure SetQuestionAudioData(const AData: TBytes);
+    procedure SetQuestionAudioData2(const AData: TBytes);
     procedure SetAnswerAudioData(const AData: TBytes);
     procedure SetBumperAudioData(const AData: TBytes);
     procedure SetCategoryObj(ACategory: ICategory);
@@ -88,37 +128,38 @@ type
 
   IFibbageQuestions = interface
     ['{E703044F-3534-4F18-892D-99D381446C1C}']
+    procedure CopyDataFrom(ASource: IFibbageQuestions);
     function ShortieQuestions: TQuestionList;
     function FinalQuestions: TQuestionList;
-    procedure Save(const APath: string);
+    procedure Save(const APath: string; ASaveOptions: TSaveOptions);
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
     function CreateNewShortieQuestion: IQuestion;
     function CreateNewFinalQuestion: IQuestion;
+    procedure LoadQuestions(const APath: string);
   end;
 
-  IQuestionsLoader = interface
-    ['{64B170E4-BEF8-46F8-BE7F-502FA2027E98}']
-    procedure LoadQuestions(const AContentDir: string);
-    function Questions: IFibbageQuestions;
+  TGameType = (FibbageXL, FibbageXLPartyPack1, Fibbage3PartyPack4, Fibbage4PartyPack9);
+  TGameTypeHelper = record helper for TGameType
+    function ToString: string;
   end;
-
-  TSaveOption = (soDoNotSaveConfig);
-  TSaveOptions = set of TSaveOption;
 
   IContentConfiguration = interface
     ['{B756232F-2FC1-4BD9-8CDB-76D33AC44D4B}']
     function Initialize(const APath: string): Boolean;
+    function GetClone: IContentConfiguration;
     procedure Save(const APath: string); overload;
     procedure Save; overload;
 
     procedure SetName(const AName: string);
     procedure SetPath(const APath: string);
+    procedure SetGameType(AType: TGameType);
     procedure SetShowCategoryDuplicated(AValue: Boolean);
     procedure SetShowTooFewSuggestions(AValue: Boolean);
 
     function GetName: string;
     function GetPath: string;
+    function GetGameType: TGameType;
     function GetShowCategoryDuplicated: Boolean;
     function GetShowTooFewSuggestions: Boolean;
   end;
@@ -130,7 +171,9 @@ type
     ['{C29008F3-5F9B-4053-8947-792D2430F7AE}']
     function Questions: IFibbageQuestions;
     function Categories: IFibbageCategories;
+    function Configuration: IContentConfiguration;
     function GetPath: string;
+    procedure CopyDataFrom(ASource: IFibbageContent);
 
     procedure Initialize(AConfiguration: IContentConfiguration);
 
@@ -144,6 +187,7 @@ type
 
     procedure AddShortieQuestion;
     procedure AddFinalQuestion;
+
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
   end;
@@ -166,7 +210,15 @@ type
     procedure Activate(AConfig: IContentConfiguration; const APath: string);
   end;
 
+  EActivateError = class(Exception);
 
 implementation
+
+{ TGameTypeHelper }
+
+function TGameTypeHelper.ToString: string;
+begin
+  Result := TRttiEnumerationType.GetName(Self);
+end;
 
 end.

@@ -8,8 +8,12 @@ uses
   System.SysUtils,
   System.Threading,
   System.Classes,
+  System.JSON,
+  System.JSON.Builders,
+  System.JSON.Writers,
   uQuestionsLoader,
   uCategoriesLoader,
+  uPathChecker,
   uInterfaces;
 
 type
@@ -17,7 +21,8 @@ type
   private
     FConfig: IContentConfiguration;
     FCategories: IFibbageCategories;
-    FQuestionsLoader: IQuestionsLoader;
+    FQuestions: IFibbageQuestions;
+
     procedure SaveManifest(const APath: string);
     procedure PrepareBackup(const APath: string);
     procedure RemoveBackup(const APath: string);
@@ -27,13 +32,18 @@ type
     procedure PreSave(const APath: string);
     procedure InnerSave(const APath: string; ASaveOptions: TSaveOptions = []);
     procedure AssignCategoryToQuestion;
+    procedure DoAssignCategoryToQuestion;
+    procedure DoAssignQuestionToCategory;
+    procedure CreateProperObjects;
+    procedure SaveManifestFibbage(const APath: string);
+    procedure SaveManifestFibbage4(const APath: string);
   public
-    constructor Create(ACategories: IFibbageCategories; AQuestionsLoader: IQuestionsLoader);
-
     function Questions: IFibbageQuestions;
     function Categories: IFibbageCategories;
+    function Configuration: IContentConfiguration;
     function GetPath: string;
 
+    procedure CopyDataFrom(ASource: IFibbageContent);
     procedure Initialize(AConfiguration: IContentConfiguration);
 
     procedure Save; overload;
@@ -58,7 +68,7 @@ implementation
 procedure TFibbageContent.AddFinalQuestion;
 begin
   var category := FCategories.CreateNewFinalCategory;
-  var question := FQuestionsLoader.Questions.CreateNewFinalQuestion;
+  var question := FQuestions.CreateNewFinalQuestion;
 
   question.SetCategoryObj(category);
 end;
@@ -66,7 +76,7 @@ end;
 procedure TFibbageContent.AddShortieQuestion;
 begin
   var category := FCategories.CreateNewShortieCategory;
-  var question := FQuestionsLoader.Questions.CreateNewShortieQuestion;
+  var question := FQuestions.CreateNewShortieQuestion;
 
   question.SetCategoryObj(category);
 end;
@@ -76,10 +86,21 @@ begin
   Result := FCategories;
 end;
 
+function TFibbageContent.Configuration: IContentConfiguration;
+begin
+  Result := FConfig;
+end;
+
+procedure TFibbageContent.CopyDataFrom(ASource: IFibbageContent);
+begin
+  FCategories.CopyDataFrom(ASource.Categories);
+  FQuestions.CopyDataFrom(ASource.Questions);
+end;
+
 procedure TFibbageContent.CopyToFinalQuestions(const AQuestion: IQuestion;
   out ANewQuestion: IQuestion);
 begin
-  var newQuestion := FQuestionsLoader.Questions.CreateNewFinalQuestion;
+  var newQuestion := FQuestions.CreateNewFinalQuestion;
   newQuestion.CloneFrom(AQuestion);
 
   var newCategory := FCategories.CreateNewFinalCategory;
@@ -94,7 +115,7 @@ end;
 procedure TFibbageContent.CopyToShortieQuestions(const AQuestion: IQuestion;
   out ANewQuestion: IQuestion);
 begin
-  var newQuestion := FQuestionsLoader.Questions.CreateNewShortieQuestion;
+  var newQuestion := FQuestions.CreateNewShortieQuestion;
   newQuestion.CloneFrom(AQuestion);
 
   var newCategory := FCategories.CreateNewShortieCategory;
@@ -106,12 +127,89 @@ begin
   ANewQuestion := newQuestion;
 end;
 
-constructor TFibbageContent.Create(ACategories: IFibbageCategories;
-  AQuestionsLoader: IQuestionsLoader);
+procedure TFibbageContent.CreateProperObjects;
 begin
-  inherited Create;
-  FCategories := ACategories;
-  FQuestionsLoader := AQuestionsLoader;
+  case FConfig.GetGameType of
+    TGameType.FibbageXL:
+      begin
+        FCategories := TFibbageCategories_FibbageXL.Create;
+        FQuestions := TQuestionsFibbageXL.Create;
+      end;
+    TGameType.FibbageXLPartyPack1:
+      begin
+        FCategories := TFibbageCategories_FibbageXLPP1.Create;
+        FQuestions:= TQuestionsFibbageXLPP1.Create;
+      end;
+    TGameType.Fibbage3PartyPack4:
+      begin
+        FCategories := TFibbageCategories_Fibbage3PP4.Create;
+        FQuestions := TQuestionsFibbage3PP4.Create;
+      end;
+    TGameType.Fibbage4PartyPack9:
+      begin
+        FCategories := TFibbageCategories_Fibbage4PP9.Create;
+        FQuestions := TQuestionsFibbage4PP9.Create;
+      end;
+    else
+      raise Exception.Create('Unknown game type');
+  end;
+end;
+
+procedure TFibbageContent.DoAssignCategoryToQuestion;
+begin
+  for var idx := FQuestions.ShortieQuestions.Count - 1 downto 0 do
+  begin
+    var item := FQuestions.ShortieQuestions[idx];
+    var category := FCategories.GetShortieCategory(item);
+    if Assigned(category) then
+      item.SetCategoryObj(category)
+    else
+    begin
+      LogE('AssignCategoryToQuestion, have shortie question (%d) without category', [item.GetId]);
+      FQuestions.ShortieQuestions.Delete(idx);
+    end;
+  end;
+
+  for var idx := FQuestions.FinalQuestions.Count - 1 downto 0 do
+  begin
+    var item := FQuestions.FinalQuestions[idx];
+    var category := FCategories.GetFinalCategory(item);
+    if Assigned(category) then
+      item.SetCategoryObj(category)
+    else
+    begin
+      LogE('AssignCategoryToQuestion, have final question (%d) without category', [item.GetId]);
+      FQuestions.FinalQuestions.Delete(idx);
+    end;
+  end;
+end;
+
+procedure TFibbageContent.DoAssignQuestionToCategory;
+begin
+  for var idx := FQuestions.ShortieQuestions.Count - 1 downto 0 do
+  begin
+    var question := FQuestions.ShortieQuestions[idx];
+    var category := FCategories.GetShortieCategory(question);
+    if Assigned(category) then
+    begin
+      question.SetCategoryObj(category);
+      Continue;
+    end;
+
+    FQuestions.ShortieQuestions.Extract(question);
+    FQuestions.FinalQuestions.Add(question);
+    question.SetQuestionType(qtFinal);
+
+    category := FCategories.GetFinalCategory(question);
+    if Assigned(category) then
+    begin
+      question.SetCategoryObj(category);
+      Continue;
+    end;
+
+    LogE('AssignQuestionToCategory, have question (%d) without category', [question.GetId]);
+    FQuestions.FinalQuestions.Extract(question);
+  end;
 end;
 
 function TFibbageContent.GetPath: string;
@@ -123,47 +221,36 @@ procedure TFibbageContent.Initialize(AConfiguration: IContentConfiguration);
 begin
   FConfig := AConfiguration;
 
+  CreateProperObjects;
+
   FCategories.LoadCategories(GetPath);
-  FQuestionsLoader.LoadQuestions(GetPath);
+  FQuestions.LoadQuestions(GetPath);
   AssignCategoryToQuestion;
 end;
 
 procedure TFibbageContent.AssignCategoryToQuestion;
 begin
-  for var item in FQuestionsLoader.Questions.ShortieQuestions do
-  begin
-    var category := FCategories.GetShortieCategory(item);
-    if Assigned(category) then
-      item.SetCategoryObj(category)
-    else
-      LogE('AssignCategoryToQuestion, have shortie question (%d) without category', [item.GetId]);
-  end;
-
-  for var item in FQuestionsLoader.Questions.FinalQuestions do
-  begin
-    var category := FCategories.GetFinalCategory(item);
-    if Assigned(category) then
-      item.SetCategoryObj(category)
-    else
-      LogE('AssignCategoryToQuestion, have final question (%d) without category', [item.GetId]);
-  end;
+  if FConfig.GetGameType = TGameType.FibbageXLPartyPack1 then
+    DoAssignQuestionToCategory
+  else
+    DoAssignCategoryToQuestion
 end;
 
 function TFibbageContent.Questions: IFibbageQuestions;
 begin
-  Result := FQuestionsLoader.Questions;
+  Result := FQuestions;
 end;
 
 procedure TFibbageContent.RemoveFinalQuestion(AQuestion: IQuestion);
 begin
   FCategories.RemoveFinalCategory(AQuestion);
-  FQuestionsLoader.Questions.RemoveFinalQuestion(AQuestion);
+  FQuestions.RemoveFinalQuestion(AQuestion);
 end;
 
 procedure TFibbageContent.RemoveShortieQuestion(AQuestion: IQuestion);
 begin
   FCategories.RemoveShortieCategory(AQuestion);
-  FQuestionsLoader.Questions.RemoveShortieQuestion(AQuestion);
+  FQuestions.RemoveShortieQuestion(AQuestion);
 end;
 
 procedure TFibbageContent.PrepareBackup(const APath: string);
@@ -211,10 +298,11 @@ procedure TFibbageContent.InnerSave(const APath: string; ASaveOptions: TSaveOpti
 begin
   PreSave(APath);
   try
-    if not (soDoNotSaveConfig in ASaveOptions) then
+    if not (soActivatingProject in ASaveOptions) then
       FConfig.Save(APath);
-    FQuestionsLoader.Questions.Save(APath);
-    FCategories.Save(APath);
+    
+    FQuestions.Save(APath, ASaveOptions);
+    FCategories.Save(APath, ASaveOptions);
     SaveManifest(APath);
 
     PostSaveSuccessful(APath);
@@ -223,6 +311,7 @@ begin
     begin
       LogE('save exception %s/%s', [E.Message, E.ClassName]);
       PostSaveFailed(APath);
+      raise;
     end;
   end;
 end;
@@ -234,8 +323,8 @@ begin
   category.CloneFrom(AQuestion.GetCategoryObj);
 
   AQuestion.SetQuestionType(qtFinal);
-  FQuestionsLoader.Questions.FinalQuestions.Add(AQuestion);
-  FQuestionsLoader.Questions.ShortieQuestions.Remove(AQuestion);
+  FQuestions.FinalQuestions.Add(AQuestion);
+  FQuestions.ShortieQuestions.Remove(AQuestion);
 end;
 
 procedure TFibbageContent.MoveToShortieQuestions(const AQuestion: IQuestion);
@@ -245,8 +334,8 @@ begin
   category.CloneFrom(AQuestion.GetCategoryObj);
 
   AQuestion.SetQuestionType(qtShortie);
-  FQuestionsLoader.Questions.ShortieQuestions.Add(AQuestion);
-  FQuestionsLoader.Questions.FinalQuestions.Remove(AQuestion);
+  FQuestions.ShortieQuestions.Add(AQuestion);
+  FQuestions.FinalQuestions.Remove(AQuestion);
 end;
 
 procedure TFibbageContent.Save;
@@ -256,12 +345,68 @@ end;
 
 procedure TFibbageContent.SaveManifest(const APath: string);
 begin
+  if FConfig.GetGameType = TGameType.FibbageXLPartyPack1 then
+    Exit;
+
+  if FConfig.GetGameType = TGameType.Fibbage4PartyPack9 then
+    SaveManifestFibbage4(APath)
+  else
+    SaveManifestFibbage(APath);
+end;
+
+procedure TFibbageContent.SaveManifestFibbage(const APath: string);
+begin
   var fs := TFileStream.Create(TPath.Combine(APath, 'manifest.jet'), fmCreate);
-  var sw := TStreamWriter.Create(fs);
+  var jw := TJsonTextWriter.Create(fs);
+  var job := TJSONObjectBuilder.Create(jw);
   try
-    sw.WriteLine('{ "id":"Main", "name":"Main Content Pack", "types":["fibbageshortie","finalfibbage"] }');
+    var jsonObj := job.BeginObject;
+
+    var typesArray := jsonObj
+      .Add('id', 'Main')
+      .Add('name', 'Main Content Pack')
+      .BeginArray('types');
+
+    typesArray
+        .Add('fibbageshortie')
+        .Add('finalfibbage');
+
+    if FConfig.GetGameType = TGameType.Fibbage3PartyPack4 then
+    begin
+      typesArray
+        .Add('tmishortie')
+        .Add('fibbagespecial');
+    end;
+
+    typesArray.EndArray;
+
+    jsonObj.EndObject;
   finally
-    sw.Free;
+    job.Free;
+    jw.Free;
+    fs.Free;
+  end;
+end;
+
+procedure TFibbageContent.SaveManifestFibbage4(const APath: string);
+begin
+  var fs := TFileStream.Create(TPath.Combine(APath, 'manifest.jet'), fmCreate);
+  var jw := TJsonTextWriter.Create(fs);
+  var job := TJSONObjectBuilder.Create(jw);
+  try
+    job.BeginObject
+      .Add('id', 'Main')
+      .Add('name', 'Fibbage4')
+      .BeginArray('types')
+        .Add('fibbageblankie')
+        .Add('fibbagefinalround')
+        .Add('celebrityblankie')
+        .Add('fanblankie')
+      .EndArray
+    .EndObject;
+  finally
+    job.Free;
+    jw.Free;
     fs.Free;
   end;
 end;
