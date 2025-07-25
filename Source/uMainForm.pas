@@ -296,6 +296,10 @@ type
     mSingleItemAlternateSpelling2: TMemo;
     Splitter4: TSplitter;
     bSingleItemQuestionAudio2: TButton;
+    Layout6: TLayout;
+    bSettingsFibbage4PP9Path: TButton;
+    lSettingsFibbage4PP9Path: TLabel;
+    eSettingsFibbage4PP9Path: TEdit;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -352,6 +356,7 @@ type
     procedure aMigrateToFibbageXLPartyPack1Execute(Sender: TObject);
     procedure aSaveProjectAndInitializeExecute(Sender: TObject);
     procedure bSingleItemQuestionAudio2Click(Sender: TObject);
+    procedure bSettingsFibbage4PP9PathClick(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -1087,6 +1092,7 @@ begin
   TAppConfig.GetInstance.FibbageXLPath := eSettingsFibbageXLPath.Text;
   TAppConfig.GetInstance.FibbageXLPartyPack1Path := eSettingsFibbageXLPP1Path.Text;
   TAppConfig.GetInstance.Fibbage3PartyPack4Path := eSettingsFibbage3PP4Path.Text;
+  TAppConfig.GetInstance.Fibbage4PartyPack9Path := eSettingsFibbage4PP9Path.Text;
   TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := cbShowCategoryDuplicatedInfo.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := cbShowDialogAboutTooFewSuggestions.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions := cbShowDialogAboutTooFewShortieQuestions.IsChecked;
@@ -1358,9 +1364,6 @@ end;
 function TFrmMain.CheckForTooFewShortieQuestions: Boolean;
 begin
   Result := True;
-
-  if not (FContent.Configuration.GetGameType in [TGameType.FibbageXLPartyPack1, TGameType.Fibbage3PartyPack4, TGameType.Fibbage4PartyPack9]) then
-    Exit;
 
   if FContent.Questions.ShortieQuestions.Count < MIN_NR_OF_SHORTIE_QUESTIONS then
     if not ShowInfoAboutTooFewShortieQuestions(
@@ -2085,7 +2088,7 @@ procedure TFrmMain.PrepareMultiViewButtons(AActTab: TAppTab);
 begin
   mvHomeOptions.BeginUpdate;
   try
-    bQuestions.Enabled := AActTab <> atHomeBeforeImport;
+    bQuestions.Enabled := Assigned(FContent);
   finally
     mvHomeOptions.EndUpdate;
   end;
@@ -2415,6 +2418,16 @@ begin
   eSettingsFibbage3PP4Path.Text := path;
 end;
 
+procedure TFrmMain.bSettingsFibbage4PP9PathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetFibbage4Path(path) then
+    Exit;
+
+  eSettingsFibbage4PP9Path.Text := path;
+end;
+
 procedure TFrmMain.bSettingsFibbageXLPathClick(Sender: TObject);
 var
   path: string;
@@ -2452,6 +2465,7 @@ begin
     eSettingsFibbageXLPath.Text := TAppConfig.GetInstance.FibbageXLPath;
     eSettingsFibbageXLPP1Path.Text := TAppConfig.GetInstance.FibbageXLPartyPack1Path;
     eSettingsFibbage3PP4Path.Text := TAppConfig.GetInstance.Fibbage3PartyPack4Path;
+    eSettingsFibbage4PP9Path.Text := TAppConfig.GetInstance.Fibbage4PartyPack9Path;
     cbShowCategoryDuplicatedInfo.IsChecked := TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories;
     cbShowDialogAboutTooFewSuggestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions;
     cbShowDialogAboutTooFewShortieQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions;
