@@ -312,8 +312,7 @@ type
 
   TFibbageCategories_Fibbage4PP9 = class(TFibbageCategoriesBase)
   private
-    procedure SaveCelebritiesCategories(const APath: string; ASaveOptions: TSaveOptions);
-    procedure SaveFanCategories(const APath: string; ASaveOptions: TSaveOptions);
+    procedure CopyOtherCategories(const APath: string);
   protected
     function CreateNewCategory(AType: TQuestionType): ICategory; override;
     function GetShortiesJetPath: string; override;
@@ -1041,6 +1040,29 @@ end;
 
 { TFibbageCategories_Fibbage4PP9 }
 
+procedure TFibbageCategories_Fibbage4PP9.CopyOtherCategories(const APath: string);
+begin
+  var dataPath := GetBackupPath(APath);
+  var jetFiles := TDirectory.GetFiles(dataPath, '*.jet');
+
+  for var idx := 0 to Length(jetFiles) - 1 do
+  begin
+    var fileName := ExtractFileName(jetFiles[idx]);
+
+    if fileName = 'fibbageblankie.jet' then
+      Continue;
+
+    if fileName = 'fibbagefinalround.jet' then
+      Continue;
+
+    var filePath := jetFiles[idx];
+    var wantedPath := TPath.Combine(APath, fileName);
+
+    if FileExists(filePath) then
+      TFile.Copy(filePath, wantedPath, True)
+  end;
+end;
+
 function TFibbageCategories_Fibbage4PP9.CreateNewCategory(AType: TQuestionType): ICategory;
 begin
   if AType = qtShortie then
@@ -1105,34 +1127,8 @@ procedure TFibbageCategories_Fibbage4PP9.Save(const APath: string;
 begin
   ShortieCategories.Save(APath, 'fibbageblankie', ASaveOptions);
   FinalCategories.Save(APath, 'fibbagefinalround', ASaveOptions);
-  SaveCelebritiesCategories(APath, ASaveOptions);
-  SaveFanCategories(APath, ASaveOptions);
-end;
-
-procedure TFibbageCategories_Fibbage4PP9.SaveCelebritiesCategories(
-  const APath: string; ASaveOptions: TSaveOptions);
-begin
-  var dataPath := GetBackupPath(APath);
-  var filePath := TPath.Combine(dataPath, 'celebrityblankie.jet');
-  var wantedPath := TPath.Combine(APath, 'celebrityblankie.jet');
-
-  if FileExists(filePath) then
-    TFile.Copy(filePath, wantedPath, True)
-  else if soActivatingProject in ASaveOptions then
-    raise EActivateError.CreateFmt('Missing file %s, check for files integrity', [filePath]);
-end;
-
-procedure TFibbageCategories_Fibbage4PP9.SaveFanCategories(const APath: string;
-  ASaveOptions: TSaveOptions);
-begin
-  var dataPath := GetBackupPath(APath);
-  var filePath := TPath.Combine(dataPath, 'fanblankie.jet');
-  var wantedPath := TPath.Combine(APath, 'fanblankie.jet');
-
-  if FileExists(filePath) then
-    TFile.Copy(filePath, wantedPath, True)
-  else if soActivatingProject in ASaveOptions then
-    raise EActivateError.CreateFmt('Missing file %s, check for files integrity', [filePath]);
+  if soActivatingProject in ASaveOptions then
+    CopyOtherCategories(APath);
 end;
 
 { TCategories_Fibbage4PartyPack9 }

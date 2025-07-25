@@ -177,8 +177,7 @@ type
 
   TQuestionsFibbage4PP9 = class(TQuestionsBase)
   private
-    procedure SaveCelebritiesQuestions(const APath: string; ASaveOptions: TSaveOptions);
-    procedure SaveFanQuestions(const APath: string; ASaveOptions: TSaveOptions);
+    procedure CopyOtherQuestions(const APath: string);
   protected
     procedure LoadShorties; override;
     procedure LoadFinals; override;
@@ -1258,6 +1257,30 @@ end;
 
 { TQuestionsFibbage4PP9 }
 
+procedure TQuestionsFibbage4PP9.CopyOtherQuestions(const APath: string);
+begin
+  var dataPath := GetBackupPath(APath);
+
+  var questionDirs := TDirectory.GetDirectories(dataPath);
+  for var idx := 0 to Length(questionDirs) - 1 do
+  begin
+    var dirName := ExtractFileName(questionDirs[idx]);
+    var dirPath := questionDirs[idx];
+    var wantedPath := TPath.Combine(APath, dirName);
+
+    if dirName = 'fibbageblankie' then
+      Continue;
+    if dirName = 'fibbagefinalround' then
+      Continue;
+
+    if DirectoryExists(wantedPath) then
+      TDirectory.Delete(wantedPath, True);
+
+    TDirectory.Copy(dirPath, wantedPath);
+
+  end;
+end;
+
 function TQuestionsFibbage4PP9.CreateNewFinalQuestion: IQuestion;
 begin
   var res := TQuestionItem.Create;
@@ -1309,48 +1332,8 @@ procedure TQuestionsFibbage4PP9.Save(const APath: string;
 begin
   FShortieQuestions.Save(APath, 'fibbageblankie');
   FFinalQuestions.Save(APath, 'fibbagefinalround');
-  SaveCelebritiesQuestions(APath, ASaveOptions);
-  SaveFanQuestions(APath, ASaveOptions);
-end;
-
-procedure TQuestionsFibbage4PP9.SaveCelebritiesQuestions(const APath: string;
-  ASaveOptions: TSaveOptions);
-begin
-  var dataPath := GetBackupPath(APath);
-  var dirPath := TPath.Combine(dataPath, 'celebrityblankie');
-  var wantedPath := TPath.Combine(APath, 'celebrityblankie');
-
-  if not DirectoryExists(dirPath) then
-  begin
-    if soActivatingProject in ASaveOptions then
-      raise EActivateError.CreateFmt('Missing directory %s, check for files integrity', [dirPath]);
-    Exit;
-  end;
-
-  if DirectoryExists(wantedPath) then
-    TDirectory.Delete(wantedPath, True);
-
-  TDirectory.Copy(dirPath, wantedPath);
-end;
-
-procedure TQuestionsFibbage4PP9.SaveFanQuestions(const APath: string;
-  ASaveOptions: TSaveOptions);
-begin
-  var dataPath := GetBackupPath(APath);
-  var dirPath := TPath.Combine(dataPath, 'fanblankie');
-  var wantedPath := TPath.Combine(APath, 'fanblankie');
-
-  if not DirectoryExists(dirPath) then
-  begin
-    if soActivatingProject in ASaveOptions then
-      raise EActivateError.CreateFmt('Missing directory %s, check for files integrity', [dirPath]);
-    Exit;
-  end;
-
-  if DirectoryExists(wantedPath) then
-    TDirectory.Delete(wantedPath, True);
-
-  TDirectory.Copy(dirPath, wantedPath);
+  if soActivatingProject in ASaveOptions then
+    CopyOtherQuestions(APath);
 end;
 
 end.
