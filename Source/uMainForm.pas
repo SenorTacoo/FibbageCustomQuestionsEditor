@@ -294,7 +294,7 @@ type
     lSingleItemAlternateSpelling2: TLabel;
     mSingleItemAlternateSpelling2: TMemo;
     Splitter4: TSplitter;
-    bSingleItemCorrectAudio2: TButton;
+    bSingleItemQuestionAudio2: TButton;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -386,6 +386,9 @@ type
     procedure SetButtonPressed(AButton: TButton);
     procedure DisableButton(AButton: TButton);
 
+    procedure FillQuestionFromControls;
+    procedure FillCategoryFromControls;
+
     procedure GoToFinalQuestions;
     procedure GoToShortieQuestions;
 
@@ -441,6 +444,7 @@ type
     procedure OnActivateStart;
     function GetFibbageXLPath(out APath: string): Boolean;
     function GetFibbage3Path(out APath: string): Boolean;
+    function GetFibbage4Path(out APath: string): Boolean;
     procedure OnPostSaveClose;
     procedure OnPostSaveInitialize;
     procedure ProcessKeyDown_Questions(var Key: Word; Shift: TShiftState);
@@ -618,6 +622,11 @@ begin
   Result := SelectDirectory('Select Fibbage3 directory', '', APath);
 end;
 
+function TFrmMain.GetFibbage4Path(out APath: string): Boolean;
+begin
+  Result := SelectDirectory('Select Fibbage4 directory', '', APath);
+end;
+
 function TFrmMain.GetFibbageXLPath(out APath: string): Boolean;
 begin
   Result := SelectDirectory('Select FibbageXL directory', '', APath);
@@ -632,7 +641,7 @@ begin
 
   while True do
   begin
-    if not GetProjectPath(str) then
+      if not GetProjectPath(str) then
       Exit;
     if cfg.Initialize(str) then
       Break;
@@ -643,6 +652,8 @@ begin
       ShowMessage('Invalid path, needed directories for this game not found');
       Continue;
     end;
+    if (gameType = TGameType.Fibbage4PartyPack9) and DirectoryExists(System.IOUtils.TPath.Combine(str, 'en')) then
+      cfg.SetPath(System.IOUtils.TPath.Combine(str, 'en'));
 
     if not GetProjectName(str) then
       Exit;
@@ -1555,14 +1566,9 @@ begin
 
   FQuestionsChanged := True;
 
-  FSelectedQuestion.SetQuestion(mSingleItemQuestion.Text.Trim);
-  FSelectedQuestion.SetAnswer(mSingleItemAnswer.Text.Trim);
-  FSelectedQuestion.SetAlternateSpelling(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
-  FSelectedQuestion.SetSuggestions(GetSingleQuestionSuggestions);
+  FillQuestionFromControls;
+  FillCategoryFromControls;
 
-  FSelectedCategory.SetId(StrToInt(eSingleItemId.Text));
-  FSelectedCategory.SetCategory(eSingleItemCategory.Text.Trim);
-  FSelectedCategory.SetIsFamilyFriendly(sFamilyFriendly.IsChecked);
   FSelectedQuestion.SetCategoryObj(FSelectedCategory);
 
   if FSelectedQuestion.GetQuestionType = qtShortie then
@@ -1611,6 +1617,15 @@ begin
           else
             Exit;
       end;
+    TGameType.Fibbage4PartyPack9:
+      begin
+        if TAppConfig.GetInstance.Fibbage4PartyPack9Path.IsEmpty then
+          if GetFibbage4Path(path) then
+            TAppConfig.GetInstance.Fibbage4PartyPack9Path := path
+          else
+            Exit;
+      end;
+
   end;
 
   TAsyncAction.Create(OnActivateStart, OnActivateEnd, ActivateProjectProc).Start;
@@ -1639,6 +1654,8 @@ begin
       destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbageXLPartyPack1Path, 'content');
     TGameType.Fibbage3PartyPack4:
       destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.Fibbage3PartyPack4Path, 'content');
+    TGameType.Fibbage4PartyPack9:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.Fibbage4PartyPack9Path, 'content', 'en');
   end;
 
   try
@@ -2007,6 +2024,25 @@ begin
   end;
 end;
 
+procedure TFrmMain.FillCategoryFromControls;
+begin
+  FSelectedCategory.SetId(StrToInt(eSingleItemId.Text));
+  FSelectedCategory.SetFamilyFriendly(sFamilyFriendly.IsChecked);
+  FSelectedCategory.SetQuestionText(mSingleItemQuestion.Text);
+  FSelectedCategory.SetQuestionText1(mSingleItemQuestion.Text);
+  FSelectedCategory.SetQuestionText2(mSingleItemQuestion2.Text);
+  FSelectedCategory.SetCorrectText(mSingleItemAnswer.Text);
+  FSelectedCategory.SetCorrectText1(mSingleItemAnswer.Text);
+  FSelectedCategory.SetCorrectText1(mSingleItemAnswer.Text);
+  FSelectedCategory.SetCorrectText2(mSingleItemAnswer2.Text);
+  FSelectedCategory.SetSuggestions(GetSingleQuestionSuggestions);
+  FSelectedCategory.SetAlternateSpelling(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
+  FSelectedCategory.SetAlternateSpelling1(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
+  FSelectedCategory.SetAlternateSpelling2(mSingleItemAlternateSpelling2.Text.Replace(', ', ',').Trim);
+  FSelectedCategory.SetCategory(eSingleItemCategory.Text.Trim);
+  FSelectedCategory.SetIsFamilyFriendly(sFamilyFriendly.IsChecked);
+end;
+
 procedure TFrmMain.FillControlsFromCategory;
 begin
   if FSelectedQuestion.GetQuestionType = TQuestionType.qtShortie then
@@ -2061,6 +2097,14 @@ begin
   finally
     sbxFinalQuestions.EndUpdate;
   end;
+end;
+
+procedure TFrmMain.FillQuestionFromControls;
+begin
+  FSelectedQuestion.SetQuestion(mSingleItemQuestion.Text.Trim);
+  FSelectedQuestion.SetAnswer(mSingleItemAnswer.Text.Trim);
+  FSelectedQuestion.SetAlternateSpelling(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
+  FSelectedQuestion.SetSuggestions(GetSingleQuestionSuggestions);
 end;
 
 procedure TFrmMain.RefreshProjectFormActions;
@@ -2356,7 +2400,7 @@ procedure TFrmMain.HideUnusedSingleQuestionControls;
 begin
   lySingleItemQuestion2.Visible := (FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9) and (FSelectedQuestion.GetQuestionType = TQuestionType.qtFinal);
   lySingleItemPossibleAnswers2.Visible := lySingleItemQuestion2.Visible;
-  bSingleItemCorrectAudio2.Visible := lySingleItemQuestion2.Visible;
+  bSingleItemQuestionAudio2.Visible := lySingleItemQuestion2.Visible;
   if lySingleItemQuestion2.Visible then
     gplSingleItemAudio.ColumnCollection.Items[2].Value := 100/3
   else

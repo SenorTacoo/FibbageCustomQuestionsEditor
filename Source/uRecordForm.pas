@@ -163,6 +163,8 @@ begin
       res := FQuestion.GetHaveAnswerAudio and (Length(FQuestion.GetAnswerAudioData) > 0);
     atBumper:
       res := FQuestion.GetHaveBumperAudio and (Length(FQuestion.GetBumperAudioData) > 0);
+    atQuestion2:
+      res := FQuestion.GetHaveQuestionAudio2 and (Length(FQuestion.GetQuestionAudioData2) > 0);
   end;
   bPlayOriginalAudio.Enabled := res;
   bRemoveAllAudio.Enabled := bPlayOriginalAudio.Enabled;
@@ -375,6 +377,7 @@ begin
     atAnswer: buffer := FQuestion.GetAnswerAudioData;
     atBumper: buffer := FQuestion.GetBumperAudioData;
     atRecorded: buffer := FRecordedData;
+    atQuestion2: buffer := FQuestion.GetQuestionAudioData2;
   end;
 
   Result := TPath.Combine(TPath.GetTempPath, TPath.GetTempFileName);

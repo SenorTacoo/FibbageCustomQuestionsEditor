@@ -44,6 +44,7 @@ type
     procedure SetIsPortrait(AValue: Boolean); virtual;
     procedure SetBumper(const AValue: string); virtual;
     procedure SetQuestionText(const AValue: string); virtual;
+    procedure SetFamilyFriendly(AValue: Boolean);  virtual;
 
     procedure SetQuestionText1(const AValue: string); virtual;
     procedure SetQuestionText2(const AValue: string); virtual;
@@ -73,6 +74,7 @@ type
     procedure SetCategory(const ACategory: string); override;
     procedure SetIsFamilyFriendly(AValue: Boolean); override;
     procedure SetBumper(const AValue: string); override;
+    procedure SetFamilyFriendly(AValue: Boolean); override;
   end;
 
   TCategoryData_FibbageXL = class(TCategoryData);
@@ -105,6 +107,9 @@ type
     function GetId: Integer; override;
     function GetIsFamilyFriendly: Boolean; override;
 
+    function GetCategory: string; override;
+    procedure SetCategory(const ACategory: string); override;
+
     procedure SetId(AId: Integer); override;
     procedure SetIsFamilyFriendly(AValue: Boolean); override;
 
@@ -119,6 +124,7 @@ type
 
     function GetAlternateSpelling: string; override;
     procedure SetAlternateSpelling(const AValue: string); override;
+    procedure SetFamilyFriendly(AValue: Boolean); override;
   end;
 
   TCategoryDataFinal_Fibbage4PartyPack9 = class(TCategoryDataBase)
@@ -697,6 +703,11 @@ begin
   {}
 end;
 
+procedure TCategoryDataBase.SetFamilyFriendly;
+begin
+  {}
+end;
+
 procedure TCategoryDataBase.SetId;
 begin
   {}
@@ -1171,6 +1182,11 @@ begin
   Result := string.Join(',', FAlternateSpellings);
 end;
 
+function TCategoryDataShortie_Fibbage4PartyPack9.GetCategory: string;
+begin
+  Result := FCategory;
+end;
+
 function TCategoryDataShortie_Fibbage4PartyPack9.GetCorrectText: string;
 begin
   Result := FCorrectText;
@@ -1202,10 +1218,22 @@ begin
   FAlternateSpellings := AValue.Split([',']);
 end;
 
+procedure TCategoryDataShortie_Fibbage4PartyPack9.SetCategory(
+  const ACategory: string);
+begin
+  FCategory := ACategory;
+end;
+
 procedure TCategoryDataShortie_Fibbage4PartyPack9.SetCorrectText(
   const AValue: string);
 begin
   FCorrectText := AValue;
+end;
+
+procedure TCategoryDataShortie_Fibbage4PartyPack9.SetFamilyFriendly(
+  AValue: Boolean);
+begin
+  FX := not AValue;
 end;
 
 procedure TCategoryDataShortie_Fibbage4PartyPack9.SetId(AId: Integer);
@@ -1216,7 +1244,7 @@ end;
 procedure TCategoryDataShortie_Fibbage4PartyPack9.SetIsFamilyFriendly(
   AValue: Boolean);
 begin
-  FX := AValue;
+  FX := not AValue;
 end;
 
 procedure TCategoryDataShortie_Fibbage4PartyPack9.SetQuestionText(
@@ -1310,7 +1338,7 @@ end;
 procedure TCategoryDataFinal_Fibbage4PartyPack9.SetIsFamilyFriendly(
   AValue: Boolean);
 begin
-  FX := AValue;
+  FX := not AValue;
 end;
 
 procedure TCategoryDataFinal_Fibbage4PartyPack9.SetQuestionText1(
@@ -1361,6 +1389,11 @@ end;
 procedure TCategoryData.SetCategory(const ACategory: string);
 begin
   FCategory := ACategory;
+end;
+
+procedure TCategoryData.SetFamilyFriendly(AValue: Boolean);
+begin
+  Fx := not AValue;
 end;
 
 procedure TCategoryData.SetId(AId: Integer);

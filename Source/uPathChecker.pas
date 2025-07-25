@@ -57,7 +57,14 @@ begin
           Exit;
       end;
     Fibbage4PartyPack9:
-      Exit(True);
+    begin
+      if DirectoryExists(IncludeTrailingPathDelimiter(APath) +
+        IncludeTrailingPathDelimiter('en')) then
+        Exit(True);
+      if DirectoryExists(IncludeTrailingPathDelimiter(APath) +
+        IncludeTrailingPathDelimiter('fibbageblankie')) then
+        Exit(True);
+    end
     else
       Exit;
   end;

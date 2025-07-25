@@ -35,6 +35,8 @@ type
     procedure DoAssignCategoryToQuestion;
     procedure DoAssignQuestionToCategory;
     procedure CreateProperObjects;
+    procedure SaveManifestFibbage(const APath: string);
+    procedure SaveManifestFibbage4(const APath: string);
   public
     function Questions: IFibbageQuestions;
     function Categories: IFibbageCategories;
@@ -346,6 +348,14 @@ begin
   if FConfig.GetGameType = TGameType.FibbageXLPartyPack1 then
     Exit;
 
+  if FConfig.GetGameType = TGameType.Fibbage4PartyPack9 then
+    SaveManifestFibbage4(APath)
+  else
+    SaveManifestFibbage(APath);
+end;
+
+procedure TFibbageContent.SaveManifestFibbage(const APath: string);
+begin
   var fs := TFileStream.Create(TPath.Combine(APath, 'manifest.jet'), fmCreate);
   var jw := TJsonTextWriter.Create(fs);
   var job := TJSONObjectBuilder.Create(jw);
@@ -371,6 +381,29 @@ begin
     typesArray.EndArray;
 
     jsonObj.EndObject;
+  finally
+    job.Free;
+    jw.Free;
+    fs.Free;
+  end;
+end;
+
+procedure TFibbageContent.SaveManifestFibbage4(const APath: string);
+begin
+  var fs := TFileStream.Create(TPath.Combine(APath, 'manifest.jet'), fmCreate);
+  var jw := TJsonTextWriter.Create(fs);
+  var job := TJSONObjectBuilder.Create(jw);
+  try
+    job.BeginObject
+      .Add('id', 'Main')
+      .Add('name', 'Fibbage4')
+      .BeginArray('types')
+        .Add('fibbageblankie')
+        .Add('fibbagefinalround')
+        .Add('celebrityblankie')
+        .Add('fanblankie')
+      .EndArray
+    .EndObject;
   finally
     job.Free;
     jw.Free;

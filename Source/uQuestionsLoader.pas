@@ -51,6 +51,7 @@ type
 
     procedure PrepareEmptyValues;
     procedure SetHaveQuestionAudio(AHave: Boolean);
+    procedure SetHaveQuestionAudio2(AHave: Boolean);
     procedure SetHaveAnswerAudio(AHave: Boolean);
     procedure SetHaveBumperAudio(AHave: Boolean);
 
@@ -61,6 +62,7 @@ type
     function GetPortraitName: string;
 
     procedure SetQuestionAudioName(const AName: string);
+    procedure SetQuestionAudioName2(const AName: string);
     procedure SetAnswerAudioName(const AName: string);
     procedure SetBumperAudioName(const AName: string);
     procedure CreateFile(const APath: string; const AData: TBytes);
@@ -71,6 +73,9 @@ type
     destructor Destroy; override;
 
     procedure SetDefaults;
+    procedure SetDefaultsFibbage4Shortie;
+    procedure SetDefaultsFibbage4Final;
+
     procedure CloneFrom(AObj: IQuestion);
 
     function GetId: Integer;
@@ -146,8 +151,8 @@ type
     procedure RemoveShortieQuestion(AQuestion: IQuestion);
     procedure RemoveFinalQuestion(AQuestion: IQuestion);
 
-    function CreateNewShortieQuestion: IQuestion;
-    function CreateNewFinalQuestion: IQuestion;
+    function CreateNewShortieQuestion: IQuestion; virtual;
+    function CreateNewFinalQuestion: IQuestion; virtual;
   end;
 
   TQuestionsFibbageXL = class(TQuestionsBase)
@@ -179,6 +184,9 @@ type
     procedure LoadFinals; override;
   public
     procedure Save(const APath: string; ASaveOptions: TSaveOptions); override;
+
+    function CreateNewShortieQuestion: IQuestion; override;
+    function CreateNewFinalQuestion: IQuestion; override;
   end;
 
   EInternalFileNotFound = class(Exception);
@@ -632,6 +640,171 @@ begin
   FFields[12].T := 'A';
 end;
 
+procedure TQuestionItem.SetDefaultsFibbage4Final;
+begin
+  SetLength(FFields, 6);
+
+  FFields[0] := TQuestionField.Create;
+  FFields[0].N := 'HasQuestionAudio1';
+  FFields[0].V := 'false';
+  FFields[0].T := 'B';
+
+  FFields[1] := TQuestionField.Create;
+  FFields[1].N := 'HasQuestionAudio2';
+  FFields[1].V := 'false';
+  FFields[1].T := 'B';
+
+  FFields[2] := TQuestionField.Create;
+  FFields[2].N := 'HasCorrectAudio';
+  FFields[2].V := 'false';
+  FFields[2].T := 'B';
+
+  FFields[3] := TQuestionField.Create;
+  FFields[3].N := 'QuestionAudio1';
+  FFields[3].V := 'questionAudio1';
+  FFields[3].T := 'A';
+
+  FFields[4] := TQuestionField.Create;
+  FFields[4].N := 'QuestionAudio2';
+  FFields[4].V := 'questionAudio2';
+  FFields[4].T := 'A';
+
+  FFields[5] := TQuestionField.Create;
+  FFields[5].N := 'CorrectAudio';
+  FFields[5].V := 'correctAnswer1';
+  FFields[5].T := 'A';
+end;
+
+procedure TQuestionItem.SetDefaultsFibbage4Shortie;
+begin
+  SetLength(FFields, 25);
+
+  FFields[0] := TQuestionField.Create;
+  FFields[0].N := 'HasBumperAudio';
+  FFields[0].V := 'false';
+  FFields[0].T := 'B';
+
+  FFields[1] := TQuestionField.Create;
+  FFields[1].N := 'HasKeywordAudio';
+  FFields[1].V := 'false';
+  FFields[1].T := 'B';
+
+  FFields[2] := TQuestionField.Create;
+  FFields[2].N := 'HasCorrectAudio';
+  FFields[2].V := 'false';
+  FFields[2].T := 'B';
+
+  FFields[3] := TQuestionField.Create;
+  FFields[3].N := 'HasQuestionAudio';
+  FFields[3].V := 'false';
+  FFields[3].T := 'B';
+
+  FFields[4] := TQuestionField.Create;
+  FFields[4].N := 'BumperAudio';
+  FFields[4].V := 'bumperAudio';
+  FFields[4].T := 'A';
+
+  FFields[5] := TQuestionField.Create;
+  FFields[5].N := 'CorrectAudio';
+  FFields[5].V := 'correctAnswer';
+  FFields[5].T := 'A';
+
+  FFields[6] := TQuestionField.Create;
+  FFields[6].N := 'QuestionAudio';
+  FFields[6].V := 'questionAudio';
+  FFields[6].T := 'A';
+
+  FFields[7] := TQuestionField.Create;
+  FFields[7].N := 'HasPic';
+  FFields[7].V := 'false';
+  FFields[7].T := 'B';
+
+  FFields[8] := TQuestionField.Create;
+  FFields[8].N := 'Pic';
+  FFields[8].V := 'picture';
+  FFields[8].T := 'G';
+
+  FFields[9] := TQuestionField.Create;
+  FFields[9].N := 'HasSetupVideo';
+  FFields[9].V := 'false';
+  FFields[9].T := 'B';
+
+  FFields[10] := TQuestionField.Create;
+  FFields[10].N := 'SetupVideo';
+  FFields[10].V := 'setupVideo';
+  FFields[10].T := '';
+
+  FFields[11] := TQuestionField.Create;
+  FFields[11].N := 'HasSetupAudio';
+  FFields[11].V := 'false';
+  FFields[11].T := 'B';
+
+  FFields[12] := TQuestionField.Create;
+  FFields[12].N := 'SetupAudio';
+  FFields[12].V := 'setupAudio';
+  FFields[12].T := 'A';
+
+  FFields[13] := TQuestionField.Create;
+  FFields[13].N := 'HasFeaturedStill';
+  FFields[13].V := 'false';
+  FFields[13].T := 'B';
+
+  FFields[14] := TQuestionField.Create;
+  FFields[14].N := 'FeaturedStill';
+  FFields[14].V := 'featuredStill';
+  FFields[14].T := 'G';
+
+  FFields[15] := TQuestionField.Create;
+  FFields[15].N := 'HasTransitionStill';
+  FFields[15].V := 'false';
+  FFields[15].T := 'B';
+
+  FFields[16] := TQuestionField.Create;
+  FFields[16].N := 'TransitionStill';
+  FFields[16].V := 'transitionStill';
+  FFields[16].T := 'G';
+
+  FFields[17] := TQuestionField.Create;
+  FFields[17].N := 'HasSetupSubtitles';
+  FFields[17].V := 'False';
+  FFields[17].T := 'B';
+
+  FFields[18] := TQuestionField.Create;
+  FFields[18].N := 'SetupSubtitles';
+  FFields[18].V := 'setupSubtitles';
+  FFields[18].T := '';
+
+  FFields[19] := TQuestionField.Create;
+  FFields[19].N := 'HasRevealVideo';
+  FFields[19].V := 'false';
+  FFields[19].T := 'B';
+
+  FFields[20] := TQuestionField.Create;
+  FFields[20].N := 'RevealVideo';
+  FFields[20].V := 'revealVideo';
+  FFields[20].T := '';
+
+  FFields[21] := TQuestionField.Create;
+  FFields[21].N := 'HasRevealAudio';
+  FFields[21].V := 'false';
+  FFields[21].T := 'B';
+
+  FFields[22] := TQuestionField.Create;
+  FFields[22].N := 'RevealAudio';
+  FFields[22].V := 'revealAudio';
+  FFields[22].T := '';
+
+  FFields[23] := TQuestionField.Create;
+  FFields[23].N := 'HasRevealSubtitles';
+  FFields[23].V := 'false';
+  FFields[23].T := 'B';
+
+  FFields[24] := TQuestionField.Create;
+  FFields[24].N := 'RevealSubtitles';
+  FFields[24].V := 'revealSubtitles';
+  FFields[24].T := '';
+end;
+
 procedure TQuestionItem.SetHaveAnswerAudio(AHave: Boolean);
 begin
   for var field in FFields do
@@ -656,6 +829,23 @@ procedure TQuestionItem.SetHaveQuestionAudio(AHave: Boolean);
 begin
   for var field in FFields do
     if SameText('HasQuestionAudio', field.N) then
+    begin
+      field.V := BoolToStr(AHave, True).ToLowerInvariant;
+      Exit;
+    end;
+
+  for var field in FFields do
+    if SameText('HasQuestionAudio1', field.N) then
+    begin
+      field.V := BoolToStr(AHave, True).ToLowerInvariant;
+      Break;
+    end;
+end;
+
+procedure TQuestionItem.SetHaveQuestionAudio2(AHave: Boolean);
+begin
+  for var field in FFields do
+    if SameText('HasQuestionAudio2', field.N) then
     begin
       field.V := BoolToStr(AHave, True).ToLowerInvariant;
       Break;
@@ -712,6 +902,11 @@ procedure TQuestionItem.SetQuestionAudioData2(const AData: TBytes);
 begin
   SetLength(FQuestionAudioBytes2, Length(AData));
   Move(AData[0], FQuestionAudioBytes2[0], Length(AData));
+
+  if AData = nil then
+    SetQuestionAudioName2('')
+  else
+    SetQuestionAudioName2(ChangeFileExt(TPath.GetRandomFileName, ''));
 end;
 
 procedure TQuestionItem.SetQuestionAudioName(const AName: string);
@@ -721,6 +916,25 @@ begin
     begin
       field.V := AName;
       SetHaveQuestionAudio(not AName.IsEmpty);
+      Exit;
+    end;
+
+  for var field in FFields do
+    if SameText('QuestionAudio1', field.N) then
+    begin
+      field.V := AName;
+      SetHaveQuestionAudio(not AName.IsEmpty);
+      Break;
+    end;
+end;
+
+procedure TQuestionItem.SetQuestionAudioName2(const AName: string);
+begin
+  for var field in FFields do
+    if SameText('QuestionAudio2', field.N) then
+    begin
+      field.V := AName;
+      SetHaveQuestionAudio2(not AName.IsEmpty);
       Break;
     end;
 end;
@@ -1043,6 +1257,26 @@ begin
 end;
 
 { TQuestionsFibbage4PP9 }
+
+function TQuestionsFibbage4PP9.CreateNewFinalQuestion: IQuestion;
+begin
+  var res := TQuestionItem.Create;
+  res.SetDefaultsFibbage4Final;
+  res.SetQuestionType(qtFinal);
+
+  Result := res;
+  FFinalQuestions.Add(Result);
+end;
+
+function TQuestionsFibbage4PP9.CreateNewShortieQuestion: IQuestion;
+begin
+  var res := TQuestionItem.Create;
+  res.SetDefaultsFibbage4Shortie;
+  res.SetQuestionType(qtShortie);
+
+  Result := res;
+  FShortieQuestions.Add(Result);
+end;
 
 procedure TQuestionsFibbage4PP9.LoadFinals;
 begin

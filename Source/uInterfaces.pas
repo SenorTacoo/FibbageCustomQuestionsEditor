@@ -41,11 +41,15 @@ type
     procedure SetIsPortrait(AValue: Boolean);
     procedure SetBumper(const AValue: string);
     procedure SetQuestionText(const AValue: string);
+    procedure SetFamilyFriendly(AValue: Boolean);
 
     procedure SetQuestionText1(const AValue: string);
     procedure SetQuestionText2(const AValue: string);
+    procedure SetCorrectText(const AValue: string);
     procedure SetCorrectText1(const AValue: string);
     procedure SetCorrectText2(const AValue: string);
+    procedure SetSuggestions(const AValue: string);
+    procedure SetAlternateSpelling(const AValue: string);
     procedure SetAlternateSpelling1(const AValue: string);
     procedure SetAlternateSpelling2(const AValue: string);
 
@@ -92,6 +96,7 @@ type
     function GetAnswer: string;
     function GetAlternateSpelling: string;
     function GetHaveQuestionAudio: Boolean;
+    function GetHaveQuestionAudio2: Boolean;
     function GetHaveAnswerAudio: Boolean;
     function GetHaveBumperAudio: Boolean;
 
