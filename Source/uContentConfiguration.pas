@@ -4,13 +4,14 @@ interface
 
 uses
   uInterfaces,
+  System.Generics.Collections,
   System.IOUtils,
   System.StrUtils,
   System.SysUtils,
   System.Classes;
 
 type
-  TContentConfiguration = class(TInterfacedObject, IContentConfiguration)
+  TContentConfiguration = class
   private
     FRawCfg: TStringList;
   public
@@ -29,11 +30,13 @@ type
     function GetShowTooFewSuggestions: Boolean;
     function GetGameType: TGameType;
 
-    function GetClone: IContentConfiguration;
+    function GetClone: TContentConfiguration;
     function Initialize(const APath: string): Boolean;
     procedure Save(const APath: string); overload;
     procedure Save; overload;
   end;
+
+  TContentConfigurations = TObjectList<TContentConfiguration>;
 
 implementation
 
@@ -52,7 +55,7 @@ begin
   inherited;
 end;
 
-function TContentConfiguration.GetClone: IContentConfiguration;
+function TContentConfiguration.GetClone: TContentConfiguration;
 begin
   Result := TContentConfiguration.Create;
   Result.SetName(GetName);

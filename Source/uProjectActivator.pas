@@ -3,23 +3,22 @@
 interface
 
 uses
-  uFibbageContent,
-  uCategoriesLoader,
   uPathChecker,
-  uQuestionsLoader,
+  uFibbageContent,
+  uContentConfiguration,
   uInterfaces;
 
 type
   TProjectActivator = class
   public
-    class procedure Activate(AConfig: IContentConfiguration; const APath: string);
+    class procedure Activate(AConfig: TContentConfiguration; const APath: string);
   end;
 
 implementation
 
 { TProjectActivator }
 
-class procedure TProjectActivator.Activate(AConfig: IContentConfiguration;
+class procedure TProjectActivator.Activate(AConfig: TContentConfiguration;
   const APath: string);
 begin
   var content := TFibbageContent.Create;

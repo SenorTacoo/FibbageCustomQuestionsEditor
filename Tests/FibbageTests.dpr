@@ -10,27 +10,27 @@ uses
   TestInsight.DUnitX,
   {$ELSE}
   DUnitX.Loggers.Console,
-  DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
+  DUnitX.Loggers.Xml.NUnit,
   DUnitX.TestFramework,
   uQuestionsLoaderTests in 'uQuestionsLoaderTests.pas',
-  uQuestionsLoader in '..\Source\uQuestionsLoader.pas',
   uInterfaces in '..\Source\uInterfaces.pas',
   uLog in '..\Source\uLog.pas',
-  uCategoriesLoader in '..\Source\uCategoriesLoader.pas';
+  uFibbageContent in '..\Source\uFibbageContent.pas',
+  uQuestionsLoader in '..\Source\uQuestionsLoader.pas',
+  uFibbageFilesReader in '..\Source\uFibbageFilesReader.pas',
+  uContentConfiguration in '..\Source\uContentConfiguration.pas';
 
-{$IFNDEF TESTINSIGHT}
-var
-  runner: ITestRunner;
-  results: IRunResults;
-  logger: ITestLogger;
-  nunitLogger : ITestLogger;
-{$ENDIF}
 begin
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
 {$ELSE}
   try
+    var runner: ITestRunner;
+    var results: IRunResults;
+    var logger: ITestLogger;
+    var nunitLogger : ITestLogger;
+
     //Check command line options, will exit if invalid
     TDUnitX.CheckCommandLine;
     //Create the test runner
@@ -39,6 +39,7 @@ begin
     runner.UseRTTI := True;
     //When true, Assertions must be made during tests;
     runner.FailsOnNoAsserts := False;
+    TDUnitX.Options.ExitBehavior := TDUnitXExitBehavior.Pause;
 
     //tell the runner how we will log things
     //Log to the console window if desired

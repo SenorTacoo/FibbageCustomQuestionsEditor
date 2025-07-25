@@ -11,3 +11,4 @@ Tests/__history
 *.dcu
 Tests/Win32
 Tests/bin
+setup/FibbageCQE.zip

@@ -117664,8 +117664,8 @@ object FrmMain: TFrmMain
           end>
         TextSettings.Trimming = None
         IsSelected = True
-        Size.Width = 12.000000000000000000
-        Size.Height = 12.000000000000000000
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = ''
         TabOrder = 0
@@ -117931,9 +117931,8 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117959,7 +117958,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 598.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -118065,9 +118064,8 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -118093,7 +118091,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 508.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -118109,9 +118107,8 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -118137,7 +118134,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 500.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -118153,9 +118150,8 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -118181,7 +118177,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 508.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -118227,8 +118223,8 @@ object FrmMain: TFrmMain
                 end>
               TextSettings.Trimming = None
               IsSelected = False
-              Size.Width = 12.000000000000000000
-              Size.Height = 12.000000000000000000
+              Size.Width = 8.000000000000000000
+              Size.Height = 8.000000000000000000
               Size.PlatformDefault = False
               StyleLookup = ''
               TabOrder = 0
@@ -118253,8 +118249,8 @@ object FrmMain: TFrmMain
                 end>
               TextSettings.Trimming = None
               IsSelected = True
-              Size.Width = 12.000000000000000000
-              Size.Height = 12.000000000000000000
+              Size.Width = 8.000000000000000000
+              Size.Height = 8.000000000000000000
               Size.PlatformDefault = False
               StyleLookup = ''
               TabOrder = 0
@@ -118318,7 +118314,7 @@ object FrmMain: TFrmMain
                 Enabled = False
                 IsPressed = True
                 Size.Width = 372.000000000000000000
-                Size.Height = 46.000000000000000000
+                Size.Height = 50.000000000000000000
                 Size.PlatformDefault = False
                 StyleLookup = 'toolbutton'
                 TabOrder = 1
@@ -118330,7 +118326,7 @@ object FrmMain: TFrmMain
                 StaysPressed = True
                 Align = Client
                 Size.Width = 372.000000000000000000
-                Size.Height = 46.000000000000000000
+                Size.Height = 50.000000000000000000
                 Size.PlatformDefault = False
                 StyleLookup = 'toolbutton'
                 TabOrder = 0
@@ -118400,9 +118396,8 @@ object FrmMain: TFrmMain
                 IsChecked = False
                 Margins.Left = 3.000000000000000000
                 Position.X = 3.000000000000000000
-                Position.Y = 15.000000000000000000
                 Size.Width = 44.000000000000000000
-                Size.Height = 20.000000000000000000
+                Size.Height = 50.000000000000000000
                 Size.PlatformDefault = False
                 TabOrder = 0
                 OnSwitch = sDarkModeOptionsSwitch
@@ -118685,7 +118680,7 @@ object FrmMain: TFrmMain
                   ReadOnly = True
                   FilterChar = '0123456789'
                   Size.Width = 161.000000000000000000
-                  Size.Height = 32.000000000000000000
+                  Size.Height = 35.000000000000000000
                   Size.PlatformDefault = False
                 end
                 object bRefreshQuestionId: TButton
@@ -118731,7 +118726,7 @@ object FrmMain: TFrmMain
                 StyleLookup = 'editstyle'
                 TabOrder = 0
                 Size.Width = 193.000000000000000000
-                Size.Height = 32.000000000000000000
+                Size.Height = 35.000000000000000000
                 Size.PlatformDefault = False
               end
             end
@@ -118757,9 +118752,8 @@ object FrmMain: TFrmMain
                 IsChecked = False
                 Margins.Right = 5.000000000000000000
                 Position.X = 144.000000000000000000
-                Position.Y = 15.000000000000000000
                 Size.Width = 44.000000000000000000
-                Size.Height = 20.000000000000000000
+                Size.Height = 50.000000000000000000
                 Size.PlatformDefault = False
                 TabOrder = 2
               end
@@ -118803,8 +118797,8 @@ object FrmMain: TFrmMain
                 Size.PlatformDefault = False
                 TabOrder = 0
                 OnKeyDown = mDisableEnter
-                Viewport.Width = 585.000000000000000000
-                Viewport.Height = 62.000000000000000000
+                Viewport.Width = 593.000000000000000000
+                Viewport.Height = 70.000000000000000000
               end
             end
             object lySingleItemPossibleAnswers: TLayout
@@ -118846,8 +118840,8 @@ object FrmMain: TFrmMain
                   Size.PlatformDefault = False
                   TabOrder = 0
                   OnKeyDown = mDisableEnter
-                  Viewport.Width = 201.000000000000000000
-                  Viewport.Height = 92.000000000000000000
+                  Viewport.Width = 209.000000000000000000
+                  Viewport.Height = 100.000000000000000000
                 end
               end
               object lySingleItemAlternateSpelling: TLayout
@@ -118882,8 +118876,8 @@ object FrmMain: TFrmMain
                   Size.PlatformDefault = False
                   TabOrder = 0
                   OnKeyDown = mDisableEnter
-                  Viewport.Width = 371.000000000000000000
-                  Viewport.Height = 92.000000000000000000
+                  Viewport.Width = 379.000000000000000000
+                  Viewport.Height = 100.000000000000000000
                 end
               end
               object sSingleItemPossibleAnswers: TSplitter
@@ -118928,8 +118922,8 @@ object FrmMain: TFrmMain
                 Size.PlatformDefault = False
                 TabOrder = 0
                 OnKeyDown = mDisableEnter
-                Viewport.Width = 585.000000000000000000
-                Viewport.Height = 63.000000000000000000
+                Viewport.Width = 593.000000000000000000
+                Viewport.Height = 71.000000000000000000
               end
             end
             object Splitter1: TSplitter
@@ -118983,8 +118977,8 @@ object FrmMain: TFrmMain
                 Size.PlatformDefault = False
                 TabOrder = 0
                 OnKeyDown = mDisableEnter
-                Viewport.Width = 585.000000000000000000
-                Viewport.Height = 62.000000000000000000
+                Viewport.Width = 593.000000000000000000
+                Viewport.Height = 70.000000000000000000
               end
             end
             object lySingleItemPossibleAnswers2: TLayout
@@ -119026,8 +119020,8 @@ object FrmMain: TFrmMain
                   Size.PlatformDefault = False
                   TabOrder = 0
                   OnKeyDown = mDisableEnter
-                  Viewport.Width = 201.000000000000000000
-                  Viewport.Height = 92.000000000000000000
+                  Viewport.Width = 209.000000000000000000
+                  Viewport.Height = 100.000000000000000000
                 end
               end
               object lySingleItemAlternateSpelling2: TLayout
@@ -119062,8 +119056,8 @@ object FrmMain: TFrmMain
                   Size.PlatformDefault = False
                   TabOrder = 0
                   OnKeyDown = mDisableEnter
-                  Viewport.Width = 371.000000000000000000
-                  Viewport.Height = 92.000000000000000000
+                  Viewport.Width = 379.000000000000000000
+                  Viewport.Height = 100.000000000000000000
                 end
               end
               object Splitter4: TSplitter

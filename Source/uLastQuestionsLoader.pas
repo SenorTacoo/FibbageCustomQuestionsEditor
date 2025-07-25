@@ -12,7 +12,7 @@ uses
   uInterfaces;
 
 type
-  TLastQuestionsLoader = class(TInterfacedObject, ILastQuestionProjects)
+  TLastQuestionsLoader = class
   strict private const
     FIBBAGE_DIRECTORY = 'FibbageCQE';
     LASTS_FILE_NAME = '.lasts';
@@ -26,8 +26,8 @@ type
 
     procedure Initialize;
 
-    procedure Add(AConfiguration: IContentConfiguration);
-    procedure Remove(AConfiguration: IContentConfiguration);
+    procedure Add(AConfiguration: TContentConfiguration);
+    procedure Remove(AConfiguration: TContentConfiguration);
     function GetAll: TContentConfigurations;
     function Count: Integer;
     procedure BeginUpdate;
@@ -38,7 +38,7 @@ implementation
 
 { TLastQuestionsLoader }
 
-procedure TLastQuestionsLoader.Add(AConfiguration: IContentConfiguration);
+procedure TLastQuestionsLoader.Add(AConfiguration: TContentConfiguration);
 begin
   var index := FPaths.IndexOf(AConfiguration.GetPath);
   case index of
@@ -90,9 +90,16 @@ begin
     if path.Trim.IsEmpty then
       Continue;
 
-    var item: IContentConfiguration := TContentConfiguration.Create;
-    if item.Initialize(path) then
-      Result.Add(item);
+    var item := TContentConfiguration.Create;
+    try
+      if item.Initialize(path) then
+      begin
+        Result.Add(item);
+        item := nil;
+      end;
+    finally
+      item.Free;
+    end;
   end;
 end;
 
@@ -113,7 +120,7 @@ begin
     FPaths.LoadFromFile(GetLastsFile);
 end;
 
-procedure TLastQuestionsLoader.Remove(AConfiguration: IContentConfiguration);
+procedure TLastQuestionsLoader.Remove(AConfiguration: TContentConfiguration);
 begin
   var index := FPaths.IndexOf(AConfiguration.GetPath);
   if index = -1 then

@@ -7,9 +7,6 @@ uses
   uConfig in 'uConfig.pas',
   uInterfaces in 'uInterfaces.pas',
   uPathChecker in 'uPathChecker.pas',
-  uQuestionsLoader in 'uQuestionsLoader.pas',
-  uCategoriesLoader in 'uCategoriesLoader.pas',
-  uFibbageContent in 'uFibbageContent.pas',
   uRecordForm in 'uRecordForm.pas' {RecordForm},
   uLastQuestionsLoader in 'uLastQuestionsLoader.pas',
   uLog in 'uLog.pas',
@@ -18,7 +15,9 @@ uses
   uAsyncAction in 'uAsyncAction.pas',
   uProjectActivator in 'uProjectActivator.pas',
   uUserDialog in 'uUserDialog.pas' {UserDialog},
-  uGetGameTypeDlg in 'uGetGameTypeDlg.pas' {GetGameTypeDlg};
+  uGetGameTypeDlg in 'uGetGameTypeDlg.pas' {GetGameTypeDlg},
+  uFibbageContent in 'uFibbageContent.pas',
+  uQuestionsLoader in 'uQuestionsLoader.pas';
 
 {$R *.res}
 

@@ -4,7 +4,7 @@
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -170,9 +170,6 @@
         <DCCReference Include="uConfig.pas"/>
         <DCCReference Include="uInterfaces.pas"/>
         <DCCReference Include="uPathChecker.pas"/>
-        <DCCReference Include="uQuestionsLoader.pas"/>
-        <DCCReference Include="uCategoriesLoader.pas"/>
-        <DCCReference Include="uFibbageContent.pas"/>
         <DCCReference Include="uRecordForm.pas">
             <Form>RecordForm</Form>
             <FormType>fmx</FormType>
@@ -194,6 +191,8 @@
             <Form>GetGameTypeDlg</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <DCCReference Include="uFibbageContent.pas"/>
+        <DCCReference Include="uQuestionsLoader.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -247,6 +246,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="bin\Win32\Release\FibbageQE.exe" Configuration="Release" Class="ProjectOutput"/>
+                <DeployFile LocalName="bin\Win32\Release\FibbageQE.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>FibbageQE.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

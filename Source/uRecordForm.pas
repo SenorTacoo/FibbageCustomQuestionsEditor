@@ -49,7 +49,7 @@ type
     procedure bRemoveAllAudioClick(Sender: TObject);
   private
     FAudioType: TAudioType;
-    FQuestion: IQuestion;
+//    FQuestion: IQuestion;
     FFormCreated: Boolean;
     FCurrentlyPlayingMode: TAudioType;
     FRecordedData: TBytes;
@@ -69,10 +69,10 @@ type
   public
     function ShowModal: TModalResult; overload;
 
-    procedure EditQuestionAudio(AQuestion: IQuestion);
-    procedure EditQuestion2Audio(AQuestion: IQuestion);
-    procedure EditAnswerAudio(AQuestion: IQuestion);
-    procedure EditBumperAudio(AQuestion: IQuestion);
+//    procedure EditQuestionAudio(AQuestion: IQuestion);
+//    procedure EditQuestion2Audio(AQuestion: IQuestion);
+//    procedure EditAnswerAudio(AQuestion: IQuestion);
+//    procedure EditBumperAudio(AQuestion: IQuestion);
   end;
 
 implementation
@@ -155,19 +155,19 @@ end;
 
 procedure TRecordForm.EnablePlayOriginalIfPossible;
 begin
-  var res := True;
-  case FAudioType of
-    atQuestion:
-      res := FQuestion.GetHaveQuestionAudio and (Length(FQuestion.GetQuestionAudioData) > 0);
-    atAnswer:
-      res := FQuestion.GetHaveAnswerAudio and (Length(FQuestion.GetAnswerAudioData) > 0);
-    atBumper:
-      res := FQuestion.GetHaveBumperAudio and (Length(FQuestion.GetBumperAudioData) > 0);
-    atQuestion2:
-      res := FQuestion.GetHaveQuestionAudio2 and (Length(FQuestion.GetQuestionAudioData2) > 0);
-  end;
-  bPlayOriginalAudio.Enabled := res;
-  bRemoveAllAudio.Enabled := bPlayOriginalAudio.Enabled;
+//  var res := True;
+//  case FAudioType of
+//    atQuestion:
+//      res := FQuestion.GetHaveQuestionAudio and (Length(FQuestion.GetQuestionAudioData) > 0);
+//    atAnswer:
+//      res := FQuestion.GetHaveAnswerAudio and (Length(FQuestion.GetAnswerAudioData) > 0);
+//    atBumper:
+//      res := FQuestion.GetHaveBumperAudio and (Length(FQuestion.GetBumperAudioData) > 0);
+//    atQuestion2:
+//      res := FQuestion.GetHaveQuestionAudio2 and (Length(FQuestion.GetQuestionAudioData2) > 0);
+//  end;
+//  bPlayOriginalAudio.Enabled := res;
+//  bRemoveAllAudio.Enabled := bPlayOriginalAudio.Enabled;
 end;
 
 procedure TRecordForm.DisableRecord;
@@ -201,37 +201,37 @@ begin
   end);
 end;
 
-procedure TRecordForm.EditAnswerAudio(AQuestion: IQuestion);
-begin
-  FAudioType := atAnswer;
-  FQuestion := AQuestion;
-  if ShowModal = mrOk then
-    SaveAudio
-end;
+//procedure TRecordForm.EditAnswerAudio(AQuestion: TFibbageQuestion);
+//begin
+//  FAudioType := atAnswer;
+//  FQuestion := AQuestion;
+//  if ShowModal = mrOk then
+//    SaveAudio
+//end;
 
-procedure TRecordForm.EditBumperAudio(AQuestion: IQuestion);
-begin
-  FAudioType := atBumper;
-  FQuestion := AQuestion;
-  if ShowModal = mrOk then
-    SaveAudio
-end;
+//procedure TRecordForm.EditBumperAudio(AQuestion: IQuestion);
+//begin
+//  FAudioType := atBumper;
+//  FQuestion := AQuestion;
+//  if ShowModal = mrOk then
+//    SaveAudio
+//end;
 
-procedure TRecordForm.EditQuestion2Audio(AQuestion: IQuestion);
-begin
-  FAudioType := atQuestion2;
-  FQuestion := AQuestion;
-  if ShowModal = mrOk then
-    SaveAudio
-end;
+//procedure TRecordForm.EditQuestion2Audio(AQuestion: IQuestion);
+//begin
+//  FAudioType := atQuestion2;
+//  FQuestion := AQuestion;
+//  if ShowModal = mrOk then
+//    SaveAudio
+//end;
 
-procedure TRecordForm.EditQuestionAudio(AQuestion: IQuestion);
-begin
-  FAudioType := atQuestion;
-  FQuestion := AQuestion;
-  if ShowModal = mrOk then
-    SaveAudio
-end;
+//procedure TRecordForm.EditQuestionAudio(AQuestion: IQuestion);
+//begin
+//  FAudioType := atQuestion;
+//  FQuestion := AQuestion;
+//  if ShowModal = mrOk then
+//    SaveAudio
+//end;
 
 procedure TRecordForm.bGoBackClick(Sender: TObject);
 begin
@@ -372,13 +372,13 @@ function TRecordForm.CreateTempAudioFile(AMode: TAudioType): string;
 var
   buffer: TBytes;
 begin
-  case AMode of
-    atQuestion: buffer := FQuestion.GetQuestionAudioData;
-    atAnswer: buffer := FQuestion.GetAnswerAudioData;
-    atBumper: buffer := FQuestion.GetBumperAudioData;
-    atRecorded: buffer := FRecordedData;
-    atQuestion2: buffer := FQuestion.GetQuestionAudioData2;
-  end;
+//  case AMode of
+//    atQuestion: buffer := FQuestion.GetQuestionAudioData;
+//    atAnswer: buffer := FQuestion.GetAnswerAudioData;
+//    atBumper: buffer := FQuestion.GetBumperAudioData;
+//    atRecorded: buffer := FRecordedData;
+//    atQuestion2: buffer := FQuestion.GetQuestionAudioData2;
+//  end;
 
   Result := TPath.Combine(TPath.GetTempPath, TPath.GetTempFileName);
   var fs := TFileStream.Create(Result, fmCreate);
@@ -403,16 +403,16 @@ end;
 
 procedure TRecordForm.SaveAudio;
 begin
-  case FAudioType of
-    atQuestion:
-      FQuestion.SetQuestionAudioData(FRecordedData);
-    atAnswer:
-      FQuestion.SetAnswerAudioData(FRecordedData);
-    atBumper:
-      FQuestion.SetBumperAudioData(FRecordedData);
-    atQuestion2:
-      FQuestion.SetQuestionAudioData2(FRecordedData);
-  end;
+//  case FAudioType of
+//    atQuestion:
+//      FQuestion.SetQuestionAudioData(FRecordedData);
+//    atAnswer:
+//      FQuestion.SetAnswerAudioData(FRecordedData);
+//    atBumper:
+//      FQuestion.SetBumperAudioData(FRecordedData);
+//    atQuestion2:
+//      FQuestion.SetQuestionAudioData2(FRecordedData);
+//  end;
 end;
 
 function TRecordForm.ShowModal: TModalResult;
