@@ -51,6 +51,7 @@ type
     procedure SelectPrev;
     function Selected: TQuestionScrollItem;
     procedure SelectQuestionWithId(AId: Integer);
+    procedure SelectCategoryWithId(AId: Int32);
   end;
 
   TProjectScrollItem = class(TPanel)
@@ -1157,39 +1158,81 @@ end;
 function TFrmMain.GetFirstTooFewSuggestionsQuestionId(out AIsShortie: Boolean; out AId: Integer): Boolean;
 begin
   Result := False;
-  for var idx := 0 to FContent.Questions.ShortieQuestions.Count - 1 do
-  begin
-    var fQuestion := FContent.Questions.ShortieQuestions[idx];
-    var suggestions := TStringList.Create;
-    try
-      suggestions.StrictDelimiter := True;
-      suggestions.DelimitedText := fQuestion.GetSuggestions;
-      if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
-      begin
-        AIsShortie := True;
-        AId := fQuestion.GetId;
-        Exit(True);
-      end;
-    finally
-      suggestions.Free;
-    end;
-  end;
 
-  for var idx := 0 to FContent.Questions.FinalQuestions.Count - 1 do
+  if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
   begin
-    var fQuestion := FContent.Questions.FinalQuestions[idx];
-    var suggestions := TStringList.Create;
-    try
-      suggestions.StrictDelimiter := True;
-      suggestions.DelimitedText := fQuestion.GetSuggestions;
-      if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
-      begin
-        AIsShortie := False;
-        AId := fQuestion.GetId;
-        Exit(True);
+    for var idx := 0 to FContent.Categories.ShortieCategories.Count - 1 do
+    begin
+      var fCategory := FContent.Categories.ShortieCategories.Category(idx);
+      var suggestions := TStringList.Create;
+      try
+        suggestions.StrictDelimiter := True;
+        suggestions.DelimitedText := fCategory.GetSuggestions;
+        if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
+        begin
+          AIsShortie := True;
+          AId := fCategory.GetId;
+          Exit(True);
+        end;
+      finally
+        suggestions.Free;
       end;
-    finally
-      suggestions.Free;
+    end;
+
+    for var idx := 0 to FContent.Categories.FinalCategories.Count - 1 do
+    begin
+      var fCategory := FContent.Categories.FinalCategories.Category(idx);
+      var suggestions := TStringList.Create;
+      try
+        suggestions.StrictDelimiter := True;
+        suggestions.DelimitedText := fCategory.GetSuggestions;
+        if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
+        begin
+          AIsShortie := False;
+          AId := fCategory.GetId;
+          Exit(True);
+        end;
+      finally
+        suggestions.Free;
+      end;
+    end;
+  end
+  else
+  begin
+    for var idx := 0 to FContent.Questions.ShortieQuestions.Count - 1 do
+    begin
+      var fQuestion := FContent.Questions.ShortieQuestions[idx];
+      var suggestions := TStringList.Create;
+      try
+        suggestions.StrictDelimiter := True;
+        suggestions.DelimitedText := fQuestion.GetSuggestions;
+        if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
+        begin
+          AIsShortie := True;
+          AId := fQuestion.GetId;
+          Exit(True);
+        end;
+      finally
+        suggestions.Free;
+      end;
+    end;
+
+    for var idx := 0 to FContent.Questions.FinalQuestions.Count - 1 do
+    begin
+      var fQuestion := FContent.Questions.FinalQuestions[idx];
+      var suggestions := TStringList.Create;
+      try
+        suggestions.StrictDelimiter := True;
+        suggestions.DelimitedText := fQuestion.GetSuggestions;
+        if suggestions.Count < OPTIMAL_NR_OF_SUGGESTIONS then
+        begin
+          AIsShortie := False;
+          AId := fQuestion.GetId;
+          Exit(True);
+        end;
+      finally
+        suggestions.Free;
+      end;
     end;
   end;
 end;
@@ -1209,36 +1252,67 @@ end;
 function TFrmMain.GetFirstDuplicatedCategoryQuestionId(out AIsShortie: Boolean; out AId: Integer): Boolean;
 begin
   Result := False;
-  for var idx := 0 to FContent.Questions.ShortieQuestions.Count - 2 do
-    for var jdx := idx + 1 to FContent.Questions.ShortieQuestions.Count - 1 do
-    begin
-      var fQuestion := FContent.Questions.ShortieQuestions[idx];
-      var sQuestion := FContent.Questions.ShortieQuestions[jdx];
-
-      if fQuestion.GetCategory.Equals(sQuestion.GetCategory) then
-      begin
-        AIsShortie := True;
-        AId := fQuestion.GetId;
-        Exit(True);
-      end;
-    end;
 
   if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
-    Exit;
-
-  for var idx := 0 to FContent.Questions.FinalQuestions.Count - 2 do
-    for var jdx := idx + 1 to FContent.Questions.FinalQuestions.Count - 1 do
-    begin
-      var fQuestion := FContent.Questions.FinalQuestions[idx];
-      var sQuestion := FContent.Questions.FinalQuestions[jdx];
-
-      if fQuestion.GetCategory.Equals(sQuestion.GetCategory) then
+  begin
+    for var idx := 0 to FContent.Categories.ShortieCategories.Count - 2 do
+      for var jdx := idx + 1 to FContent.Categories.ShortieCategories.Count - 1 do
       begin
-        AIsShortie := False;
-        AId := fQuestion.GetId;
-        Exit(True);
+        var fCategory := FContent.Categories.ShortieCategories.Category(idx);
+        var sCategory := FContent.Categories.ShortieCategories.Category(jdx);
+
+        if fCategory.GetCategory.Equals(sCategory.GetCategory) then
+        begin
+          AIsShortie := True;
+          AId := fCategory.GetId;
+          Exit(True);
+        end;
       end;
-    end;
+
+    for var idx := 0 to FContent.Categories.FinalCategories.Count - 2 do
+      for var jdx := idx + 1 to FContent.Categories.FinalCategories.Count - 1 do
+      begin
+        var fCategory := FContent.Categories.FinalCategories.Category(idx);
+        var sCategory := FContent.Categories.FinalCategories.Category(jdx);
+
+        if fCategory.GetCategory.Equals(sCategory.GetCategory) then
+        begin
+          AIsShortie := False;
+          AId := fCategory.GetId;
+          Exit(True);
+        end;
+      end;
+  end
+  else
+  begin
+    for var idx := 0 to FContent.Questions.ShortieQuestions.Count - 2 do
+      for var jdx := idx + 1 to FContent.Questions.ShortieQuestions.Count - 1 do
+      begin
+        var fQuestion := FContent.Questions.ShortieQuestions[idx];
+        var sQuestion := FContent.Questions.ShortieQuestions[jdx];
+
+        if fQuestion.GetCategory.Equals(sQuestion.GetCategory) then
+        begin
+          AIsShortie := True;
+          AId := fQuestion.GetId;
+          Exit(True);
+        end;
+      end;
+
+    for var idx := 0 to FContent.Questions.FinalQuestions.Count - 2 do
+      for var jdx := idx + 1 to FContent.Questions.FinalQuestions.Count - 1 do
+      begin
+        var fQuestion := FContent.Questions.FinalQuestions[idx];
+        var sQuestion := FContent.Questions.FinalQuestions[jdx];
+
+        if fQuestion.GetCategory.Equals(sQuestion.GetCategory) then
+        begin
+          AIsShortie := False;
+          AId := fQuestion.GetId;
+          Exit(True);
+        end;
+      end;
+  end;
 end;
 
 procedure TFrmMain.SaveProc;
@@ -1260,14 +1334,20 @@ begin
       if isShortie then
       begin
         GoToShortieQuestions;
-        FShortieVisItems.SelectQuestionWithId(qId);
+        if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+          FShortieVisItems.SelectCategoryWithId(qId)
+        else
+          FShortieVisItems.SelectQuestionWithId(qId);
         sbxShortieQuestions.ViewportPosition := TPointF.Create(0, FShortieVisItems.Selected.Top);
         FLastClickedItemToEdit := FShortieVisItems.Selected;
       end
       else
       begin
         GoToFinalQuestions;
-        FFinalVisItems.SelectQuestionWithId(qId);
+        if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+          FFinalVisItems.SelectCategoryWithId(qId)
+        else
+          FFinalVisItems.SelectQuestionWithId(qId);
         sbxFinalQuestions.ViewportPosition := TPointF.Create(0, FFinalVisItems.Selected.Top);
         FLastClickedItemToEdit := FFinalVisItems.Selected;
       end;
@@ -1279,7 +1359,7 @@ function TFrmMain.CheckForTooFewShortieQuestions: Boolean;
 begin
   Result := True;
 
-  if not (FContent.Configuration.GetGameType in [TGameType.FibbageXLPartyPack1, TGameType.Fibbage3PartyPack4]) then
+  if not (FContent.Configuration.GetGameType in [TGameType.FibbageXLPartyPack1, TGameType.Fibbage3PartyPack4, TGameType.Fibbage4PartyPack9]) then
     Exit;
 
   if FContent.Questions.ShortieQuestions.Count < MIN_NR_OF_SHORTIE_QUESTIONS then
@@ -1306,14 +1386,20 @@ begin
       if isShortie then
       begin
         GoToShortieQuestions;
-        FShortieVisItems.SelectQuestionWithId(qId);
+        if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+          FShortieVisItems.SelectCategoryWithId(qId)
+        else
+          FShortieVisItems.SelectQuestionWithId(qId);
         sbxShortieQuestions.ViewportPosition := TPointF.Create(0, FShortieVisItems.Selected.Top);
         FLastClickedItemToEdit := FShortieVisItems.Selected;
       end
       else
       begin
         GoToFinalQuestions;
-        FFinalVisItems.SelectQuestionWithId(qId);
+        if FContent.Configuration.GetGameType = TGameType.Fibbage4PartyPack9 then
+          FFinalVisItems.SelectCategoryWithId(qId)
+        else
+          FFinalVisItems.SelectQuestionWithId(qId);
         sbxFinalQuestions.ViewportPosition := TPointF.Create(0, FFinalVisItems.Selected.Top);
         FLastClickedItemToEdit := FFinalVisItems.Selected;
       end;
@@ -2870,6 +2956,17 @@ procedure TQuestionScrollItems.SelectAll;
 begin
   for var item in Self do
     item.Selected := True;
+end;
+
+procedure TQuestionScrollItems.SelectCategoryWithId(AId: Int32);
+begin
+  for var question in Self do
+    if question.OrgCategory.GetId = AId then
+    begin
+      ClearSelection;
+      question.SetSelected(True);
+      Break;
+    end;
 end;
 
 function TQuestionScrollItems.Selected: TQuestionScrollItem;
