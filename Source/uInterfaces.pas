@@ -23,12 +23,35 @@ type
     function GetIsFamilyFriendly: Boolean;
     function GetIsPortrait: Boolean;
     function GetBumper: string;
+    function GetQuestionText: string;
+    function GetCorrectText: string;
+    function GetSuggestions: string;
+    function GetAlternateSpelling: string;
+
+    function GetQuestionText1: string;
+    function GetQuestionText2: string;
+    function GetCorrectText1: string;
+    function GetCorrectText2: string;
+    function GetAlternateSpelling1: string;
+    function GetAlternateSpelling2: string;
 
     procedure SetId(AId: Integer);
     procedure SetCategory(const ACategory: string);
     procedure SetIsFamilyFriendly(AValue: Boolean);
     procedure SetIsPortrait(AValue: Boolean);
     procedure SetBumper(const AValue: string);
+    procedure SetQuestionText(const AValue: string);
+    procedure SetFamilyFriendly(AValue: Boolean);
+
+    procedure SetQuestionText1(const AValue: string);
+    procedure SetQuestionText2(const AValue: string);
+    procedure SetCorrectText(const AValue: string);
+    procedure SetCorrectText1(const AValue: string);
+    procedure SetCorrectText2(const AValue: string);
+    procedure SetSuggestions(const AValue: string);
+    procedure SetAlternateSpelling(const AValue: string);
+    procedure SetAlternateSpelling1(const AValue: string);
+    procedure SetAlternateSpelling2(const AValue: string);
 
     procedure CloneFrom(AObj: ICategory);
   end;
@@ -73,10 +96,12 @@ type
     function GetAnswer: string;
     function GetAlternateSpelling: string;
     function GetHaveQuestionAudio: Boolean;
+    function GetHaveQuestionAudio2: Boolean;
     function GetHaveAnswerAudio: Boolean;
     function GetHaveBumperAudio: Boolean;
 
     function GetQuestionAudioData: TBytes;
+    function GetQuestionAudioData2: TBytes;
     function GetAnswerAudioData: TBytes;
     function GetBumperAudioData: TBytes;
     function GetCategoryObj: ICategory;
@@ -88,6 +113,7 @@ type
     procedure SetAnswer(const AAnswer: string);
     procedure SetAlternateSpelling(const AAlternateSpelling: string);
     procedure SetQuestionAudioData(const AData: TBytes);
+    procedure SetQuestionAudioData2(const AData: TBytes);
     procedure SetAnswerAudioData(const AData: TBytes);
     procedure SetBumperAudioData(const AData: TBytes);
     procedure SetCategoryObj(ACategory: ICategory);
@@ -113,7 +139,7 @@ type
     procedure LoadQuestions(const APath: string);
   end;
 
-  TGameType = (FibbageXL, FibbageXLPartyPack1, Fibbage3PartyPack4);
+  TGameType = (FibbageXL, FibbageXLPartyPack1, Fibbage3PartyPack4, Fibbage4PartyPack9);
   TGameTypeHelper = record helper for TGameType
     function ToString: string;
   end;

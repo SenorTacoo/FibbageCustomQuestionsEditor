@@ -91,8 +91,8 @@ begin
       Continue;
 
     var item: IContentConfiguration := TContentConfiguration.Create;
-    item.Initialize(path);
-    Result.Add(item);
+    if item.Initialize(path) then
+      Result.Add(item);
   end;
 end;
 

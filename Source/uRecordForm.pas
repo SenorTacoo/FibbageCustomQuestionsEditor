@@ -10,7 +10,7 @@ uses
   ACS_Converters, NewACDSAudio, FMX.Media, uConfig, System.IOUtils, System.Math;
 
 type
-  TAudioType = (atQuestion, atAnswer, atBumper, atRecorded);
+  TAudioType = (atQuestion, atAnswer, atBumper, atRecorded, atQuestion2);
 
   TRecordForm = class(TForm)
     DXAudioIn1: TDXAudioIn;
@@ -70,6 +70,7 @@ type
     function ShowModal: TModalResult; overload;
 
     procedure EditQuestionAudio(AQuestion: IQuestion);
+    procedure EditQuestion2Audio(AQuestion: IQuestion);
     procedure EditAnswerAudio(AQuestion: IQuestion);
     procedure EditBumperAudio(AQuestion: IQuestion);
   end;
@@ -162,6 +163,8 @@ begin
       res := FQuestion.GetHaveAnswerAudio and (Length(FQuestion.GetAnswerAudioData) > 0);
     atBumper:
       res := FQuestion.GetHaveBumperAudio and (Length(FQuestion.GetBumperAudioData) > 0);
+    atQuestion2:
+      res := FQuestion.GetHaveQuestionAudio2 and (Length(FQuestion.GetQuestionAudioData2) > 0);
   end;
   bPlayOriginalAudio.Enabled := res;
   bRemoveAllAudio.Enabled := bPlayOriginalAudio.Enabled;
@@ -209,6 +212,14 @@ end;
 procedure TRecordForm.EditBumperAudio(AQuestion: IQuestion);
 begin
   FAudioType := atBumper;
+  FQuestion := AQuestion;
+  if ShowModal = mrOk then
+    SaveAudio
+end;
+
+procedure TRecordForm.EditQuestion2Audio(AQuestion: IQuestion);
+begin
+  FAudioType := atQuestion2;
   FQuestion := AQuestion;
   if ShowModal = mrOk then
     SaveAudio
@@ -366,6 +377,7 @@ begin
     atAnswer: buffer := FQuestion.GetAnswerAudioData;
     atBumper: buffer := FQuestion.GetBumperAudioData;
     atRecorded: buffer := FRecordedData;
+    atQuestion2: buffer := FQuestion.GetQuestionAudioData2;
   end;
 
   Result := TPath.Combine(TPath.GetTempPath, TPath.GetTempFileName);
@@ -398,6 +410,8 @@ begin
       FQuestion.SetAnswerAudioData(FRecordedData);
     atBumper:
       FQuestion.SetBumperAudioData(FRecordedData);
+    atQuestion2:
+      FQuestion.SetQuestionAudioData2(FRecordedData);
   end;
 end;
 

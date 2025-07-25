@@ -23,6 +23,7 @@ object RecordForm: TRecordForm
     StyleLookup = 'playtoolbuttonmultiview'
     TabOrder = 2
     Text = 'Play recorded audio'
+    TextSettings.Trimming = None
     OnClick = bPlayRecordedAudioClick
   end
   object Layout1: TLayout
@@ -110,6 +111,7 @@ object RecordForm: TRecordForm
       StyleLookup = 'mictoolbuttonmultiview'
       TabOrder = 0
       Text = 'Record audio'
+      TextSettings.Trimming = None
       OnClick = bRecordAudioClick
     end
   end
@@ -151,6 +153,7 @@ object RecordForm: TRecordForm
       StyleLookup = 'savetoolbuttonmultiview'
       TabOrder = 0
       Text = 'Save'
+      TextSettings.Trimming = None
       OnClick = bSaveRecordedAudioClick
     end
     object bGoBack: TButton
@@ -161,6 +164,7 @@ object RecordForm: TRecordForm
       StyleLookup = 'stoptoolbuttonmultiview'
       TabOrder = 1
       Text = 'Cancel'
+      TextSettings.Trimming = None
       OnClick = bGoBackClick
     end
   end
@@ -173,6 +177,7 @@ object RecordForm: TRecordForm
     StyleLookup = 'playtoolbuttonmultiview'
     TabOrder = 3
     Text = 'Play original audio'
+    TextSettings.Trimming = None
     OnClick = bPlayOriginalAudioClick
   end
   object bRemoveAllAudio: TButton
@@ -184,6 +189,7 @@ object RecordForm: TRecordForm
     StyleLookup = 'trashtoolbuttonmultiview'
     TabOrder = 17
     Text = 'Remove audio'
+    TextSettings.Trimming = None
     OnClick = bRemoveAllAudioClick
   end
   object DXAudioIn1: TDXAudioIn

@@ -44,6 +44,8 @@ type
     function GetFibbageXLPartyPack1Path: string;
     procedure SetFibbage3PartyPack4Path(const Value: string);
     procedure SetFibbageXLPartyPack1Path(const Value: string);
+    function GetFibbage4PartyPack9Path: string;
+    procedure SetFibbage4PartyPack9Path(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -58,6 +60,7 @@ type
     property FibbageXLPath: string read GetFibbagePath write SetFibbagePath;
     property FibbageXLPartyPack1Path: string read GetFibbageXLPartyPack1Path write SetFibbageXLPartyPack1Path;
     property Fibbage3PartyPack4Path: string read GetFibbage3PartyPack4Path write SetFibbage3PartyPack4Path;
+    property Fibbage4PartyPack9Path: string read GetFibbage4PartyPack9Path write SetFibbage4PartyPack9Path;
 
     property ShowInfoAboutDuplicatedCategories: Boolean read GetShowInfoAboutDuplicatedCategories write SetShowInfoAboutDuplicatedCategories;
     property ShowInfoAboutTooFewSuggestions: Boolean read GetShowInfoAboutTooFewSuggestions write SetShowInfoAboutTooFewSuggestions;
@@ -94,6 +97,11 @@ end;
 function TAppConfig.GetFibbage3PartyPack4Path: string;
 begin
   Result := FIniFile.ReadString('General', 'Fibbage3PartyPack4Path', '');
+end;
+
+function TAppConfig.GetFibbage4PartyPack9Path: string;
+begin
+  Result := FIniFile.ReadString('General', 'Fibbage4PartyPack9Path', '');
 end;
 
 function TAppConfig.GetFibbagePath: string;
@@ -161,6 +169,11 @@ end;
 procedure TAppConfig.SetFibbage3PartyPack4Path(const Value: string);
 begin
   FIniFile.WriteString('General', 'Fibbage3PartyPack4Path', Value);
+end;
+
+procedure TAppConfig.SetFibbage4PartyPack9Path(const Value: string);
+begin
+  FIniFile.WriteString('General', 'Fibbage4PartyPack9Path', Value);
 end;
 
 procedure TAppConfig.SetFibbagePath(const Value: string);
