@@ -19,7 +19,8 @@ uses
   uFibbageContent in '..\Source\uFibbageContent.pas',
   uQuestionsLoader in '..\Source\uQuestionsLoader.pas',
   uFibbageFilesReader in '..\Source\uFibbageFilesReader.pas',
-  uContentConfiguration in '..\Source\uContentConfiguration.pas';
+  uContentConfiguration in '..\Source\uContentConfiguration.pas',
+  uFibbageJSONWriter in '..\Source\uFibbageJSONWriter.pas';
 
 begin
 {$IFDEF TESTINSIGHT}

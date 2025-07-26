@@ -17,7 +17,15 @@ uses
   uUserDialog in 'uUserDialog.pas' {UserDialog},
   uGetGameTypeDlg in 'uGetGameTypeDlg.pas' {GetGameTypeDlg},
   uFibbageContent in 'uFibbageContent.pas',
-  uQuestionsLoader in 'uQuestionsLoader.pas';
+  uFibbageFilesReader in 'uFibbageFilesReader.pas',
+  uFibbageJSONWriter in 'uFibbageJSONWriter.pas',
+  uQuestionsLoader in 'uQuestionsLoader.pas',
+  uEditQuestionFrame in 'GUI\uEditQuestionFrame.pas' {FrmEditQuestion: TFrame},
+  uEditableStringItemFrame in 'GUI\uEditableStringItemFrame.pas' {FrmEditableStringItem: TFrame},
+  uEditableU32ItemFrame in 'GUI\uEditableU32ItemFrame.pas' {FrmEditableU32Item: TFrame},
+  uEditableBoolItemFrame in 'GUI\uEditableBoolItemFrame.pas' {FrmEditableBoolItem: TFrame},
+  uEditableLongStringItemFrame in 'GUI\uEditableLongStringItemFrame.pas' {FrmEditableLongStringItem: TFrame},
+  uEditableAudioItemFrame in 'GUI\uEditableAudioItemFrame.pas' {FrmEditableAudioItem: TFrame};
 
 {$R *.res}
 

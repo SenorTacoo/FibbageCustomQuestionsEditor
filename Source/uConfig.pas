@@ -46,6 +46,8 @@ type
     procedure SetFibbageXLPartyPack1Path(const Value: string);
     function GetFibbage4PartyPack9Path: string;
     procedure SetFibbage4PartyPack9Path(const Value: string);
+    function GetShowInfoAboutMissingBlanks: Boolean;
+    procedure SetShowInfoAboutMissingBlanks(const Value: Boolean);
   public
     constructor Create;
     destructor Destroy; override;
@@ -65,6 +67,7 @@ type
     property ShowInfoAboutDuplicatedCategories: Boolean read GetShowInfoAboutDuplicatedCategories write SetShowInfoAboutDuplicatedCategories;
     property ShowInfoAboutTooFewSuggestions: Boolean read GetShowInfoAboutTooFewSuggestions write SetShowInfoAboutTooFewSuggestions;
     property ShowInfoAboutTooFewShortieQuestions: Boolean read GetShowInfoAboutTooFewShortieQuestions write SetShowInfoAboutTooFewShortieQuestions;
+    property ShowInfoAboutMissingBlanks: Boolean read GetShowInfoAboutMissingBlanks write SetShowInfoAboutMissingBlanks;
   end;
 
 implementation
@@ -151,6 +154,11 @@ begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutDuplicatedCategories', True);
 end;
 
+function TAppConfig.GetShowInfoAboutMissingBlanks: Boolean;
+begin
+  Result := FIniFile.ReadBool('General', 'ShowInfoAboutMissingBlanks', True);
+end;
+
 function TAppConfig.GetShowInfoAboutTooFewShortieQuestions: Boolean;
 begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewShortieQuestions', True);
@@ -214,6 +222,11 @@ end;
 procedure TAppConfig.SetShowInfoAboutDuplicatedCategories(const Value: Boolean);
 begin
   FIniFile.WriteBool('General', 'ShowInfoAboutDuplicatedCategories', Value);
+end;
+
+procedure TAppConfig.SetShowInfoAboutMissingBlanks(const Value: Boolean);
+begin
+  FIniFile.WriteBool('General', 'ShowInfoAboutMissingBlanks', Value);
 end;
 
 procedure TAppConfig.SetShowInfoAboutTooFewShortieQuestions(

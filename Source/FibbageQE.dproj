@@ -192,7 +192,39 @@
             <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="uFibbageContent.pas"/>
+        <DCCReference Include="uFibbageFilesReader.pas"/>
+        <DCCReference Include="uFibbageJSONWriter.pas"/>
         <DCCReference Include="uQuestionsLoader.pas"/>
+        <DCCReference Include="GUI\uEditQuestionFrame.pas">
+            <Form>FrmEditQuestion</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableStringItemFrame.pas">
+            <Form>FrmEditableStringItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableU32ItemFrame.pas">
+            <Form>FrmEditableU32Item</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableBoolItemFrame.pas">
+            <Form>FrmEditableBoolItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableLongStringItemFrame.pas">
+            <Form>FrmEditableLongStringItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableAudioItemFrame.pas">
+            <Form>FrmEditableAudioItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

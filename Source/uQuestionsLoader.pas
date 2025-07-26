@@ -5,16 +5,23 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.StrUtils,
+  System.IOUtils,
   System.Generics.Collections,
   REST.Json,
-  System.JSON.Writers,
   System.JSON.Builders,
+  uFibbageJSONWriter,
   uFibbageFilesReader;
 
 type
   TEditableFieldBase = class(TObject);
 
   TEditableStringField = class(TEditableFieldBase)
+    Name: string;
+    Value: string;
+  end;
+
+  TEditableLongStringField = class(TEditableFieldBase)
     Name: string;
     Value: string;
   end;
@@ -27,6 +34,7 @@ type
   TEditableAudioField = class(TEditableFieldBase)
     Name: string;
     Value: string;
+    BasePath: string;
   end;
 
   TEditableBoolField = class(TEditableFieldBase)
@@ -36,9 +44,24 @@ type
 
   TEditableFields = TObjectList<TEditableFieldBase>;
 
+  TQuestionPreview = record
+    Header: string;
+    Question: string;
+  end;
+
+//  TQuestionsPreview = TObjectList<TQuestionPreview>;
+
   TFibbageQuestion = class
   public
+    procedure SetEditableFields(AFields: TEditableFields); virtual; abstract;
     function GetEditableFields: TEditableFields; virtual; abstract;
+    function GetPreview: TQuestionPreview; virtual; abstract;
+    function GetJSON: string; virtual; abstract;
+  end;
+
+  TFibbageAudioEntry = class
+    BasePath: string;
+    Name: string;
   end;
 
   TFibbageXLQuestion = class(TFibbageQuestion)
@@ -48,32 +71,41 @@ type
     FFamilyFriendly: Boolean;
     FBumperAudio: string;
     FBumperType: string;
-    FCorrectAudio: string;
-    FQuestionAudio: string;
+    FCorrectAudio: TFibbageAudioEntry;
+    FQuestionAudio: TFibbageAudioEntry;
     FSuggestions: TArray<string>;
     FCorrectText: string;
     FQuestionText: string;
     FAlternateSpellings: TArray<string>;
   public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure SetEditableFields(AFields: TEditableFields); override;
     function GetEditableFields: TEditableFields; override;
+    function GetPreview: TQuestionPreview; override;
+    function GetJSON: string; override;
+    function SuggestionsCount: Int32;
   end;
 
   TFibbageQuestions<T: class> = class
   private
     function GetItem(AIndex: Int32): T;
   protected
-    FQuestionsType: string;
     FList: TObjectList<T>;
     FReader: TFibbageFilesReader;
 
-    procedure DoInitialize; virtual; abstract;
+    procedure DoInitialize;
+    procedure DoParseItem(AItem: TQuestionData); virtual; abstract;
+    function GetName: string; virtual; abstract;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure Initialize(AReader: TFibbageFilesReader; const AType: string);
+    procedure Initialize(AReader: TFibbageFilesReader);
 
     function Count: Int32;
+
     property Item[AIndex: Int32]: T read GetItem; default;
   end;
 
@@ -101,24 +133,26 @@ type
       destructor Destroy; override;
       function GetValue(const AName: string): string;
     end;
-  private
-    procedure DoParseItem(AItem: TQuestionData);
   protected
-    procedure DoInitialize; override;
+    procedure DoParseItem(AItem: TQuestionData); override;
   public
     function GetCategoriesJSON: string;
+    function HasQuestionWithTheSameCategory(AQuestion: TFibbageXLQuestion): Boolean;
+  end;
+
+  TFibbageXLQuestions_Shortie = class(TFibbageXLQuestions)
+  public
+    function GetName: string; override;
+  end;
+
+  TFibbageXLQuestions_Final = class(TFibbageXLQuestions)
+  public
+    function GetName: string; override;
   end;
 
 implementation
 
 { TFibbageXLQuestions }
-
-procedure TFibbageXLQuestions.DoInitialize;
-begin
-  FReader.Read(FQuestionsType);
-  for var idx := 0 to FReader.Count - 1 do
-    DoParseItem(FReader.GetItem(idx));
-end;
 
 procedure TFibbageXLQuestions.DoParseItem(AItem: TQuestionData);
 begin
@@ -138,8 +172,13 @@ begin
         newItem.FFamilyFriendly := not rawCategory.FContent[idx].FX;
         newItem.FBumperAudio := rawQuestion.GetValue('BumperAudio');
         newItem.FBumperType := rawQuestion.GetValue('BumperType');
-        newItem.FCorrectAudio := rawQuestion.GetValue('CorrectAudio');
-        newItem.FQuestionAudio := rawQuestion.GetValue('QuestionAudio');
+
+        newItem.FCorrectAudio.Name := rawQuestion.GetValue('CorrectAudio');
+        newItem.FCorrectAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
+
+        newItem.FQuestionAudio.Name := rawQuestion.GetValue('QuestionAudio');
+        newItem.FQuestionAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
+
         newItem.FSuggestions := rawQuestion.GetValue('Suggestions').Split([',']);
         newItem.FCorrectText := rawQuestion.GetValue('CorrectText');
         newItem.FQuestionText := rawQuestion.GetValue('QuestionText');
@@ -159,11 +198,9 @@ end;
 
 function TFibbageXLQuestions.GetCategoriesJSON: string;
 begin
-  var strStream := TStringWriter.Create;
-  var jw := TJsonTextWriter.Create(strStream);
-  var job := TJSONObjectBuilder.Create(jw);
+  var builder := TFibbageJSONBuilder.Create;
   try
-    var contentArr := job.BeginObject
+    var contentArr := builder.BeginObject
       .BeginArray('content');
 
     for var question in FList do
@@ -177,11 +214,23 @@ begin
     end;
 
     contentArr.EndArray.EndObject;
-    Result := strStream.ToString;
+
+    Result := builder.Build;
   finally
-    job.Free;
-    jw.Free;
-    strStream.Free;
+    builder.Free;
+  end;
+end;
+
+function TFibbageXLQuestions.HasQuestionWithTheSameCategory(
+  AQuestion: TFibbageXLQuestion): Boolean;
+begin
+  Result := False;
+  for var item in FList do
+  begin
+    if AQuestion = item then
+      Continue;
+    if AQuestion.FCategory = item.FCategory then
+      Exit(True);
   end;
 end;
 
@@ -204,12 +253,17 @@ begin
   inherited;
 end;
 
+procedure TFibbageQuestions<T>.DoInitialize;
+begin
+  DoParseItem(FReader.Read(GetName));
+end;
+
 function TFibbageQuestions<T>.GetItem(AIndex: Int32): T;
 begin
   Result := FList[AIndex];
 end;
 
-procedure TFibbageQuestions<T>.Initialize(AReader: TFibbageFilesReader; const AType: string);
+procedure TFibbageQuestions<T>.Initialize(AReader: TFibbageFilesReader);
 begin
   FList.Clear;
   FReader := AReader;
@@ -246,39 +300,48 @@ end;
 
 { TFibbageXLQuestion }
 
+constructor TFibbageXLQuestion.Create;
+begin
+  inherited Create;
+  FCorrectAudio := TFibbageAudioEntry.Create;
+  FQuestionAudio := TFibbageAudioEntry.Create;
+end;
+
+destructor TFibbageXLQuestion.Destroy;
+begin
+  FCorrectAudio.Free;
+  FQuestionAudio.Free;
+  inherited;
+end;
+
 function TFibbageXLQuestion.GetEditableFields: TEditableFields;
 begin
   Result := TEditableFields.Create;
-
-  var u32Item := TEditableU32Field.Create;
-  u32Item.Name := 'Id';
-  u32Item.Value := FId;
-  Result.Add(u32Item);
 
   var strItem := TEditableStringField.Create;
   strItem.Name := 'Category';
   strItem.Value := FCategory;
   Result.Add(strItem);
 
-  strItem := TEditableStringField.Create;
-  strItem.Name := 'Question Text';
-  strItem.Value := FQuestionText;
-  Result.Add(strItem);
+  var strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Question Text';
+  strLongItem.Value := FQuestionText;
+  Result.Add(strLongItem);
 
   strItem := TEditableStringField.Create;
   strItem.Name := 'Correct Text';
   strItem.Value := FCorrectText;
   Result.Add(strItem);
 
-  strItem := TEditableStringField.Create;
-  strItem.Name := 'Alternate Spellings';
-  strItem.Value := string.Join(',', FAlternateSpellings);
-  Result.Add(strItem);
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Alternate Spellings';
+  strLongItem.Value := string.Join(', ', FAlternateSpellings);
+  Result.Add(strLongItem);
 
-  strItem := TEditableStringField.Create;
-  strItem.Name := 'Suggestions';
-  strItem.Value := string.Join(',', FSuggestions);
-  Result.Add(strItem);
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Suggestions';
+  strLongItem.Value := string.Join(', ', FSuggestions);
+  Result.Add(strLongItem);
 
   var boolItem := TEditableBoolField.Create;
   boolItem.Name := 'Family Friendly';
@@ -286,24 +349,140 @@ begin
   Result.Add(boolItem);
 
   var audioItem := TEditableAudioField.Create;
-  audioItem.Name := 'Bumper Audio';
-  audioItem.Value := FBumperAudio;
-  Result.Add(audioItem);
-
-  strItem := TEditableStringField.Create;
-  strItem.Name := 'Bumper Type';
-  strItem.Value := FBumperType;
-  Result.Add(strItem);
-
-  audioItem := TEditableAudioField.Create;
   audioItem.Name := 'Question Audio';
-  audioItem.Value := FQuestionAudio;
+  audioItem.Value := FQuestionAudio.Name;
+  audioItem.BasePath := FQuestionAudio.BasePath;
   Result.Add(audioItem);
 
   audioItem := TEditableAudioField.Create;
   audioItem.Name := 'Correct Audio';
-  audioItem.Value := FCorrectAudio;
+  audioItem.Value := FCorrectAudio.Name;
+  audioItem.BasePath := FCorrectAudio.BasePath;
   Result.Add(audioItem);
+end;
+
+function TFibbageXLQuestion.GetJSON: string;
+begin
+  var builder := TFibbageJSONBuilder.Create;
+  try
+    var fields := builder.BeginObject.BeginArray('fields');
+
+    fields
+      .BeginObject
+        .Add('t', 'B')
+        .Add('v', BoolToStr(not FBumperAudio.IsEmpty, True).ToLowerInvariant)
+        .Add('n', 'HasBumperAudio')
+      .EndObject
+      .BeginObject
+        .Add('t', 'B')
+        .Add('v', BoolToStr((not FBumperType.IsEmpty) and (FBumperType <> 'None'), True).ToLowerInvariant)
+        .Add('n', 'HasBumperType')
+      .EndObject
+      .BeginObject
+        .Add('t', 'B')
+        .Add('v', BoolToStr(not FCorrectAudio.Name.IsEmpty, True).ToLowerInvariant)
+        .Add('n', 'HasCorrectAudio')
+      .EndObject
+      .BeginObject
+        .Add('t', 'B')
+        .Add('v', BoolToStr(not FQuestionAudio.Name.IsEmpty, True).ToLowerInvariant)
+        .Add('n', 'HasQuestionAudio')
+      .EndObject
+      .BeginObject
+        .Add('t', 'S')
+        .Add('v', string.Join(',', FSuggestions))
+        .Add('n', 'Suggestions')
+      .EndObject
+      .BeginObject
+        .Add('t', 'S')
+        .Add('v', FCategory)
+        .Add('n', 'Category')
+      .EndObject
+      .BeginObject
+        .Add('t', 'S')
+        .Add('v', FCorrectText)
+        .Add('n', 'CorrectText')
+      .EndObject
+      .BeginObject
+        .Add('t', 'S')
+        .Add('v', IfThen(FBumperType.IsEmpty, 'None', FBumperType))
+        .Add('n', 'BumperType')
+      .EndObject
+      .BeginObject
+        .Add('t', 'S')
+        .Add('v', FQuestionText)
+        .Add('n', 'QuestionText')
+      .EndObject
+      .BeginObject
+        .Add('t', 'S')
+        .Add('v', string.Join(',', FAlternateSpellings))
+        .Add('n', 'AlternateSpellings')
+      .EndObject;
+
+      var bumperAudio := fields.BeginObject;
+        bumperAudio.Add('t', 'A');
+        if not FBumperAudio.IsEmpty then
+          bumperAudio.Add('v', FBumperAudio);
+        bumperAudio.Add('n', 'BumperAudio')
+
+      .EndObject
+      .BeginObject
+        .Add('t', 'A')
+        .Add('v', FCorrectAudio)
+        .Add('n', 'CorrectAudio')
+      .EndObject
+      .BeginObject
+        .Add('t', 'A')
+        .Add('v', FQuestionAudio)
+        .Add('n', 'QuestionAudio')
+      .EndObject
+    .EndArray
+    .EndObject;
+
+    Result := builder.Build;
+  finally
+    builder.Free;
+  end;
+end;
+
+function TFibbageXLQuestion.GetPreview: TQuestionPreview;
+begin
+  Result := Default(TQuestionPreview);
+  Result.Header := Format('Id: %d, Category: %s', [FId, FCategory]);
+  Result.Question := FQuestionText;
+end;
+
+procedure TFibbageXLQuestion.SetEditableFields(AFields: TEditableFields);
+begin
+  FCategory := (AFields[0] as TEditableStringField).Value;
+  FQuestionText := (AFields[1] as TEditableLongStringField).Value;
+  FCorrectText := (AFields[2] as TEditableStringField).Value;
+  FAlternateSpellings := (AFields[3] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
+  FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
+  FFamilyFriendly := (AFields[5] as TEditableBoolField).Value;
+  FQuestionAudio.Name := (AFields[6] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[6] as TEditableAudioField).BasePath;
+  FCorrectAudio.Name := (AFields[7] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[7] as TEditableAudioField).BasePath;
+end;
+
+function TFibbageXLQuestion.SuggestionsCount: Int32;
+begin
+  Result := Length(FSuggestions);
+end;
+
+{ TFibbageXLQuestions_Shortie }
+
+function TFibbageXLQuestions_Shortie.GetName: string;
+begin
+  Result := 'fibbageshortie';
+end;
+
+{ TFibbageXLQuestions_Final }
+
+function TFibbageXLQuestions_Final.GetName: string;
+begin
+  Result := 'finalfibbage';
 end;
 
 end.

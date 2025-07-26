@@ -14,9 +14,8 @@ object RecordForm: TRecordForm
   OnClose = FormClose
   DesignerMasterStyle = 0
   object bPlayRecordedAudio: TButton
-    Align = Top
+    Align = Client
     Enabled = False
-    Position.Y = 200.000000000000000000
     Size.Width = 493.000000000000000000
     Size.Height = 50.000000000000000000
     Size.PlatformDefault = False
@@ -98,7 +97,7 @@ object RecordForm: TRecordForm
   end
   object Layout5: TLayout
     Align = Top
-    Position.Y = 150.000000000000000000
+    Position.Y = 100.000000000000000000
     Size.Width = 493.000000000000000000
     Size.Height = 50.000000000000000000
     Size.PlatformDefault = False
@@ -110,14 +109,14 @@ object RecordForm: TRecordForm
       Size.PlatformDefault = False
       StyleLookup = 'mictoolbuttonmultiview'
       TabOrder = 0
-      Text = 'Record audio'
+      Text = 'Record'
       TextSettings.Trimming = None
       OnClick = bRecordAudioClick
     end
   end
   object GridPanelLayout1: TGridPanelLayout
     Align = Top
-    Position.Y = 300.000000000000000000
+    Position.Y = 200.000000000000000000
     Size.Width = 493.000000000000000000
     Size.Height = 50.000000000000000000
     Size.PlatformDefault = False
@@ -169,8 +168,7 @@ object RecordForm: TRecordForm
     end
   end
   object bPlayOriginalAudio: TButton
-    Align = Top
-    Position.Y = 100.000000000000000000
+    Align = Client
     Size.Width = 493.000000000000000000
     Size.Height = 50.000000000000000000
     Size.PlatformDefault = False
@@ -182,7 +180,7 @@ object RecordForm: TRecordForm
   end
   object bRemoveAllAudio: TButton
     Align = Top
-    Position.Y = 250.000000000000000000
+    Position.Y = 150.000000000000000000
     Size.Width = 493.000000000000000000
     Size.Height = 50.000000000000000000
     Size.PlatformDefault = False
