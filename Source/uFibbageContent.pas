@@ -12,7 +12,7 @@ uses
   uInterfaces;
 
 type
-  TFibbageContent = class
+  TFibbageContent = class abstract
   protected
     FConfiguration: TContentConfiguration;
     FFilesReader: TFibbageFilesReader;
@@ -26,8 +26,12 @@ type
     procedure Save(const APath: string; ASaveOptions: TSaveOptions); overload;
     procedure Save; overload;
 
+    function CreateNewQuestion(const AType: string): TFibbageQuestion; virtual; abstract;
+    procedure RemoveQuestion(const AType: string; AQuestion: TFibbageQuestion); virtual; abstract;
+
     function GetEditableTypes: TStringList; virtual; abstract;
     procedure ForEachQuestion(const AType: string; AProc: TProc<TFibbageQuestion>); virtual; abstract;
+
     function HasDuplicatedCategory(const AType: string; AQuestion: TFibbageQuestion): Boolean; virtual; abstract;
     function HasTooFewSuggestions(const AType: string; AQuestion: TFibbageQuestion): Boolean; virtual; abstract;
     function HasMissingBlanks(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean; virtual; abstract;
@@ -44,8 +48,10 @@ type
     destructor Destroy; override;
 
     function GetEditableTypes: TStringList; override;
-//    function GetEditableQuestionsPreview(const AType: string): TQuestionsPreview; override;
     procedure ForEachQuestion(const AType: string; AProc: TProc<TFibbageQuestion>); override;
+    function CreateNewQuestion(const AType: string): TFibbageQuestion; override;
+    procedure RemoveQuestion(const AType: string; AQuestion: TFibbageQuestion); override;
+
     function HasDuplicatedCategory(const AType: string; AQuestion: TFibbageQuestion): Boolean; override;
     function HasTooFewSuggestions(const AType: string; AQuestion: TFibbageQuestion): Boolean; override;
     function HasMissingBlanks(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
@@ -85,6 +91,17 @@ end;
 
 { TFibbageXLContent }
 
+function TFibbageXLContent.CreateNewQuestion(
+  const AType: string): TFibbageQuestion;
+begin
+  if AType = FShortieQuestions.GetName then
+    Result := FShortieQuestions.CreateNewQuestion
+  else if AType = FFinalQuestions.GetName then
+    Result := FFinalQuestions.CreateNewQuestion
+  else
+    Assert(False);
+end;
+
 constructor TFibbageXLContent.Create(const ABasePath: string);
 begin
   inherited Create(ABasePath);
@@ -121,7 +138,6 @@ begin
   end
   else
     Assert(False);
-
 end;
 
 function TFibbageXLContent.GetEditableTypes: TStringList;
@@ -153,6 +169,17 @@ const
   OPTIMAL_SUGGESTIONS_NR = 17;
 begin
   Result := (AQuestion as TFibbageXLQuestion).SuggestionsCount < OPTIMAL_SUGGESTIONS_NR;
+end;
+
+procedure TFibbageXLContent.RemoveQuestion(const AType: string;
+  AQuestion: TFibbageQuestion);
+begin
+  if AType = FShortieQuestions.GetName then
+    FShortieQuestions.RemoveQuestion(AQuestion as TFibbageXLQuestion)
+  else if AType = FFinalQuestions.GetName then
+    FFinalQuestions.RemoveQuestion(AQuestion as TFibbageXLQuestion)
+  else
+    Assert(False);
 end;
 
 end.

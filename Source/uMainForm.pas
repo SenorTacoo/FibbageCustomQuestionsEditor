@@ -282,7 +282,6 @@ type
     procedure aSaveChangesSettingsExecute(Sender: TObject);
     procedure aCancelChangesSettingsExecute(Sender: TObject);
     procedure bSettingsClick(Sender: TObject);
-    procedure bRefreshQuestionIdClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure aSaveProjectAndCloseExecute(Sender: TObject);
     procedure lFamilyFriendlyClick(Sender: TObject);
@@ -351,9 +350,6 @@ type
 
     procedure OnShortieQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure OnFinalQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
-
-    procedure RemoveSelectedShortieQuestions;
-    procedure RemoveSelectedFinalQuestions;
 
     procedure FillFinalScrollBox;
     procedure FillShortiesScrollBox;
@@ -428,6 +424,9 @@ type
     procedure FillAudioDevices;
     procedure OnCancelSingleQuestionClick(Sender: TObject);
     procedure OnSaveSingleQuestionClick(Sender: TObject);
+    function AddQuestionScrollItem(AQuestion: TFibbageQuestion): TQuestionScrollItem;
+    function GetSelectedQuestionsCount: Int32;
+    procedure SwitchHighlightQuestionItem(AItem: TQuestionScrollItem; AClearOthers: Boolean);
   public
     { Public declarations }
   end;
@@ -448,14 +447,12 @@ begin
   if FChangingTab then
     Exit;
 
-//  if tcQuestions.ActiveTab = tiShortieQuestions then
-//    CreateNewShortieQuestion
-//  else if tcQuestions.ActiveTab = tiFinalQuestions then
-//    CreateNewFinalQuestion
-//  else
-//    Assert(False);
+  var question := FContent.CreateNewQuestion(FActiveQuestionsType);
 
-//  lNewQuestion.Text := 'New question';
+  FLastClickedItemToEdit := AddQuestionScrollItem(question);
+
+  frmEditQuestion.NewQuestion(question);
+
   GoToQuestionDetails;
 end;
 
@@ -525,6 +522,16 @@ begin
   end;
 end;
 
+function TFrmMain.AddQuestionScrollItem(AQuestion: TFibbageQuestion): TQuestionScrollItem;
+begin
+  Result := TQuestionScrollItem.CreateItem(Self, AQuestion);
+  Result.Parent := sbxQuestions;
+  Result.Align := TAlignLayout.Top;
+  Result.Position.Y := MaxInt;
+  Result.OnMouseDown := OnQuestionItemMouseDown;
+  Result.OnDblClick := OnQuestionItemDoubleClick;
+end;
+
 procedure TFrmMain.aEditProjectNameExecute(Sender: TObject);
 begin
   if not Assigned(FLastClickedConfiguration) then
@@ -557,7 +564,6 @@ begin
   FSelectedQuestion := FLastClickedItemToEdit.OrgQuestion;
   FLastClickedItemToEdit.Selected := True;
 
-//  lNewQuestion.Text := 'Edit question';
   GoToQuestionDetails;
 end;
 
@@ -1042,12 +1048,27 @@ end;
 
 procedure TFrmMain.aRemoveQuestionsExecute(Sender: TObject);
 begin
-//  if tcQuestions.ActiveTab = tiShortieQuestions then
-//    RemoveSelectedShortieQuestions
-//  else if tcQuestions.ActiveTab = tiFinalQuestions then
-//    RemoveSelectedFinalQuestions
-//  else
-//    Assert(False);
+  sbxQuestions.BeginUpdate;
+  try
+    for var idx := sbxQuestions.Content.ChildrenCount - 1 downto 0 do
+    begin
+      if not (sbxQuestions.Content.Children[idx] is TQuestionScrollItem) then
+        Continue;
+      var item := sbxQuestions.Content.Children[idx] as TQuestionScrollItem;
+
+      if not item.Selected then
+        Continue;
+
+      FContent.RemoveQuestion(FActiveQuestionsType, item.OrgQuestion);
+      FreeAndNil(item);
+//      sbxQuestions.Content.RemoveObject(item);
+//      item.Free;
+    end;
+  finally
+    FLastClickedItemToEdit := nil;
+    aRemoveQuestions.Enabled := False;
+    sbxQuestions.EndUpdate;
+  end;
 end;
 
 procedure TFrmMain.aSaveChangesSettingsExecute(Sender: TObject);
@@ -1579,6 +1600,18 @@ begin
   end;
 end;
 
+function TFrmMain.GetSelectedQuestionsCount: Int32;
+begin
+  Result := 0;
+  for var item in sbxQuestions.Content.Children do
+  begin
+    if not (item is TQuestionScrollItem) then
+      Continue;
+    if (item as TQuestionScrollItem).Selected then
+      Inc(Result);
+  end;
+end;
+
 function TFrmMain.GetSingleQuestionSuggestions: string;
 begin
   var suggestions := TStringList.Create;
@@ -1745,29 +1778,6 @@ begin
   GoToAllQuestions;
 end;
 
-procedure TFrmMain.bRefreshQuestionIdClick(Sender: TObject);
-begin
-//  eSingleItemId.Text := FContent.Categories.GetAvailableId.ToString;
-end;
-
-procedure TFrmMain.RemoveSelectedShortieQuestions;
-begin
-//  sbxShortieQuestions.BeginUpdate;
-//  try
-//    for var idx := FShortieVisItems.Count - 1 downto 0 do
-//      if FShortieVisItems[idx].Selected then
-//      begin
-//        var item := FShortieVisItems.ExtractAt(idx);
-//        FContent.RemoveShortieQuestion(item.OrgQuestion);
-//        FreeAndNil(item);
-//      end;
-//  finally
-//    FLastClickedItemToEdit := nil;
-//    aRemoveQuestions.Enabled := False;
-//    sbxShortieQuestions.EndUpdate;
-//  end;
-end;
-
 procedure TFrmMain.sDarkModeOptionsSwitch(Sender: TObject);
 begin
   SetDarkMode(sDarkModeOptions.IsChecked);
@@ -1776,24 +1786,6 @@ end;
 procedure TFrmMain.sDarkModeSwitch(Sender: TObject);
 begin
   SetDarkMode(sDarkMode.IsChecked);
-end;
-
-procedure TFrmMain.RemoveSelectedFinalQuestions;
-begin
-//  sbxFinalQuestions.BeginUpdate;
-//  try
-//    for var idx := FFinalVisItems.Count - 1 downto 0 do
-//      if FFinalVisItems[idx].Selected then
-//      begin
-//        var item := FFinalVisItems.ExtractAt(idx);
-//        FContent.RemoveFinalQuestion(item.OrgQuestion);
-//        FreeAndNil(item);
-//      end;
-//  finally
-//    FLastClickedItemToEdit := nil;
-//    aRemoveQuestions.Enabled := False;
-//    sbxFinalQuestions.EndUpdate;
-//  end;
 end;
 
 function TFrmMain.GetProjectPath(out APath: string): Boolean;
@@ -2017,13 +2009,51 @@ begin
   if not (Sender is TQuestionScrollItem) then
     Exit;
 
-  for var child in sbxQuestions.Content.Children do
-    if child = Sender then
-      (child as TQuestionScrollItem).Selected := not (child as TQuestionScrollItem).Selected
-    else if child is TQuestionScrollItem then
-      (child as TQuestionScrollItem).Selected := False;
-
   FLastClickedItemToEdit := Sender as TQuestionScrollItem;
+  if Button = TMouseButton.mbRight then
+  begin
+    FLastClickedItem := Sender as TQuestionScrollItem;
+    SwitchHighlightQuestionItem(Sender as TQuestionScrollItem, True);
+    pmFinalQuestions.Popup(Screen.MousePos.X, Screen.MousePos.Y);
+  end
+  else if ssDouble in Shift then
+    SwitchHighlightQuestionItem(Sender as TQuestionScrollItem, True)
+  else if ssShift in Shift then
+  begin
+    var fIdx := 0;
+    var sIdx := sbxQuestions.Content.Children.IndexOf(Sender as TQuestionScrollItem);
+    if Assigned(FLastClickedItem) then
+      fIdx := sbxQuestions.Content.Children.IndexOf(FLastClickedItem);
+
+    if fIdx > sIdx then
+    begin
+      var tmp := fIdx;
+      fIdx := sIdx;
+      sIdx := tmp;
+    end;
+
+    for var idx := 0 to sbxQuestions.Content.ChildrenCount - 1 do
+    begin
+      if not (sbxQuestions.Content.Children[idx] is TQuestionScrollItem) then
+        Continue;
+      (sbxQuestions.Content.Children[idx] as TQuestionScrollItem).Selected := (idx >= fIdx) and (idx <= sIdx);
+    end;
+  end
+  else
+  begin
+    FLastClickedItem := Sender as TQuestionScrollItem;
+    if ssCtrl in Shift then
+      SwitchHighlightQuestionItem(Sender as TQuestionScrollItem, False)
+    else
+      SwitchHighlightQuestionItem(Sender as TQuestionScrollItem, True);
+  end;
+
+  if not (Sender as TQuestionScrollItem).Selected then
+    FLastClickedItemToEdit := nil;
+
+  var selCnt := GetSelectedQuestionsCount;
+  aRemoveQuestions.Enabled := selCnt > 0;
+  aRemoveQuestions.Text := IfThen(selCnt > 1, 'Remove questions', 'Remove question');
 end;
 
 procedure TFrmMain.OnQuestionTypeButtonClick(Sender: TObject);
@@ -2191,85 +2221,27 @@ end;
 
 procedure TFrmMain.FillCategoryFromControls;
 begin
-//  FSelectedCategory.SetId(StrToInt(eSingleItemId.Text));
-//  FSelectedCategory.SetFamilyFriendly(sFamilyFriendly.IsChecked);
-//  FSelectedCategory.SetQuestionText(mSingleItemQuestion.Text);
-//  FSelectedCategory.SetQuestionText1(mSingleItemQuestion.Text);
-//  FSelectedCategory.SetQuestionText2(mSingleItemQuestion2.Text);
-//  FSelectedCategory.SetCorrectText(mSingleItemAnswer.Text);
-//  FSelectedCategory.SetCorrectText1(mSingleItemAnswer.Text);
-//  FSelectedCategory.SetCorrectText1(mSingleItemAnswer.Text);
-//  FSelectedCategory.SetCorrectText2(mSingleItemAnswer2.Text);
-//  FSelectedCategory.SetSuggestions(GetSingleQuestionSuggestions);
-//  FSelectedCategory.SetAlternateSpelling(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
-//  FSelectedCategory.SetAlternateSpelling1(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
-//  FSelectedCategory.SetAlternateSpelling2(mSingleItemAlternateSpelling2.Text.Replace(', ', ',').Trim);
-//  FSelectedCategory.SetCategory(eSingleItemCategory.Text.Trim);
-//  FSelectedCategory.SetIsFamilyFriendly(sFamilyFriendly.IsChecked);
+
 end;
 
 procedure TFrmMain.FillControlsFromCategory;
 begin
-//  if FSelectedQuestion.GetQuestionType = TQuestionType.qtShortie then
-//  begin
-//    mSingleItemQuestion.Text := FSelectedCategory.GetQuestionText;
-//    mSingleItemAnswer.Text := FSelectedCategory.GetCorrectText;
-//    mSingleItemAlternateSpelling.Text := FSelectedCategory.GetAlternateSpelling.Replace(',', ', ');
-//    mSingleItemSuggestions.Text := FSelectedCategory.GetSuggestions.Replace(',', ', ');
-//    eSingleItemId.Text := FSelectedCategory.GetId.ToString;
-//    eSingleItemCategory.Text := FSelectedCategory.GetCategory;
-//    sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
-//  end
-//  else
-//  begin
-//    mSingleItemQuestion.Text := FSelectedCategory.GetQuestionText1;
-//    mSingleItemQuestion2.Text := FSelectedCategory.GetQuestionText2;
-//    mSingleItemAnswer.Text := FSelectedCategory.GetCorrectText1;
-//    mSingleItemAnswer2.Text := FSelectedCategory.GetCorrectText2;
-//    mSingleItemAlternateSpelling.Text := FSelectedCategory.GetAlternateSpelling1.Replace(',', ', ');
-//    mSingleItemAlternateSpelling2.Text := FSelectedCategory.GetAlternateSpelling2.Replace(',', ', ');
-//    mSingleItemSuggestions.Text := FSelectedCategory.GetSuggestions.Replace(',', ', ');
-//    eSingleItemId.Text := FSelectedCategory.GetId.ToString;
-//    sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
-//  end;
+
 end;
 
 procedure TFrmMain.FillControlsFromQuestion;
 begin
-//  mSingleItemQuestion.Text := FSelectedQuestion.GetQuestion;
-//  mSingleItemAnswer.Text := FSelectedQuestion.GetAnswer;
-//  mSingleItemAlternateSpelling.Text :=  FSelectedQuestion.GetAlternateSpelling.Replace(',', ', ');
-//  mSingleItemSuggestions.Text := FSelectedQuestion.GetSuggestions.Replace(',', ', ');
-//  eSingleItemId.Text := FSelectedCategory.GetId.ToString;
-//  eSingleItemCategory.Text := FSelectedCategory.GetCategory;
-//  sFamilyFriendly.IsChecked := FSelectedCategory.GetIsFamilyFriendly;
+
 end;
 
 procedure TFrmMain.FillFinalScrollBox;
 begin
-//  sbxFinalQuestions.BeginUpdate;
-//  try
-//    for var item in FContent.Questions.FinalQuestions do
-//    begin
-//      var qItem := TQuestionScrollItem.CreateItem(sbxFinalQuestions, FContent, item);
-//      qItem.Parent := sbxFinalQuestions;
-//      qItem.Align := TAlignLayout.Top;
-//      qItem.Position.Y := MaxInt;
-//      qItem.OnMouseDown := OnFinalQuestionItemMouseDown;
-//      qItem.OnDblClick := OnFinalQuestionItemDoubleClick;
-//      FFinalVisItems.Add(qItem);
-//    end;
-//  finally
-//    sbxFinalQuestions.EndUpdate;
-//  end;
+
 end;
 
 procedure TFrmMain.FillQuestionFromControls;
 begin
-//  FSelectedQuestion.SetQuestion(mSingleItemQuestion.Text.Trim);
-//  FSelectedQuestion.SetAnswer(mSingleItemAnswer.Text.Trim);
-//  FSelectedQuestion.SetAlternateSpelling(mSingleItemAlternateSpelling.Text.Replace(', ', ',').Trim);
-//  FSelectedQuestion.SetSuggestions(GetSingleQuestionSuggestions);
+
 end;
 
 procedure TFrmMain.RefreshProjectFormActions;
@@ -2584,6 +2556,15 @@ begin
 //    gplSingleItemAudio.ColumnCollection.Items[2].Value := 0;
 //
 //  lySingleItemCategory.Visible := not lySingleItemQuestion2.Visible;
+end;
+
+procedure TFrmMain.SwitchHighlightQuestionItem(AItem: TQuestionScrollItem; AClearOthers: Boolean);
+begin
+  for var child in sbxQuestions.Content.Children do
+    if child = AItem then
+      (child as TQuestionScrollItem).Selected := not (child as TQuestionScrollItem).Selected
+    else if AClearOthers and (child is TQuestionScrollItem) then
+      (child as TQuestionScrollItem).Selected := False;
 end;
 
 procedure TFrmMain.bSingleItemBumperAudioClick(Sender: TObject);
@@ -2927,16 +2908,10 @@ begin
     FContent.ForEachQuestion(AType,
       procedure(AQuestion: TFibbageQuestion)
       begin
-        var item := TQuestionScrollItem.CreateItem(Self, AQuestion);
-        item.Parent := sbxQuestions;
-        item.Align := TAlignLayout.Top;
-        item.Position.Y := MaxInt;
-        item.OnMouseDown := OnQuestionItemMouseDown;
-        item.OnDblClick := OnQuestionItemDoubleClick;
+        AddQuestionScrollItem(AQuestion);
       end);
   finally
     sbxQuestions.EndUpdate;
-//    sbxQuestions.RealignContent;
   end;
 end;
 

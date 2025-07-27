@@ -88,7 +88,7 @@ type
     function SuggestionsCount: Int32;
   end;
 
-  TFibbageQuestions<T: class> = class
+  TFibbageQuestions<T: class> = class abstract
   private
     function GetItem(AIndex: Int32): T;
   protected
@@ -103,6 +103,9 @@ type
     destructor Destroy; override;
 
     procedure Initialize(AReader: TFibbageFilesReader);
+
+    function CreateNewQuestion: T; virtual; abstract;
+    procedure RemoveQuestion(AQuestion: T); virtual; abstract;
 
     function Count: Int32;
 
@@ -137,6 +140,10 @@ type
     procedure DoParseItem(AItem: TQuestionData); override;
   public
     function GetCategoriesJSON: string;
+
+    function CreateNewQuestion: TFibbageXLQuestion; override;
+    procedure RemoveQuestion(AQuestion: TFibbageXLQuestion); override;
+
     function HasQuestionWithTheSameCategory(AQuestion: TFibbageXLQuestion): Boolean;
   end;
 
@@ -153,6 +160,12 @@ type
 implementation
 
 { TFibbageXLQuestions }
+
+function TFibbageXLQuestions.CreateNewQuestion: TFibbageXLQuestion;
+begin
+  Result := TFibbageXLQuestion.Create;
+  FList.Add(Result);
+end;
 
 procedure TFibbageXLQuestions.DoParseItem(AItem: TQuestionData);
 begin
@@ -232,6 +245,11 @@ begin
     if AQuestion.FCategory = item.FCategory then
       Exit(True);
   end;
+end;
+
+procedure TFibbageXLQuestions.RemoveQuestion(AQuestion: TFibbageXLQuestion);
+begin
+  FList.Remove(AQuestion);
 end;
 
 { TFibbageQuestions<T> }
