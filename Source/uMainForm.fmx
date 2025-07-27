@@ -2,7 +2,7 @@ object FrmMain: TFrmMain
   Left = 0
   Top = 0
   Caption = 'Fibbage custom questions editor'
-  ClientHeight = 700
+  ClientHeight = 600
   ClientWidth = 797
   Position = ScreenCenter
   SystemStatusBar.BackgroundColor = claBlack
@@ -116927,8 +116927,8 @@ object FrmMain: TFrmMain
     Left = 642
     Top = 119
   end
-  object pmShortieQuestions: TPopupMenu
-    OnPopup = pmShortieQuestionsPopup
+  object pmQuestions: TPopupMenu
+    OnPopup = pmQuestionsPopup
     Left = 522
     Top = 128
     object miAddQuestion: TMenuItem
@@ -116947,13 +116947,11 @@ object FrmMain: TFrmMain
       StyleLookup = 'menuseparatorstyle'
       Text = '-'
     end
-    object miCopyToFinal: TMenuItem
-      Action = aCopyToFinalQuestions
-      ImageIndex = -1
+    object miCopyTo: TMenuItem
+      Text = 'Copy to'
     end
-    object MenuItem3: TMenuItem
-      Action = aMoveToFinalQuestions
-      ImageIndex = -1
+    object miMoveTo: TMenuItem
+      Text = 'Move to'
     end
   end
   object pmProjects: TPopupMenu
@@ -117030,7 +117028,7 @@ object FrmMain: TFrmMain
   object pContent: TPanel
     Align = Client
     Size.Width = 797.000000000000000000
-    Size.Height = 700.000000000000000000
+    Size.Height = 600.000000000000000000
     Size.PlatformDefault = False
     StyleLookup = 'pBackgroundStyle'
     TabOrder = 31
@@ -117038,28 +117036,28 @@ object FrmMain: TFrmMain
       Align = Client
       Margins.Right = 3.000000000000000000
       Size.Width = 794.000000000000000000
-      Size.Height = 700.000000000000000000
+      Size.Height = 600.000000000000000000
       Size.PlatformDefault = False
       TabIndex = 2
       TabOrder = 0
       TabPosition = None
       Sizes = (
         794s
-        700s
+        600s
         794s
-        700s
+        600s
         794s
-        700s
+        600s
         794s
-        700s)
+        600s)
       object tiQuestionProjects: TTabItem
         CustomIcon = <
           item
           end>
         TextSettings.Trimming = None
         IsSelected = False
-        Size.Width = 12.000000000000000000
-        Size.Height = 12.000000000000000000
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = ''
         TabOrder = 0
@@ -117070,48 +117068,18 @@ object FrmMain: TFrmMain
           Align = Client
           Margins.Left = 50.000000000000000000
           Size.Width = 744.000000000000000000
-          Size.Height = 700.000000000000000000
+          Size.Height = 600.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 1
           object sbxProjects: TVertScrollBox
             Align = Client
             PopupMenu = pmProjects
             Size.Width = 744.000000000000000000
-            Size.Height = 654.000000000000000000
+            Size.Height = 554.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 2
             Viewport.Width = 744.000000000000000000
-            Viewport.Height = 654.000000000000000000
-            object pmFinalQuestions: TPopupMenu
-              OnPopup = pmShortieQuestionsPopup
-              Left = 530
-              Top = 184
-              object miAddFinalQuestion: TMenuItem
-                Action = aAddQuestion
-                ImageIndex = -1
-              end
-              object miEditFinalQuestion: TMenuItem
-                Action = aEditQuestion
-                Locked = True
-                ImageIndex = -1
-              end
-              object miRemoveFinalQuestions: TMenuItem
-                Action = aRemoveQuestions
-                ImageIndex = -1
-              end
-              object MenuItem7: TMenuItem
-                StyleLookup = 'menuseparatorstyle'
-                Text = '-'
-              end
-              object miCopyToShorties: TMenuItem
-                Action = aCopyToShortieQuestions
-                ImageIndex = -1
-              end
-              object miMoveToShorties: TMenuItem
-                Action = aMoveToShortieQuestions
-                ImageIndex = -1
-              end
-            end
+            Viewport.Height = 554.000000000000000000
           end
           object tbQuestionProjects: TToolBar
             Size.Width = 744.000000000000000000
@@ -117157,7 +117125,7 @@ object FrmMain: TFrmMain
           object pProjectsMultiview: TPanel
             Align = Client
             Size.Width = 50.000000000000000000
-            Size.Height = 700.000000000000000000
+            Size.Height = 600.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'pMultiviewStyle'
             TabOrder = 0
@@ -117251,7 +117219,7 @@ object FrmMain: TFrmMain
             end
             object lyDarkMode: TLayout
               Align = MostBottom
-              Position.Y = 650.000000000000000000
+              Position.Y = 550.000000000000000000
               Size.Width = 50.000000000000000000
               Size.Height = 50.000000000000000000
               Size.PlatformDefault = False
@@ -117261,9 +117229,8 @@ object FrmMain: TFrmMain
                 IsChecked = False
                 Margins.Left = 3.000000000000000000
                 Position.X = 3.000000000000000000
-                Position.Y = 15.000000000000000000
                 Size.Width = 44.000000000000000000
-                Size.Height = 20.000000000000000000
+                Size.Height = 50.000000000000000000
                 Size.PlatformDefault = False
                 TabOrder = 0
                 OnSwitch = sDarkModeSwitch
@@ -117286,7 +117253,7 @@ object FrmMain: TFrmMain
             end
             object bSettings: TButton
               Align = Bottom
-              Position.Y = 600.000000000000000000
+              Position.Y = 500.000000000000000000
               Size.Width = 50.000000000000000000
               Size.Height = 50.000000000000000000
               Size.PlatformDefault = False
@@ -117325,9 +117292,8 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117353,7 +117319,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 598.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -117459,9 +117425,8 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117487,7 +117452,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 508.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -117503,9 +117468,8 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117531,7 +117495,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 500.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -117547,9 +117511,8 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117575,7 +117538,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 508.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -117602,7 +117565,7 @@ object FrmMain: TFrmMain
           object cbAudioOutput: TComboBox
             Align = Client
             Size.Width = 569.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'comboboxstyle'
             TabOrder = 10
@@ -117622,7 +117585,7 @@ object FrmMain: TFrmMain
           object cbAudioInput: TComboBox
             Align = Client
             Size.Width = 580.000000000000000000
-            Size.Height = 32.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 9
             OnChange = cbAudioInputChange
@@ -117657,7 +117620,7 @@ object FrmMain: TFrmMain
           Align = Client
           Margins.Left = 50.000000000000000000
           Size.Width = 744.000000000000000000
-          Size.Height = 700.000000000000000000
+          Size.Height = 600.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 1
           object pQuestionsButtons: TPanel
@@ -117680,17 +117643,7 @@ object FrmMain: TFrmMain
                 item
                   Value = 50.000001907348710000
                 end>
-              ControlCollection = <
-                item
-                  Column = 0
-                  Control = bShortieQuestions
-                  Row = 0
-                end
-                item
-                  Column = 1
-                  Control = bFinalQuestions
-                  Row = 0
-                end>
+              ControlCollection = <>
               ExpandStyle = AddColumns
               RowCollection = <
                 item
@@ -117699,32 +117652,6 @@ object FrmMain: TFrmMain
                 item
                   SizeStyle = Auto
                 end>
-              object bShortieQuestions: TButton
-                StaysPressed = True
-                Align = Client
-                Enabled = False
-                IsPressed = True
-                Size.Width = 372.000000000000000000
-                Size.Height = 46.000000000000000000
-                Size.PlatformDefault = False
-                StyleLookup = 'toolbutton'
-                TabOrder = 1
-                Text = 'Shortie questions'
-                TextSettings.Trimming = None
-                OnClick = bShortieQuestionsClick
-              end
-              object bFinalQuestions: TButton
-                StaysPressed = True
-                Align = Client
-                Size.Width = 372.000000000000000000
-                Size.Height = 46.000000000000000000
-                Size.PlatformDefault = False
-                StyleLookup = 'toolbutton'
-                TabOrder = 0
-                Text = 'Final questions'
-                TextSettings.Trimming = None
-                OnClick = bFinalQuestionsClick
-              end
             end
           end
           object ToolBar2: TToolBar
@@ -117761,12 +117688,14 @@ object FrmMain: TFrmMain
           end
           object sbxQuestions: TScrollBox
             Align = Client
+            PopupMenu = pmQuestions
             Size.Width = 744.000000000000000000
-            Size.Height = 604.000000000000000000
+            Size.Height = 504.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 2
+            OnCalcContentBounds = sbxQuestionsCalcContentBounds
             Viewport.Width = 744.000000000000000000
-            Viewport.Height = 604.000000000000000000
+            Viewport.Height = 504.000000000000000000
           end
         end
         object mvQuestionsOptions: TMultiView
@@ -117780,13 +117709,13 @@ object FrmMain: TFrmMain
           object pQuestionsMultiview: TPanel
             Align = Client
             Size.Width = 50.000000000000000000
-            Size.Height = 700.000000000000000000
+            Size.Height = 600.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'pMultiviewStyle'
             TabOrder = 0
             object Layout1: TLayout
               Align = MostBottom
-              Position.Y = 650.000000000000000000
+              Position.Y = 550.000000000000000000
               Size.Width = 50.000000000000000000
               Size.Height = 50.000000000000000000
               Size.PlatformDefault = False
@@ -117937,13 +117866,14 @@ object FrmMain: TFrmMain
         inline frmEditQuestion: TFrmEditQuestion
           Align = Client
           Size.Width = 794.000000000000000000
-          Size.Height = 700.000000000000000000
+          Size.Height = 600.000000000000000000
           Size.PlatformDefault = False
+          TabOrder = 0
           inherited sbxQuestionItems: TScrollBox
             Size.Width = 794.000000000000000000
-            Size.Height = 654.000000000000000000
+            Size.Height = 554.000000000000000000
             Viewport.Width = 794.000000000000000000
-            Viewport.Height = 654.000000000000000000
+            Viewport.Height = 554.000000000000000000
           end
           inherited ToolBar3: TToolBar
             Size.Width = 794.000000000000000000
@@ -118076,22 +118006,18 @@ object FrmMain: TFrmMain
     object aCopyToFinalQuestions: TAction
       Category = 'Shorties'
       Text = 'Copy to Finals'
-      OnExecute = aCopyToFinalQuestionsExecute
     end
     object aMoveToFinalQuestions: TAction
       Category = 'Shorties'
       Text = 'Move to Finals'
-      OnExecute = aMoveToFinalQuestionsExecute
     end
     object aCopyToShortieQuestions: TAction
       Category = 'Finals'
       Text = 'Copy to Shorties'
-      OnExecute = aCopyToShortieQuestionsExecute
     end
     object aMoveToShortieQuestions: TAction
       Category = 'Finals'
       Text = 'Move to Shorties'
-      OnExecute = aMoveToShortieQuestionsExecute
     end
     object aGoToSettings: TChangeTabAction
       Category = 'Tab'
@@ -118118,17 +118044,14 @@ object FrmMain: TFrmMain
     object aMigrateToFibbageXL: TAction
       Category = 'Migration'
       Text = 'FibbageXL'
-      OnExecute = aMigrateToFibbageXLExecute
     end
     object aMigrateToFibbage3: TAction
       Category = 'Migration'
       Text = 'Fibbage3'
-      OnExecute = aMigrateToFibbage3Execute
     end
     object aMigrateToFibbageXLPartyPack1: TAction
       Category = 'Migration'
       Text = 'FibbageXL Party Pack 1'
-      OnExecute = aMigrateToFibbageXLPartyPack1Execute
     end
     object aSaveProjectAndInitialize: TAction
       Text = 'aSaveProjectAndInitialize'

@@ -14,6 +14,7 @@ type
   TContentConfiguration = class
   private
     FRawCfg: TStringList;
+    FNewContent: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -34,6 +35,8 @@ type
     function Initialize(const APath: string): Boolean;
     procedure Save(const APath: string); overload;
     procedure Save; overload;
+
+    property NewContent: Boolean read FNewContent write FNewContent;
   end;
 
   TContentConfigurations = TObjectList<TContentConfiguration>;
@@ -109,8 +112,6 @@ end;
 
 procedure TContentConfiguration.Save(const APath: string);
 begin
-  if GetPath <> APath then
-    SetPath(APath);
   ForceDirectories(APath);
   FRawCfg.SaveToFile(TPath.Combine(APath, '.fcqeinfo'));
 end;

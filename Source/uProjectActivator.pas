@@ -21,9 +21,9 @@ implementation
 class procedure TProjectActivator.Activate(AConfig: TContentConfiguration;
   const APath: string);
 begin
-  var content := TFibbageContent.Create('');
+  var content := TFibbageContent.Create(AConfig);
   try
-    content.Initialize(AConfig);
+    content.Initialize;
     content.Save(APath, [soActivatingProject]);
   finally
     content.Free;

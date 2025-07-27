@@ -90,6 +90,7 @@ begin
 
     FField.Value := ChangeFileExt(TPath.GetFileName(dlg.Files[0]), '');
     FField.BasePath := TPath.GetDirectoryName(dlg.Files[0]);
+    RefreshEnables;
   finally
     dlg.Free;
   end;

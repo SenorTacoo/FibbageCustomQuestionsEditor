@@ -8,6 +8,7 @@ uses
   System.StrUtils,
   System.IOUtils,
   System.Generics.Collections,
+  System.Math,
   REST.Json,
   System.JSON.Builders,
   uFibbageJSONWriter,
@@ -51,7 +52,7 @@ type
 
 //  TQuestionsPreview = TObjectList<TQuestionPreview>;
 
-  TFibbageQuestion = class
+  TFibbageQuestion = class(TPersistent)
   public
     procedure SetEditableFields(AFields: TEditableFields); virtual; abstract;
     function GetEditableFields: TEditableFields; virtual; abstract;
@@ -69,7 +70,7 @@ type
     FId: UInt32;
     FCategory: string;
     FFamilyFriendly: Boolean;
-    FBumperAudio: string;
+    FBumperAudio: TFibbageAudioEntry;
     FBumperType: string;
     FCorrectAudio: TFibbageAudioEntry;
     FQuestionAudio: TFibbageAudioEntry;
@@ -77,6 +78,8 @@ type
     FCorrectText: string;
     FQuestionText: string;
     FAlternateSpellings: TArray<string>;
+  protected
+    procedure AssignTo(Dest: TPersistent); override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -86,6 +89,8 @@ type
     function GetPreview: TQuestionPreview; override;
     function GetJSON: string; override;
     function SuggestionsCount: Int32;
+
+    property Category: string read FCategory;
   end;
 
   TFibbageQuestions<T: class> = class abstract
@@ -94,20 +99,27 @@ type
   protected
     FList: TObjectList<T>;
     FReader: TFibbageFilesReader;
+    FSavePath: string;
 
     procedure DoInitialize;
     procedure DoParseItem(AItem: TQuestionData); virtual; abstract;
-    function GetName: string; virtual; abstract;
+    procedure DoSaveCategory; virtual; abstract;
+    procedure DoSaveQuestions; virtual; abstract;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure Initialize(AReader: TFibbageFilesReader);
+    procedure Save(const APath: string);
+    function GetName: string; virtual; abstract;
 
     function CreateNewQuestion: T; virtual; abstract;
     procedure RemoveQuestion(AQuestion: T); virtual; abstract;
 
     function Count: Int32;
+
+    function GetFirstQuestionWithDuplicatedCategory: T; virtual; abstract;
+    function GetFirstQuestionWithTooFewSuggestions: T; virtual; abstract;
 
     property Item[AIndex: Int32]: T read GetItem; default;
   end;
@@ -136,8 +148,17 @@ type
       destructor Destroy; override;
       function GetValue(const AName: string): string;
     end;
+  strict private const
+    OPTIMAL_SUGGESTIONS_COUNT = 17;
+  private
+    function GetNextRandomId: UInt32;
+
+    procedure SaveAudioFile(const ABasePath: string; AEntry: TFibbageAudioEntry);
+    procedure ClearAudioEntryIfNotExistingFile(AEntry: TFibbageAudioEntry);
   protected
     procedure DoParseItem(AItem: TQuestionData); override;
+    procedure DoSaveCategory; override;
+    procedure DoSaveQuestions; override;
   public
     function GetCategoriesJSON: string;
 
@@ -145,6 +166,8 @@ type
     procedure RemoveQuestion(AQuestion: TFibbageXLQuestion); override;
 
     function HasQuestionWithTheSameCategory(AQuestion: TFibbageXLQuestion): Boolean;
+    function GetFirstQuestionWithDuplicatedCategory: TFibbageXLQuestion; override;
+    function GetFirstQuestionWithTooFewSuggestions: TFibbageXLQuestion; override;
   end;
 
   TFibbageXLQuestions_Shortie = class(TFibbageXLQuestions)
@@ -161,9 +184,21 @@ implementation
 
 { TFibbageXLQuestions }
 
+procedure TFibbageXLQuestions.ClearAudioEntryIfNotExistingFile(
+  AEntry: TFibbageAudioEntry);
+begin
+  if AEntry.Name = '' then
+    Exit;
+
+  var wantedPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.ogg');
+  if not TFile.Exists(wantedPath) then
+    AEntry.Name := '';
+end;
+
 function TFibbageXLQuestions.CreateNewQuestion: TFibbageXLQuestion;
 begin
   Result := TFibbageXLQuestion.Create;
+  Result.FId := GetNextRandomId;
   FList.Add(Result);
 end;
 
@@ -183,14 +218,20 @@ begin
         newItem.FId := rawCategory.FContent[idx].FId;
         newItem.FCategory := rawQuestion.GetValue('Category');
         newItem.FFamilyFriendly := not rawCategory.FContent[idx].FX;
-        newItem.FBumperAudio := rawQuestion.GetValue('BumperAudio');
+
+        newItem.FBumperAudio.Name := rawQuestion.GetValue('BumperAudio');
+        newItem.FBumperAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
+        ClearAudioEntryIfNotExistingFile(newItem.FBumperAudio);
+
         newItem.FBumperType := rawQuestion.GetValue('BumperType');
 
         newItem.FCorrectAudio.Name := rawQuestion.GetValue('CorrectAudio');
         newItem.FCorrectAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
+        ClearAudioEntryIfNotExistingFile(newItem.FCorrectAudio);
 
         newItem.FQuestionAudio.Name := rawQuestion.GetValue('QuestionAudio');
         newItem.FQuestionAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
+        ClearAudioEntryIfNotExistingFile(newItem.FQuestionAudio);
 
         newItem.FSuggestions := rawQuestion.GetValue('Suggestions').Split([',']);
         newItem.FCorrectText := rawQuestion.GetValue('CorrectText');
@@ -209,6 +250,46 @@ begin
   end;
 end;
 
+procedure TFibbageXLQuestions.DoSaveCategory;
+begin
+  var filePath := TPath.Combine(FSavePath, Format('%s.jet', [GetName]));
+  var fs := TFileStream.Create(filePath, fmCreate);
+  var sw := TStreamWriter.Create(fs);
+  try
+    sw.OwnStream;
+    sw.Write(GetCategoriesJSON);
+  finally
+    sw.Free;
+  end;
+end;
+
+procedure TFibbageXLQuestions.DoSaveQuestions;
+begin
+  for var item in FList do
+  begin
+    var basePath := TPath.Combine(FSavePath, GetName, UIntToStr(item.FId));
+    ForceDirectories(basePath);
+    var filePath := TPath.Combine(basePath, 'data.jet');
+    var fs := TFileStream.Create(filePath, fmCreate);
+    var sw := TStreamWriter.Create(fs);
+    try
+      sw.OwnStream;
+      sw.Write(item.GetJSON);
+    finally
+      sw.Free;
+    end;
+
+    if not item.FBumperAudio.Name.IsEmpty then
+      SaveAudioFile(basePath, item.FBumperAudio);
+
+    if not item.FCorrectAudio.Name.IsEmpty then
+      SaveAudioFile(basePath, item.FCorrectAudio);
+
+    if not item.FQuestionAudio.Name.IsEmpty then
+      SaveAudioFile(basePath, item.FQuestionAudio);
+  end;
+end;
+
 function TFibbageXLQuestions.GetCategoriesJSON: string;
 begin
   var builder := TFibbageJSONBuilder.Create;
@@ -222,7 +303,7 @@ begin
         .Add('x', not question.FFamilyFriendly)
         .Add('id', question.FId)
         .Add('category', question.FCategory)
-        .Add('bumper', question.FBumperAudio)
+        .Add('bumper', question.FBumperAudio.Name)
       .EndObject;
     end;
 
@@ -232,6 +313,37 @@ begin
   finally
     builder.Free;
   end;
+end;
+
+function TFibbageXLQuestions.GetFirstQuestionWithDuplicatedCategory: TFibbageXLQuestion;
+begin
+  Result := nil;
+  for var idx := 0 to FList.Count - 2 do
+    for var jdx := idx + 1 to FList.Count - 1 do
+      if FList[idx].FCategory = FList[jdx].FCategory then
+        Exit(FList[idx]);
+end;
+
+function TFibbageXLQuestions.GetFirstQuestionWithTooFewSuggestions: TFibbageXLQuestion;
+begin
+  Result := nil;
+  for var idx := 0 to FList.Count - 1 do
+    if FList[idx].SuggestionsCount < OPTIMAL_SUGGESTIONS_COUNT then
+      Exit(FList[idx]);
+end;
+
+function TFibbageXLQuestions.GetNextRandomId: UInt32;
+begin
+  var found := False;
+  repeat
+    Result := RandomRange(30000, 50000);
+    for var item in FList do
+      if item.FId = Result then
+      begin
+        found := True;
+        Break;
+      end;
+  until not found;
 end;
 
 function TFibbageXLQuestions.HasQuestionWithTheSameCategory(
@@ -250,6 +362,20 @@ end;
 procedure TFibbageXLQuestions.RemoveQuestion(AQuestion: TFibbageXLQuestion);
 begin
   FList.Remove(AQuestion);
+end;
+
+procedure TFibbageXLQuestions.SaveAudioFile(const ABasePath: string; AEntry: TFibbageAudioEntry);
+begin
+  var srcPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.ogg');
+  var dstPath := TPath.Combine(ABasePath, AEntry.Name + '.ogg');
+
+  if srcPath = dstPath then
+    Exit;
+
+  if srcPath.StartsWith(TPath.GetTempPath) then
+    TFile.Move(srcPath, dstPath)
+  else
+    TFile.Copy(srcPath, dstPath);
 end;
 
 { TFibbageQuestions<T> }
@@ -288,6 +414,13 @@ begin
   DoInitialize;
 end;
 
+procedure TFibbageQuestions<T>.Save(const APath: string);
+begin
+  FSavePath := APath;
+  DoSaveCategory;
+  DoSaveQuestions;
+end;
+
 { TFibbageXLQuestions.TXLCategories }
 
 destructor TFibbageXLQuestions.TXLCategories.Destroy;
@@ -318,17 +451,44 @@ end;
 
 { TFibbageXLQuestion }
 
+procedure TFibbageXLQuestion.AssignTo(Dest: TPersistent);
+begin
+  if not (Dest is TFibbageXLQuestion) then
+  begin
+    Assert(False);
+    Exit;
+  end;
+
+  var destQuestion := Dest as TFibbageXLQuestion;
+
+  {destQuestion.FId := FId;}
+  destQuestion.FCategory := FCategory;
+  destQuestion.FFamilyFriendly := FFamilyFriendly;
+  destQuestion.FBumperAudio := FBumperAudio;
+  destQuestion.FBumperType := FBumperType;
+  destQuestion.FCorrectAudio.BasePath := FCorrectAudio.BasePath;
+  destQuestion.FCorrectAudio.Name := FCorrectAudio.Name;
+  destQuestion.FQuestionAudio.BasePath := FQuestionAudio.BasePath;
+  destQuestion.FQuestionAudio.Name := FQuestionAudio.Name;
+  destQuestion.FSuggestions := FSuggestions;
+  destQuestion.FCorrectText := FCorrectText;
+  destQuestion.FQuestionText := FQuestionText;
+  destQuestion.FAlternateSpellings := FAlternateSpellings;
+end;
+
 constructor TFibbageXLQuestion.Create;
 begin
   inherited Create;
   FCorrectAudio := TFibbageAudioEntry.Create;
   FQuestionAudio := TFibbageAudioEntry.Create;
+  FBumperAudio := TFibbageAudioEntry.Create;
 end;
 
 destructor TFibbageXLQuestion.Destroy;
 begin
   FCorrectAudio.Free;
   FQuestionAudio.Free;
+  FBumperAudio.Free;
   inherited;
 end;
 
@@ -388,7 +548,7 @@ begin
     fields
       .BeginObject
         .Add('t', 'B')
-        .Add('v', BoolToStr(not FBumperAudio.IsEmpty, True).ToLowerInvariant)
+        .Add('v', BoolToStr(not FBumperAudio.Name.IsEmpty, True).ToLowerInvariant)
         .Add('n', 'HasBumperAudio')
       .EndObject
       .BeginObject
@@ -439,19 +599,19 @@ begin
 
       var bumperAudio := fields.BeginObject;
         bumperAudio.Add('t', 'A');
-        if not FBumperAudio.IsEmpty then
-          bumperAudio.Add('v', FBumperAudio);
+        if not FBumperAudio.Name.IsEmpty then
+          bumperAudio.Add('v', FBumperAudio.Name);
         bumperAudio.Add('n', 'BumperAudio')
 
       .EndObject
       .BeginObject
         .Add('t', 'A')
-        .Add('v', FCorrectAudio)
+        .Add('v', FCorrectAudio.Name)
         .Add('n', 'CorrectAudio')
       .EndObject
       .BeginObject
         .Add('t', 'A')
-        .Add('v', FQuestionAudio)
+        .Add('v', FQuestionAudio.Name)
         .Add('n', 'QuestionAudio')
       .EndObject
     .EndArray
