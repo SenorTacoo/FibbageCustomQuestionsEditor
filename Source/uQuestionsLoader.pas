@@ -50,6 +50,7 @@ type
     function GetEditableFields: TEditableFields; virtual; abstract;
     function GetPreview: TQuestionPreview; virtual; abstract;
     function GetJSON: string; virtual; abstract;
+    function IsMissingBlank: Boolean; virtual; abstract;
   end;
 
   TFibbageAudioEntry = class
@@ -65,8 +66,7 @@ type
     FReader: TFibbageFilesReader;
     FSavePath: string;
 
-    procedure DoInitialize;
-    procedure DoParseItem(AItem: TQuestionData); virtual; abstract;
+    procedure DoInitialize; virtual; abstract;
     procedure DoSaveCategory; virtual; abstract;
     procedure DoSaveQuestions; virtual; abstract;
   public
@@ -110,16 +110,6 @@ destructor TFibbageQuestions<T>.Destroy;
 begin
   FList.Free;
   inherited;
-end;
-
-procedure TFibbageQuestions<T>.DoInitialize;
-begin
-  var item := FReader.Read(GetName);
-  try
-    DoParseItem(item);
-  finally
-    item.Free;
-  end;
 end;
 
 function TFibbageQuestions<T>.GetItem(AIndex: Int32): T;

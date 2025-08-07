@@ -1,26 +1,28 @@
-unit uFibbageXLContent;
+unit uFibbageXLPartyPack1Content;
 
 interface
 
 uses
+  System.Math,
   System.Classes,
   System.SysUtils,
   System.IOUtils,
   System.JSON.Builders,
   uQuestionsLoader,
   uContentConfiguration,
-  uFibbageXLQuestions,
+  uFibbageXLPartyPack1Questions,
   uFibbageJSONWriter,
   uFibbageContent;
 
 type
-  TFibbageXLContent = class(TFibbageContent)
+  TFibbageXLPartyPack1Content = class(TFibbageContent)
   private
-    FShortieQuestions: TFibbageXLQuestions_Shortie;
-    FFinalQuestions: TFibbageXLQuestions_Final;
+    FShortieQuestions: TFibbageXLPartyPack1Questions_Shortie;
+    FFinalQuestions: TFibbageXLPartyPack1Questions_Final;
 
     function GetManifestJSON: string;
     procedure SaveManifest(const APath: string);
+    function GetNextQuestionId: UInt32;
   protected
     function DoInitialize: Boolean; override;
   public
@@ -46,9 +48,9 @@ type
 
 implementation
 
-{ TFibbageXLContent }
+{ TFibbageXLPartyPack1Content }
 
-function TFibbageXLContent.CreateNewQuestion(
+function TFibbageXLPartyPack1Content.CreateNewQuestion(
   const AType: string): TFibbageQuestion;
 begin
   Result := nil;
@@ -60,7 +62,7 @@ begin
     Assert(False);
 end;
 
-procedure TFibbageXLContent.Activate(const APath: string);
+procedure TFibbageXLPartyPack1Content.Activate(const APath: string);
 begin
   var destPath := TPath.Combine(APath, 'content');
   var savePath := TPath.Combine(TPath.GetTempPath, TPath.GetRandomFileName);
@@ -71,7 +73,6 @@ begin
         FConfiguration.Save(savePath);
       FShortieQuestions.Save(savePath);
       FFinalQuestions.Save(savePath);
-      SaveManifest(savePath);
     except
       on E: Exception do
       begin
@@ -89,10 +90,10 @@ begin
   end;
 end;
 
-procedure TFibbageXLContent.CopyQuestion(const AType: string;
+procedure TFibbageXLPartyPack1Content.CopyQuestion(const AType: string;
   AQuestion: TFibbageQuestion);
 var
-  question: TFibbageXLQuestion;
+  question: TFibbageXLPartyPack1Question;
 begin
   if FShortieQuestions.GetName = AType then
     question := FShortieQuestions.CreateNewQuestion
@@ -106,21 +107,24 @@ begin
   question.Assign(AQuestion);
 end;
 
-constructor TFibbageXLContent.Create(ACfg: TContentConfiguration);
+constructor TFibbageXLPartyPack1Content.Create(ACfg: TContentConfiguration);
 begin
   inherited Create(ACfg);
-  FShortieQuestions := TFibbageXLQuestions_Shortie.Create;
-  FFinalQuestions := TFibbageXLQuestions_Final.Create;
+  FShortieQuestions := TFibbageXLPartyPack1Questions_Shortie.Create;
+  FFinalQuestions := TFibbageXLPartyPack1Questions_Final.Create;
+
+  FShortieQuestions.OnGetNextQuestionId := GetNextQuestionId;
+  FFinalQuestions.OnGetNextQuestionId := GetNextQuestionId;
 end;
 
-destructor TFibbageXLContent.Destroy;
+destructor TFibbageXLPartyPack1Content.Destroy;
 begin
   FShortieQuestions.Free;
   FFinalQuestions.Free;
   inherited;
 end;
 
-function TFibbageXLContent.DoInitialize: Boolean;
+function TFibbageXLPartyPack1Content.DoInitialize: Boolean;
 begin
   if not FConfiguration.NewContent then
   begin
@@ -130,7 +134,7 @@ begin
   Result := True;
 end;
 
-procedure TFibbageXLContent.ForEachQuestion(const AType: string;
+procedure TFibbageXLPartyPack1Content.ForEachQuestion(const AType: string;
   AProc: TProc<TFibbageQuestion>);
 begin
   if AType = FShortieQuestions.GetName then
@@ -147,14 +151,14 @@ begin
     Assert(False);
 end;
 
-function TFibbageXLContent.GetEditableTypes: TStringList;
+function TFibbageXLPartyPack1Content.GetEditableTypes: TStringList;
 begin
   Result := TStringList.Create;
   Result.Add(FShortieQuestions.GetName);
   Result.Add(FFinalQuestions.GetName);
 end;
 
-function TFibbageXLContent.GetManifestJSON: string;
+function TFibbageXLPartyPack1Content.GetManifestJSON: string;
 begin
   var builder := TFibbageJSONBuilder.Create;
   try
@@ -172,24 +176,35 @@ begin
   end;
 end;
 
-function TFibbageXLContent.HasDuplicatedCategory(const AType: string;
+function TFibbageXLPartyPack1Content.GetNextQuestionId: UInt32;
+var
+  found: Boolean;
+begin
+  repeat
+    Result := RandomRange(16000, 50000);
+    found := Assigned(FShortieQuestions.GetFirstQuestionWithId(Result)) or
+      Assigned(FFinalQuestions.GetFirstQuestionWithId(Result));
+  until not found;
+end;
+
+function TFibbageXLPartyPack1Content.HasDuplicatedCategory(const AType: string;
   AQuestion: TFibbageQuestion): Boolean;
 begin
   Result := False;
   if AType = FShortieQuestions.GetName then
-    Result := FShortieQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbageXLQuestion)
+    Result := FShortieQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbageXLPartyPack1Question)
   else if AType = FFinalQuestions.GetName then
-    Result := FFinalQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbageXLQuestion)
+    Result := FFinalQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbageXLPartyPack1Question)
   else
     Assert(False);
 end;
 
-function TFibbageXLContent.HasMissingBlank(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean;
+function TFibbageXLPartyPack1Content.HasMissingBlank(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean;
 begin
-  Result := (AQuestion as TFibbageXLQuestion).IsMissingBlank;
+  Result := False;
 end;
 
-function TFibbageXLContent.HasTooFewQuestions(const AType: string): Boolean;
+function TFibbageXLPartyPack1Content.HasTooFewQuestions(const AType: string): Boolean;
 const
   MIN_SHORTIE_QUESTIONS_COUNT = 5;
   MIN_FINAL_QUESTIONS_COUNT = 1;
@@ -200,33 +215,33 @@ begin
     Result := FFinalQuestions.Count < MIN_FINAL_QUESTIONS_COUNT;
 end;
 
-function TFibbageXLContent.HasTooFewSuggestions(const AType: string;
+function TFibbageXLPartyPack1Content.HasTooFewSuggestions(const AType: string;
   AQuestion: TFibbageQuestion): Boolean;
 const
   OPTIMAL_SUGGESTIONS_NR = 17;
 begin
-  Result := (AQuestion as TFibbageXLQuestion).SuggestionsCount < OPTIMAL_SUGGESTIONS_NR;
+  Result := (AQuestion as TFibbageXLPartyPack1Question).SuggestionsCount < OPTIMAL_SUGGESTIONS_NR;
 end;
 
-procedure TFibbageXLContent.MoveQuestion(const ASrcType, ADstType: string;
+procedure TFibbageXLPartyPack1Content.MoveQuestion(const ASrcType, ADstType: string;
   AQuestion: TFibbageQuestion);
 begin
   CopyQuestion(ADstType, AQuestion);
   RemoveQuestion(ASrcType, AQuestion);
 end;
 
-procedure TFibbageXLContent.RemoveQuestion(const AType: string;
+procedure TFibbageXLPartyPack1Content.RemoveQuestion(const AType: string;
   AQuestion: TFibbageQuestion);
 begin
   if AType = FShortieQuestions.GetName then
-    FShortieQuestions.RemoveQuestion(AQuestion as TFibbageXLQuestion)
+    FShortieQuestions.RemoveQuestion(AQuestion as TFibbageXLPartyPack1Question)
   else if AType = FFinalQuestions.GetName then
-    FFinalQuestions.RemoveQuestion(AQuestion as TFibbageXLQuestion)
+    FFinalQuestions.RemoveQuestion(AQuestion as TFibbageXLPartyPack1Question)
   else
     Assert(False);
 end;
 
-procedure TFibbageXLContent.Save;
+procedure TFibbageXLPartyPack1Content.Save;
 begin
   var savePath := TPath.Combine(TPath.GetTempPath, TPath.GetRandomFileName);
   try
@@ -252,7 +267,7 @@ begin
   end;
 end;
 
-procedure TFibbageXLContent.SaveManifest(const APath: string);
+procedure TFibbageXLPartyPack1Content.SaveManifest(const APath: string);
 begin
   var fileName := TPath.Combine(APath, 'manifest.jet');
   var fs := TFileStream.Create(fileName, fmCreate);

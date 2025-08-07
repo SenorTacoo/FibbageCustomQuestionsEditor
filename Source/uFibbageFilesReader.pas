@@ -19,6 +19,8 @@ type
   end;
 
   TFibbageFilesReader = class
+  private
+    procedure DoRead(const ACategoryFile, AQuestionsDirectory: string);
   protected
     FQuestionData: TQuestionData;
     FBasePath: string;
@@ -26,7 +28,8 @@ type
     constructor Create(const ABasePath: string);
     destructor Destroy; override;
 
-    function Read(AType: string): TQuestionData;
+    function Read(const AType: string): TQuestionData;
+    function ReadWithCustomQuestionsDir(const AType, AQuestionsDir: string): TQuestionData;
 
     property BasePath: string read FBasePath;
   end;
@@ -70,14 +73,14 @@ begin
   inherited;
 end;
 
-function TFibbageFilesReader.Read(AType: string): TQuestionData;
+procedure TFibbageFilesReader.DoRead(const ACategoryFile, AQuestionsDirectory: string);
 begin
   if FQuestionData = nil then
     FQuestionData := TQuestionData.Create;
 
-  var jetFile := TDirectory.GetFiles(FBasePath, Format('%s.jet', [AType]));
+  var jetFile := TDirectory.GetFiles(FBasePath, Format('%s.jet', [ACategoryFile]));
   if Length(jetFile) < 1 then
-    raise EMissingFile.Create(TPath.Combine(FBasePath, AType + '.jet'));
+    raise EMissingFile.Create(TPath.Combine(FBasePath, ACategoryFile + '.jet'));
 
   var sr := TStreamReader.Create(jetFile[0]);
   try
@@ -86,7 +89,7 @@ begin
     sr.Free;
   end;
 
-  var questionDirs := TDirectory.GetDirectories(TPath.Combine(FBasePath, AType));
+  var questionDirs := TDirectory.GetDirectories(TPath.Combine(FBasePath, AQuestionsDirectory));
 
   for var dir in questionDirs do
   begin
@@ -102,7 +105,19 @@ begin
       sr.Free;
     end;
   end;
+end;
 
+function TFibbageFilesReader.Read(const AType: string): TQuestionData;
+begin
+  DoRead(AType, AType);
+  Result := FQuestionData;
+  FQuestionData := nil;
+end;
+
+function TFibbageFilesReader.ReadWithCustomQuestionsDir(const AType,
+  AQuestionsDir: string): TQuestionData;
+begin
+  DoRead(AType, AQuestionsDir);
   Result := FQuestionData;
   FQuestionData := nil;
 end;

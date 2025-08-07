@@ -27,7 +27,9 @@ uses
   uEditableAudioItemFrame in 'GUI\uEditableAudioItemFrame.pas' {FrmEditableAudioItem: TFrame},
   uFibbageContentFactory in 'uFibbageContentFactory.pas',
   uFibbageXLContent in 'FibbageXL\uFibbageXLContent.pas',
-  uFibbageXLQuestions in 'FibbageXL\uFibbageXLQuestions.pas';
+  uFibbageXLQuestions in 'FibbageXL\uFibbageXLQuestions.pas',
+  uFibbageXLPartyPack1Content in 'FibbageXLPartyPack1\uFibbageXLPartyPack1Content.pas',
+  uFibbageXLPartyPack1Questions in 'FibbageXLPartyPack1\uFibbageXLPartyPack1Questions.pas';
 
 {$R *.res}
 

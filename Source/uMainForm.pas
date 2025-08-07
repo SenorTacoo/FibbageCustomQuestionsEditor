@@ -229,6 +229,7 @@ type
     DSAudioOut1: TDSAudioOut;
     miCopyTo: TMenuItem;
     miMoveTo: TMenuItem;
+    cbShowDialogAboutMissingBlanks: TCheckBox;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -335,8 +336,9 @@ type
     procedure StopSplash;
     procedure StartSplash;
     function GetFibbageXLPath(out APath: string): Boolean;
-    function GetFibbage3Path(out APath: string): Boolean;
-    function GetFibbage4Path(out APath: string): Boolean;
+    function GetJackboxPartyPack1Path(out APath: string): Boolean;
+    function GetJackboxPartyPack4Path(out APath: string): Boolean;
+    function GetJackboxPartyPack9Path(out APath: string): Boolean;
     procedure OnPostSaveClose;
     procedure OnPostSaveInitialize;
     procedure ProcessKeyDown_Questions(var Key: Word; Shift: TShiftState);
@@ -484,16 +486,6 @@ begin
   Result := SelectDirectory('Select destination directory', '', APath);
 end;
 
-function TFrmMain.GetFibbage3Path(out APath: string): Boolean;
-begin
-  Result := SelectDirectory('Select Fibbage3 directory', '', APath);
-end;
-
-function TFrmMain.GetFibbage4Path(out APath: string): Boolean;
-begin
-  Result := SelectDirectory('Select Fibbage4 directory', '', APath);
-end;
-
 function TFrmMain.GetFibbageXLPath(out APath: string): Boolean;
 begin
   Result := SelectDirectory('Select FibbageXL directory', '', APath);
@@ -506,6 +498,7 @@ var
 begin
   var cfg := TContentConfiguration.Create;
   try
+    cfg.ImportedContent := True;
     while True do
     begin
       if not GetProjectPath(str) then
@@ -531,10 +524,10 @@ begin
       Break;
     end;
 
-    InsertNewProject(cfg);
+    FSelectedConfiguration := cfg;
     cfg := nil;
-
-    aInitializeProject.Execute;
+    ClearPreviousQuestions;
+    TAsyncAction.Create(PreContentInitialized, PostContentInitialized, InitializeContentTask).Start;
   finally
     cfg.Free;
   end;
@@ -613,7 +606,8 @@ begin
 
     SetActiveQuestionsType((gplQuestions.Controls[0] as TButton).Text);
 
-    AddLastChoosenProject;
+    if (not FSelectedConfiguration.NewContent) and (not FSelectedConfiguration.ImportedContent) then
+      AddLastChoosenProject;
   finally
     GoToAllQuestions;
     pLoading.Visible := False;
@@ -817,12 +811,13 @@ begin
     Exit;
 
   TAppConfig.GetInstance.FibbageXLPath := eSettingsFibbageXLPath.Text;
-  TAppConfig.GetInstance.FibbageXLPartyPack1Path := eSettingsFibbageXLPP1Path.Text;
-  TAppConfig.GetInstance.Fibbage3PartyPack4Path := eSettingsFibbage3PP4Path.Text;
-  TAppConfig.GetInstance.Fibbage4PartyPack9Path := eSettingsFibbage4PP9Path.Text;
+  TAppConfig.GetInstance.JackboxPartyPack1Path := eSettingsFibbageXLPP1Path.Text;
+  TAppConfig.GetInstance.JackboxPartyPack4Path := eSettingsFibbage3PP4Path.Text;
+  TAppConfig.GetInstance.JackboxPartyPack9Path := eSettingsFibbage4PP9Path.Text;
   TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := cbShowCategoryDuplicatedInfo.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := cbShowDialogAboutTooFewSuggestions.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions := cbShowDialogAboutTooFewQuestions.IsChecked;
+  TAppConfig.GetInstance.ShowInfoAboutMissingBlanks := cbShowDialogAboutMissingBlanks.IsChecked;
 
   GoToHome;
 end;
@@ -898,6 +893,21 @@ begin
     dlg.Free;
     rDim.Visible := False;
   end;
+end;
+
+function TFrmMain.GetJackboxPartyPack1Path(out APath: string): Boolean;
+begin
+  Result := SelectDirectory('Select "The Jackbox Party Pack" directory', '', APath);
+end;
+
+function TFrmMain.GetJackboxPartyPack4Path(out APath: string): Boolean;
+begin
+  Result := SelectDirectory('Select "The Jackbox Party Pack 4" directory', '', APath);
+end;
+
+function TFrmMain.GetJackboxPartyPack9Path(out APath: string): Boolean;
+begin
+  Result := SelectDirectory('Select "The Jackbox Party Pack 9" directory', '', APath);
 end;
 
 function TFrmMain.GetFirstQuestionWithDuplicatedCategory(out AType: string;
@@ -1280,25 +1290,25 @@ begin
       end;
     TGameType.FibbageXLPartyPack1:
       begin
-        if TAppConfig.GetInstance.FibbageXLPartyPack1Path.IsEmpty then
-          if GetFibbageXLPath(path) then
-            TAppConfig.GetInstance.FibbageXLPartyPack1Path := path
+        if TAppConfig.GetInstance.JackboxPartyPack1Path.IsEmpty then
+          if GetJackboxPartyPack1Path(path) then
+            TAppConfig.GetInstance.JackboxPartyPack1Path := path
           else
             Exit;
       end;
     TGameType.Fibbage3PartyPack4:
       begin
-        if TAppConfig.GetInstance.Fibbage3PartyPack4Path.IsEmpty then
-          if GetFibbage3Path(path) then
-            TAppConfig.GetInstance.Fibbage3PartyPack4Path := path
+        if TAppConfig.GetInstance.JackboxPartyPack4Path.IsEmpty then
+          if GetJackboxPartyPack4Path(path) then
+            TAppConfig.GetInstance.JackboxPartyPack4Path := path
           else
             Exit;
       end;
     TGameType.Fibbage4PartyPack9:
       begin
-        if TAppConfig.GetInstance.Fibbage4PartyPack9Path.IsEmpty then
-          if GetFibbage4Path(path) then
-            TAppConfig.GetInstance.Fibbage4PartyPack9Path := path
+        if TAppConfig.GetInstance.JackboxPartyPack9Path.IsEmpty then
+          if GetJackboxPartyPack9Path(path) then
+            TAppConfig.GetInstance.JackboxPartyPack9Path := path
           else
             Exit;
       end;
@@ -1374,11 +1384,11 @@ begin
     TGameType.FibbageXL:
       destPath := TAppConfig.GetInstance.FibbageXLPath;
     TGameType.FibbageXLPartyPack1:
-      destPath := TAppConfig.GetInstance.FibbageXLPartyPack1Path;
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.JackboxPartyPack1Path, 'games', 'FibbageXL');
     TGameType.Fibbage3PartyPack4:
-      destPath := TAppConfig.GetInstance.Fibbage3PartyPack4Path;
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.JackboxPartyPack4Path, 'games', 'Fibbage3');
     TGameType.Fibbage4PartyPack9:
-      destPath := TAppConfig.GetInstance.Fibbage4PartyPack9Path;
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.JackboxPartyPack9Path, 'games', 'Fibbage4');
   end;
 
   try
@@ -1737,7 +1747,7 @@ procedure TFrmMain.bSettingsFibbage3PP4PathClick(Sender: TObject);
 var
   path: string;
 begin
-  if not GetFibbage3Path(path) then
+  if not GetJackboxPartyPack4Path(path) then
     Exit;
 
   eSettingsFibbage3PP4Path.Text := path;
@@ -1747,7 +1757,7 @@ procedure TFrmMain.bSettingsFibbage4PP9PathClick(Sender: TObject);
 var
   path: string;
 begin
-  if not GetFibbage4Path(path) then
+  if not GetJackboxPartyPack9Path(path) then
     Exit;
 
   eSettingsFibbage4PP9Path.Text := path;
@@ -1767,7 +1777,7 @@ procedure TFrmMain.bSettingsFibbageXLPP1PathClick(Sender: TObject);
 var
   path: string;
 begin
-  if not GetFibbageXLPath(path) then
+  if not GetJackboxPartyPack1Path(path) then
     Exit;
 
   eSettingsFibbageXLPP1Path.Text := path;
@@ -1779,12 +1789,13 @@ begin
   try
     FillAudioDevices;
     eSettingsFibbageXLPath.Text := TAppConfig.GetInstance.FibbageXLPath;
-    eSettingsFibbageXLPP1Path.Text := TAppConfig.GetInstance.FibbageXLPartyPack1Path;
-    eSettingsFibbage3PP4Path.Text := TAppConfig.GetInstance.Fibbage3PartyPack4Path;
-    eSettingsFibbage4PP9Path.Text := TAppConfig.GetInstance.Fibbage4PartyPack9Path;
+    eSettingsFibbageXLPP1Path.Text := TAppConfig.GetInstance.JackboxPartyPack1Path;
+    eSettingsFibbage3PP4Path.Text := TAppConfig.GetInstance.JackboxPartyPack4Path;
+    eSettingsFibbage4PP9Path.Text := TAppConfig.GetInstance.JackboxPartyPack9Path;
     cbShowCategoryDuplicatedInfo.IsChecked := TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories;
     cbShowDialogAboutTooFewSuggestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions;
     cbShowDialogAboutTooFewQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions;
+    cbShowDialogAboutMissingBlanks.IsChecked := TAppConfig.GetInstance.ShowInfoAboutMissingBlanks;
 
     aGoToSettings.Execute;
   finally

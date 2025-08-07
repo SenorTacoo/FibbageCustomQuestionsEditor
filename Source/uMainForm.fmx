@@ -117412,7 +117412,7 @@ object FrmMain: TFrmMain
           Size.Width = 784.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 9
+          TabOrder = 10
           Text = 'Show dialog about too few questions'
         end
         object Layout4: TLayout
@@ -117442,11 +117442,11 @@ object FrmMain: TFrmMain
             AutoSize = True
             Margins.Left = 10.000000000000000000
             Position.X = 10.000000000000000000
-            Size.Width = 205.000000000000000000
+            Size.Width = 181.000000000000000000
             Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TextSettings.WordWrap = False
-            Text = 'Fibbage 3 (Party Pack 4) path'
+            Text = 'Jackbox Party Pack 4 path'
             TabOrder = 0
           end
           object eSettingsFibbage3PP4Path: TEdit
@@ -117454,7 +117454,7 @@ object FrmMain: TFrmMain
             Align = Client
             TabOrder = 1
             Margins.Left = 10.000000000000000000
-            Size.Width = 508.000000000000000000
+            Size.Width = 532.000000000000000000
             Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
           end
@@ -117486,11 +117486,11 @@ object FrmMain: TFrmMain
             AutoSize = True
             Margins.Left = 10.000000000000000000
             Position.X = 10.000000000000000000
-            Size.Width = 213.000000000000000000
+            Size.Width = 168.000000000000000000
             Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TextSettings.WordWrap = False
-            Text = 'Fibbage XL (Party Pack 1) path'
+            Text = 'Jackbox Party Pack path'
             TabOrder = 0
           end
           object eSettingsFibbageXLPP1Path: TEdit
@@ -117498,7 +117498,7 @@ object FrmMain: TFrmMain
             Align = Client
             TabOrder = 1
             Margins.Left = 10.000000000000000000
-            Size.Width = 500.000000000000000000
+            Size.Width = 545.000000000000000000
             Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
           end
@@ -117530,11 +117530,11 @@ object FrmMain: TFrmMain
             AutoSize = True
             Margins.Left = 10.000000000000000000
             Position.X = 10.000000000000000000
-            Size.Width = 205.000000000000000000
+            Size.Width = 181.000000000000000000
             Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TextSettings.WordWrap = False
-            Text = 'Fibbage 4 (Party Pack 9) path'
+            Text = 'Jackbox Party Pack 9 path'
             TabOrder = 0
           end
           object eSettingsFibbage4PP9Path: TEdit
@@ -117542,7 +117542,7 @@ object FrmMain: TFrmMain
             Align = Client
             TabOrder = 1
             Margins.Left = 10.000000000000000000
-            Size.Width = 508.000000000000000000
+            Size.Width = 532.000000000000000000
             Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
           end
@@ -117552,7 +117552,7 @@ object FrmMain: TFrmMain
           Margins.Left = 10.000000000000000000
           Margins.Right = 10.000000000000000000
           Position.X = 10.000000000000000000
-          Position.Y = 396.000000000000000000
+          Position.Y = 446.000000000000000000
           Size.Width = 774.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
@@ -117582,7 +117582,7 @@ object FrmMain: TFrmMain
           Margins.Left = 10.000000000000000000
           Margins.Right = 10.000000000000000000
           Position.X = 10.000000000000000000
-          Position.Y = 446.000000000000000000
+          Position.Y = 496.000000000000000000
           Size.Width = 774.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
@@ -117605,6 +117605,17 @@ object FrmMain: TFrmMain
             Text = 'Default audio input device: '
             TabOrder = 12
           end
+        end
+        object cbShowDialogAboutMissingBlanks: TCheckBox
+          Align = Top
+          Margins.Left = 10.000000000000000000
+          Position.X = 10.000000000000000000
+          Position.Y = 396.000000000000000000
+          Size.Width = 784.000000000000000000
+          Size.Height = 50.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 9
+          Text = 'Show dialog about missing BLANK'
         end
       end
       object tiQuestions: TTabItem

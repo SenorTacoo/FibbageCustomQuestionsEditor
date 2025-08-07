@@ -15,6 +15,7 @@ type
   private
     FRawCfg: TStringList;
     FNewContent: Boolean;
+    FImportedContent: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -37,6 +38,7 @@ type
     procedure Save; overload;
 
     property NewContent: Boolean read FNewContent write FNewContent;
+    property ImportedContent: Boolean read FImportedContent write FImportedContent;
   end;
 
   TContentConfigurations = TObjectList<TContentConfiguration>;

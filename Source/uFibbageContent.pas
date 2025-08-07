@@ -54,6 +54,8 @@ end;
 
 destructor TFibbageContent.Destroy;
 begin
+  if Assigned(FConfiguration) and FConfiguration.ImportedContent then
+    FConfiguration.Free;
   FFilesReader.Free;
   inherited;
 end;
