@@ -117038,7 +117038,7 @@ object FrmMain: TFrmMain
       Size.Width = 794.000000000000000000
       Size.Height = 600.000000000000000000
       Size.PlatformDefault = False
-      TabIndex = 2
+      TabIndex = 1
       TabOrder = 0
       TabPosition = None
       Sizes = (
@@ -117056,8 +117056,8 @@ object FrmMain: TFrmMain
           end>
         TextSettings.Trimming = None
         IsSelected = False
-        Size.Width = 8.000000000000000000
-        Size.Height = 8.000000000000000000
+        Size.Width = 12.000000000000000000
+        Size.Height = 12.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = ''
         TabOrder = 0
@@ -117229,8 +117229,9 @@ object FrmMain: TFrmMain
                 IsChecked = False
                 Margins.Left = 3.000000000000000000
                 Position.X = 3.000000000000000000
+                Position.Y = 15.000000000000000000
                 Size.Width = 44.000000000000000000
-                Size.Height = 50.000000000000000000
+                Size.Height = 20.000000000000000000
                 Size.PlatformDefault = False
                 TabOrder = 0
                 OnSwitch = sDarkModeSwitch
@@ -117271,7 +117272,7 @@ object FrmMain: TFrmMain
           item
           end>
         TextSettings.Trimming = None
-        IsSelected = False
+        IsSelected = True
         Size.Width = 12.000000000000000000
         Size.Height = 12.000000000000000000
         Size.PlatformDefault = False
@@ -117292,8 +117293,9 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
+            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 46.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117319,7 +117321,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 598.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -117402,7 +117404,7 @@ object FrmMain: TFrmMain
           TabOrder = 8
           Text = 'Show dialog about too few suggestions'
         end
-        object cbShowDialogAboutTooFewShortieQuestions: TCheckBox
+        object cbShowDialogAboutTooFewQuestions: TCheckBox
           Align = Top
           Margins.Left = 10.000000000000000000
           Position.X = 10.000000000000000000
@@ -117411,7 +117413,7 @@ object FrmMain: TFrmMain
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 9
-          Text = 'Show dialog about too few shortie questions'
+          Text = 'Show dialog about too few questions'
         end
         object Layout4: TLayout
           Align = Top
@@ -117425,8 +117427,9 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
+            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 46.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117452,7 +117455,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 508.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -117468,8 +117471,9 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
+            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 46.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117495,7 +117499,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 500.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -117511,8 +117515,9 @@ object FrmMain: TFrmMain
             Margins.Left = 5.000000000000000000
             Margins.Right = 10.000000000000000000
             Position.X = 738.000000000000000000
+            Position.Y = 2.000000000000000000
             Size.Width = 46.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 46.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'arrowdowntoolbutton'
             TabOrder = 2
@@ -117538,7 +117543,7 @@ object FrmMain: TFrmMain
             TabOrder = 1
             Margins.Left = 10.000000000000000000
             Size.Width = 508.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
           end
         end
@@ -117565,7 +117570,7 @@ object FrmMain: TFrmMain
           object cbAudioOutput: TComboBox
             Align = Client
             Size.Width = 569.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'comboboxstyle'
             TabOrder = 10
@@ -117585,7 +117590,7 @@ object FrmMain: TFrmMain
           object cbAudioInput: TComboBox
             Align = Client
             Size.Width = 580.000000000000000000
-            Size.Height = 50.000000000000000000
+            Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 9
             OnChange = cbAudioInputChange
@@ -117607,7 +117612,7 @@ object FrmMain: TFrmMain
           item
           end>
         TextSettings.Trimming = None
-        IsSelected = True
+        IsSelected = False
         Size.Width = 12.000000000000000000
         Size.Height = 12.000000000000000000
         Size.PlatformDefault = False
@@ -117884,6 +117889,7 @@ object FrmMain: TFrmMain
               end
               inherited bSaveQuestionChanges: TButton
                 Position.X = 687.000000000000000000
+                OnClick = frmEditQuestionbSaveQuestionChangesClick
               end
               inherited bCancelQuestionChanges: TButton
                 Position.X = 748.000000000000000000

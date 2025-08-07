@@ -2,12 +2,14 @@ object FrmEditQuestion: TFrmEditQuestion
   Size.Width = 507.000000000000000000
   Size.Height = 328.000000000000000000
   Size.PlatformDefault = False
+  TabOrder = 0
   object sbxQuestionItems: TScrollBox
     Align = Client
     Size.Width = 507.000000000000000000
     Size.Height = 282.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 1
+    TabOrder = 0
+    OnCalcContentBounds = sbxQuestionItemsCalcContentBounds
     Viewport.Width = 507.000000000000000000
     Viewport.Height = 282.000000000000000000
   end
@@ -15,7 +17,6 @@ object FrmEditQuestion: TFrmEditQuestion
     Size.Width = 507.000000000000000000
     Size.Height = 46.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 0
     object pQuestionToolbar: TPanel
       Align = Client
       Size.Width = 507.000000000000000000

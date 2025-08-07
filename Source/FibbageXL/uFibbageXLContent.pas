@@ -1,0 +1,268 @@
+unit uFibbageXLContent;
+
+interface
+
+uses
+  System.Classes,
+  System.SysUtils,
+  System.IOUtils,
+  System.JSON.Builders,
+  uQuestionsLoader,
+  uContentConfiguration,
+  uFibbageXLQuestions,
+  uFibbageJSONWriter,
+  uFibbageContent;
+
+type
+  TFibbageXLContent = class(TFibbageContent)
+  private
+    FShortieQuestions: TFibbageXLQuestions_Shortie;
+    FFinalQuestions: TFibbageXLQuestions_Final;
+
+    function GetManifestJSON: string;
+    procedure SaveManifest(const APath: string);
+  protected
+    function DoInitialize: Boolean; override;
+  public
+    constructor Create(ACfg: TContentConfiguration);
+    destructor Destroy; override;
+
+    function GetEditableTypes: TStringList; override;
+    procedure ForEachQuestion(const AType: string; AProc: TProc<TFibbageQuestion>); override;
+    function CreateNewQuestion(const AType: string): TFibbageQuestion; override;
+    procedure RemoveQuestion(const AType: string; AQuestion: TFibbageQuestion); override;
+
+    procedure CopyQuestion(const AType: string; AQuestion: TFibbageQuestion); override;
+    procedure MoveQuestion(const ASrcType, ADstType: string; AQuestion: TFibbageQuestion); override;
+
+    procedure Activate(const APath: string); override;
+    procedure Save; override;
+
+    function HasDuplicatedCategory(const AType: string; AQuestion: TFibbageQuestion): Boolean; overload; override;
+    function HasTooFewSuggestions(const AType: string; AQuestion: TFibbageQuestion): Boolean; override;
+    function HasMissingBlank(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
+    function HasTooFewQuestions(const AType: string): Boolean; override;
+  end;
+
+implementation
+
+{ TFibbageXLContent }
+
+function TFibbageXLContent.CreateNewQuestion(
+  const AType: string): TFibbageQuestion;
+begin
+  Result := nil;
+  if AType = FShortieQuestions.GetName then
+    Result := FShortieQuestions.CreateNewQuestion
+  else if AType = FFinalQuestions.GetName then
+    Result := FFinalQuestions.CreateNewQuestion
+  else
+    Assert(False);
+end;
+
+procedure TFibbageXLContent.Activate(const APath: string);
+begin
+  var destPath := TPath.Combine(APath, 'content');
+  var savePath := TPath.Combine(TPath.GetTempPath, TPath.GetRandomFileName);
+  try
+    try
+      ForceDirectories(savePath);
+      if SameText(FConfiguration.GetPath, destPath) then
+        FConfiguration.Save(savePath);
+      FShortieQuestions.Save(savePath);
+      FFinalQuestions.Save(savePath);
+      SaveManifest(savePath);
+    except
+      on E: Exception do
+      begin
+        TDirectory.Delete(savePath, True);
+        raise;
+      end;
+    end;
+  finally
+    if TDirectory.Exists(savePath) then
+    begin
+      TDirectory.Delete(destPath, True);
+      TDirectory.Copy(savePath, destPath); {CANNOT USE MOVE - NOT WORKING FOR MULTIPLE DRIVES}
+      TDirectory.Delete(savePath, True);
+    end;
+  end;
+end;
+
+procedure TFibbageXLContent.CopyQuestion(const AType: string;
+  AQuestion: TFibbageQuestion);
+var
+  question: TFibbageXLQuestion;
+begin
+  if FShortieQuestions.GetName = AType then
+    question := FShortieQuestions.CreateNewQuestion
+  else if FFinalQuestions.GetName = AType then
+    question := FFinalQuestions.CreateNewQuestion
+  else
+  begin
+    Assert(False);
+    Exit;
+  end;
+  question.Assign(AQuestion);
+end;
+
+constructor TFibbageXLContent.Create(ACfg: TContentConfiguration);
+begin
+  inherited Create(ACfg);
+  FShortieQuestions := TFibbageXLQuestions_Shortie.Create;
+  FFinalQuestions := TFibbageXLQuestions_Final.Create;
+end;
+
+destructor TFibbageXLContent.Destroy;
+begin
+  FShortieQuestions.Free;
+  FFinalQuestions.Free;
+  inherited;
+end;
+
+function TFibbageXLContent.DoInitialize: Boolean;
+begin
+  if not FConfiguration.NewContent then
+  begin
+    FShortieQuestions.Initialize(FFilesReader);
+    FFinalQuestions.Initialize(FFilesReader);
+  end;
+  Result := True;
+end;
+
+procedure TFibbageXLContent.ForEachQuestion(const AType: string;
+  AProc: TProc<TFibbageQuestion>);
+begin
+  if AType = FShortieQuestions.GetName then
+  begin
+    for var idx := 0 to FShortieQuestions.Count - 1 do
+      AProc(FShortieQuestions[idx]);
+  end
+  else if AType = FFinalQuestions.GetName then
+  begin
+    for var idx := 0 to FFinalQuestions.Count - 1 do
+      AProc(FFinalQuestions[idx]);
+  end
+  else
+    Assert(False);
+end;
+
+function TFibbageXLContent.GetEditableTypes: TStringList;
+begin
+  Result := TStringList.Create;
+  Result.Add(FShortieQuestions.GetName);
+  Result.Add(FFinalQuestions.GetName);
+end;
+
+function TFibbageXLContent.GetManifestJSON: string;
+begin
+  var builder := TFibbageJSONBuilder.Create;
+  try
+    builder.BeginObject
+      .Add('id', 'Main')
+      .Add('name', 'Main Content Pack')
+      .BeginArray('types')
+        .Add(FShortieQuestions.GetName)
+        .Add(FFinalQuestions.GetName)
+      .EndArray
+    .EndObject;
+    Result := builder.Build;
+  finally
+    builder.Free;
+  end;
+end;
+
+function TFibbageXLContent.HasDuplicatedCategory(const AType: string;
+  AQuestion: TFibbageQuestion): Boolean;
+begin
+  Result := False;
+  if AType = FShortieQuestions.GetName then
+    Result := FShortieQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbageXLQuestion)
+  else if AType = FFinalQuestions.GetName then
+    Result := FFinalQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbageXLQuestion)
+  else
+    Assert(False);
+end;
+
+function TFibbageXLContent.HasMissingBlank(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean;
+begin
+  Result := False;
+end;
+
+function TFibbageXLContent.HasTooFewQuestions(const AType: string): Boolean;
+const
+  MIN_SHORTIE_QUESTIONS_COUNT = 5;
+  MIN_FINAL_QUESTIONS_COUNT = 1;
+begin
+  if AType = FShortieQuestions.GetName then
+    Result := FShortieQuestions.Count < MIN_SHORTIE_QUESTIONS_COUNT
+  else
+    Result := FFinalQuestions.Count < MIN_FINAL_QUESTIONS_COUNT;
+end;
+
+function TFibbageXLContent.HasTooFewSuggestions(const AType: string;
+  AQuestion: TFibbageQuestion): Boolean;
+const
+  OPTIMAL_SUGGESTIONS_NR = 17;
+begin
+  Result := (AQuestion as TFibbageXLQuestion).SuggestionsCount < OPTIMAL_SUGGESTIONS_NR;
+end;
+
+procedure TFibbageXLContent.MoveQuestion(const ASrcType, ADstType: string;
+  AQuestion: TFibbageQuestion);
+begin
+  CopyQuestion(ADstType, AQuestion);
+  RemoveQuestion(ASrcType, AQuestion);
+end;
+
+procedure TFibbageXLContent.RemoveQuestion(const AType: string;
+  AQuestion: TFibbageQuestion);
+begin
+  if AType = FShortieQuestions.GetName then
+    FShortieQuestions.RemoveQuestion(AQuestion as TFibbageXLQuestion)
+  else if AType = FFinalQuestions.GetName then
+    FFinalQuestions.RemoveQuestion(AQuestion as TFibbageXLQuestion)
+  else
+    Assert(False);
+end;
+
+procedure TFibbageXLContent.Save;
+begin
+  var savePath := TPath.Combine(TPath.GetTempPath, TPath.GetRandomFileName);
+  try
+    try
+      FConfiguration.Save(savePath);
+      FShortieQuestions.Save(savePath);
+      FFinalQuestions.Save(savePath);
+      SaveManifest(savePath);
+    except
+      on E: Exception do
+      begin
+        TDirectory.Delete(savePath, True);
+        raise;
+      end;
+    end;
+  finally
+    if TDirectory.Exists(savePath) then
+    begin
+      TDirectory.Delete(FConfiguration.GetPath, True);
+      TDirectory.Copy(savePath, FConfiguration.GetPath); {CANNOT USE MOVE - NOT WORKING FOR MULTIPLE DRIVES}
+      TDirectory.Delete(savePath, True);
+    end;
+  end;
+end;
+
+procedure TFibbageXLContent.SaveManifest(const APath: string);
+begin
+  var fileName := TPath.Combine(APath, 'manifest.jet');
+  var fs := TFileStream.Create(fileName, fmCreate);
+  var sw := TStreamWriter.Create(fs);
+  try
+    sw.OwnStream;
+    sw.Write(GetManifestJSON);
+  finally
+    sw.Free;
+  end;
+end;
+
+end.

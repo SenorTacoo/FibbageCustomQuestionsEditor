@@ -3,12 +3,12 @@ unit uEditQuestionFrame;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, 
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   uQuestionsLoader, FMX.Layouts, FMX.Memo.Types, FMX.Controls.Presentation,
   FMX.ScrollBox, FMX.Memo, uEditableStringItemFrame, uEditableU32ItemFrame,
   uEditableBoolItemFrame, uEditableLongStringItemFrame, uEditableAudioItemFrame,
-  System.Math, FMX.Effects;
+  System.Math, FMX.Effects, System.Generics.Collections;
 
 type
   TFrmEditQuestion = class(TFrame)
@@ -21,11 +21,15 @@ type
     bCancelQuestionChanges: TButton;
     procedure bCancelQuestionChangesClick(Sender: TObject);
     procedure bSaveQuestionChangesClick(Sender: TObject);
+    procedure sbxQuestionItemsCalcContentBounds(Sender: TObject;
+      var ContentBounds: TRectF);
   private
     FOrgQuestion: TFibbageQuestion;
     FFields: TEditableFields;
     FOnSaveClick: TNotifyEvent;
     FOnCancelClick: TNotifyEvent;
+
+    FFieldsVis: TList<TFrame>;
 
     procedure DoAddStringField(AField: TEditableStringField);
     procedure DoAddLongStringField(AField: TEditableLongStringField);
@@ -36,9 +40,9 @@ type
     procedure ProcessFillScrollBox;
     procedure ClearScrollBox;
   public
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure NewQuestion(AQuestion: TFibbageQuestion);
     procedure EditQuestion(AQuestion: TFibbageQuestion);
 
     property OnCancelClick: TNotifyEvent read FOnCancelClick write FOnCancelClick;
@@ -68,18 +72,24 @@ end;
 
 procedure TFrmEditQuestion.ClearScrollBox;
 begin
+  FFieldsVis.Clear;
   for var idx := sbxQuestionItems.Content.ChildrenCount - 1 downto 0 do
   begin
     var ctrl := sbxQuestionItems.Content.Children[idx];
     sbxQuestionItems.Content.RemoveObject(ctrl);
     ctrl.Free;
-  //      FreeAndNil(sbxQuestionItems.Content.Children[idx]);
-  //      sbxQuestionItems.Content.RemoveObject(idx);
   end;
+end;
+
+constructor TFrmEditQuestion.Create(AOwner: TComponent);
+begin
+  inherited;
+  FFieldsVis := TList<TFrame>.Create;
 end;
 
 destructor TFrmEditQuestion.Destroy;
 begin
+  FFieldsVis.Free;
   FFields.Free;
   inherited;
 end;
@@ -89,8 +99,10 @@ begin
   var frame := TFrmEditableAudioItem.Create(Self, AField);
   frame.Name := Format('editField_%d', [sbxQuestionItems.Content.ChildrenCount]);
   frame.Align := TAlignLayout.Top;
+  frame.Position.Y := MaxInt;
   frame.Height := Max(Canvas.TextHeight('Yy'), 50);
   frame.Parent := sbxQuestionItems;
+  FFieldsVis.Add(frame);
 end;
 
 procedure TFrmEditQuestion.DoAddBoolField(AField: TEditableBoolField);
@@ -98,8 +110,10 @@ begin
   var frame := TFrmEditableBoolItem.Create(Self, AField);
   frame.Name := Format('editField_%d', [sbxQuestionItems.Content.ChildrenCount]);
   frame.Align := TAlignLayout.Top;
+  frame.Position.Y := MaxInt;
   frame.Height := Max(Canvas.TextHeight('Yy'), 30);
   frame.Parent := sbxQuestionItems;
+  FFieldsVis.Add(frame);
 end;
 
 procedure TFrmEditQuestion.DoAddLongStringField(
@@ -108,8 +122,10 @@ begin
   var frame := TFrmEditableLongStringItem.Create(Self, AField);
   frame.Name := Format('editField_%d', [sbxQuestionItems.Content.ChildrenCount]);
   frame.Align := TAlignLayout.Top;
+  frame.Position.Y := MaxInt;
   frame.Height := Max(Canvas.TextHeight('Yy') * 3, 90);
   frame.Parent := sbxQuestionItems;
+  FFieldsVis.Add(frame);
 end;
 
 procedure TFrmEditQuestion.DoAddStringField(AField: TEditableStringField);
@@ -117,8 +133,10 @@ begin
   var frame := TFrmEditableStringItem.Create(Self, AField);
   frame.Name := Format('editField_%d', [sbxQuestionItems.Content.ChildrenCount]);
   frame.Align := TAlignLayout.Top;
+  frame.Position.Y := MaxInt;
   frame.Height := Max(Canvas.TextHeight('Yy'), 30);
   frame.Parent := sbxQuestionItems;
+  FFieldsVis.Add(frame);
 end;
 
 procedure TFrmEditQuestion.DoAddU32Field(AField: TEditableU32Field);
@@ -126,22 +144,15 @@ begin
   var frame := TFrmEditableU32Item.Create(Self, AField);
   frame.Name := Format('editField_%d', [sbxQuestionItems.Content.ChildrenCount]);
   frame.Align := TAlignLayout.Top;
+  frame.Position.Y := MaxInt;
   frame.Height := Max(Canvas.TextHeight('Yy'), 30);
   frame.Parent := sbxQuestionItems;
+  FFieldsVis.Add(frame);
 end;
 
 procedure TFrmEditQuestion.EditQuestion(AQuestion: TFibbageQuestion);
 begin
   lNewQuestion.Text := 'Edit question';
-  FOrgQuestion := AQuestion;
-  FreeAndNil(FFields);
-  FFields := AQuestion.GetEditableFields;
-  ProcessFillScrollBox;
-end;
-
-procedure TFrmEditQuestion.NewQuestion(AQuestion: TFibbageQuestion);
-begin
-  lNewQuestion.Text := 'New question';
   FOrgQuestion := AQuestion;
   FreeAndNil(FFields);
   FFields := AQuestion.GetEditableFields;
@@ -167,9 +178,19 @@ begin
       else
         Assert(False, field.ClassName);
     end;
+    sbxQuestionItems.RealignContent;
   finally
     sbxQuestionItems.EndUpdate;
   end;
+end;
+
+procedure TFrmEditQuestion.sbxQuestionItemsCalcContentBounds(Sender: TObject;
+  var ContentBounds: TRectF);
+begin
+  ContentBounds.Top := 0;
+  ContentBounds.Bottom := 0;
+  for var item in FFieldsVis do
+    ContentBounds.Bottom := ContentBounds.Bottom + item.Height + item.Margins.Top + item.Margins.Bottom;
 end;
 
 end.

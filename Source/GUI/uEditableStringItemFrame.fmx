@@ -21,12 +21,13 @@ object FrmEditableStringItem: TFrmEditableStringItem
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 'Label1'
-    TabOrder = 0
+    TabOrder = 1
+    TabStop = False
   end
   object Edit1: TEdit
     Touch.InteractiveGestures = [LongTap, DoubleTap]
     Align = Client
-    TabOrder = 1
+    TabOrder = 0
     Margins.Top = 3.000000000000000000
     Margins.Right = 3.000000000000000000
     Margins.Bottom = 3.000000000000000000

@@ -14,7 +14,7 @@ uses
   Data.Bind.ObjectScope, FMX.Platform, System.Math,
   FMX.Memo.Types, FMX.ScrollBox, FMX.Memo, FMX.Media,
   ACS_Classes, ACS_DXAudio, ACS_Vorbis, ACS_Converters, ACS_Wave,
-  NewACDSAudio, System.Generics.Collections, uRecordForm, FMX.ListBox, 
+  NewACDSAudio, System.Generics.Collections, FMX.ListBox,
   System.Messaging, System.DateUtils, uLog,
   FMX.Menus, System.StrUtils, uGetTextDlg, FMX.Objects, FMX.DialogService, uAsyncAction,
   uContentConfiguration, uProjectActivator, uLastQuestionsLoader,
@@ -196,7 +196,7 @@ type
     cbShowCategoryDuplicatedInfo: TCheckBox;
     cbShowDialogAboutTooFewSuggestions: TCheckBox;
     rDim: TRectangle;
-    cbShowDialogAboutTooFewShortieQuestions: TCheckBox;
+    cbShowDialogAboutTooFewQuestions: TCheckBox;
     Layout4: TLayout;
     bSettingsFibbage3PP4Path: TButton;
     lSettingsFibbage3PP4Path: TLabel;
@@ -274,6 +274,7 @@ type
     procedure cbAudioInputChange(Sender: TObject);
     procedure sbxQuestionsCalcContentBounds(Sender: TObject;
       var ContentBounds: TRectF);
+    procedure frmEditQuestionbSaveQuestionChangesClick(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -344,29 +345,31 @@ type
     procedure RefreshProjectFormActions;
     procedure RefreshQuestionsFormActions;
     function IsCategoryDuplicated: Boolean;
-    function GetFirstQuestionWithDuplicatedCategory(out AType, ACategory: string; out AQuestion: TFibbageQuestion): Boolean;
+
+    function GetFirstQuestionWithDuplicatedCategory(out AType: string; out AQuestion: TFibbageQuestion): Boolean;
     function GetFirstQuestionWithTooFewSuggestions(out AType: string; out AQuestion: TFibbageQuestion): Boolean;
-    function ShowInfoAboutDuplicatedCategories(const AInfo: string): Boolean;
-    function ShowInfoAboutTooFewSuggestions(const AInfo: string): Boolean;
-    function ShowInfoAboutTooFewShortieQuestions(const AInfo: string): Boolean;
-    function ShowInfoAboutMissingBlanks(const AInfo: string): Boolean;
+    function GetFirstQuestionWithMissingBlank(out AType: string; out AQuestion: TFibbageQuestion; out AError: string): Boolean;
+    function GetFirstTypeWithTooFewQuestions(out AType: string): Boolean;
+
+    function ShowInfoAboutDuplicatedCategories(const AInfo: string; ACanCancel: Boolean): Boolean;
+    function ShowInfoAboutTooFewSuggestions(const AInfo: string; ACanCancel: Boolean): Boolean;
+    function ShowInfoAboutTooFewQuestions(const AInfo: string; ACanCancel: Boolean): Boolean;
+    function ShowInfoAboutMissingBlanks(const AInfo: string; ACanCancel: Boolean): Boolean;
+
     function IsTooFewSuggestions: Boolean;
-    function GetSingleQuestionSuggestions: string;
-    function IsMissingBlanks(out AError: string): Boolean;
+    function IsMissingBlank(out AError: string): Boolean;
+
     function CheckForDuplicatedCategoriesPreSave: Boolean;
     function CheckForTooFewSuggestions: Boolean;
+    function CheckForMissingBlanks: Boolean;
+    function CheckForTooFewQuestions: Boolean;
+
     function ShouldSaveProject: Boolean;
-    function CheckForTooFewShortieQuestions: Boolean;
     procedure InsertNewProject(AConfig: TContentConfiguration);
-    function CheckIfFinalQuestionForFibbage3Ok: Boolean;
-    function CheckIfFinalQuestionForFibbage4Ok: Boolean;
-    function ShowSimpleInfoWithQuestion(const AInfo: string): Boolean;
     procedure ShowSimpleInfo(const AInfo: string);
 
     procedure SetActiveQuestionsType(const AType: string);
     procedure OnQuestionTypeButtonClick(Sender: TObject);
-    procedure OnBeforeQuestionTypeChanged;
-    procedure OnAfterQuestionTypeChanged;
     procedure OnQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure OnQuestionItemDoubleClick(Sender: TObject);
     procedure FillAudioDevices;
@@ -377,6 +380,7 @@ type
     procedure UpdateMoveCopyOptions;
     procedure OnCopyQuestionTo(Sender: TObject);
     procedure OnMoveQuestionTo(Sender: TObject);
+    procedure ShowErrorsIfEditedQuestionIsNotOk;
   public
     { Public declarations }
   end;
@@ -818,7 +822,7 @@ begin
   TAppConfig.GetInstance.Fibbage4PartyPack9Path := eSettingsFibbage4PP9Path.Text;
   TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := cbShowCategoryDuplicatedInfo.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := cbShowDialogAboutTooFewSuggestions.IsChecked;
-  TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions := cbShowDialogAboutTooFewShortieQuestions.IsChecked;
+  TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions := cbShowDialogAboutTooFewQuestions.IsChecked;
 
   GoToHome;
 end;
@@ -896,16 +900,117 @@ begin
   end;
 end;
 
-function TFrmMain.GetFirstQuestionWithDuplicatedCategory(out AType,
-  ACategory: string; out AQuestion: TFibbageQuestion): Boolean;
+function TFrmMain.GetFirstQuestionWithDuplicatedCategory(out AType: string;
+  out AQuestion: TFibbageQuestion): Boolean;
 begin
-  Result := FContent.HasDuplicatedCategory(AType, ACategory, AQuestion);
+  Result := False;
+  var types := FContent.GetEditableTypes;
+  try
+    var foundQuestion: TFibbageQuestion := nil;
+    for var idx := 0 to types.Count - 1 do
+    begin
+      FContent.ForEachQuestion(types[idx],
+      procedure (AItem: TFibbageQuestion)
+      begin
+        if Assigned(foundQuestion) then
+          Exit;
+        if FContent.HasDuplicatedCategory(types[idx], AItem) then
+          foundQuestion := AItem;
+      end);
+
+      if Assigned(foundQuestion) then
+      begin
+        Result := True;
+        AQuestion := foundQuestion;
+        AType := types[idx];
+        Exit;
+      end;
+    end;
+  finally
+    types.Free;
+  end;
+end;
+
+function TFrmMain.GetFirstQuestionWithMissingBlank(out AType: string;
+  out AQuestion: TFibbageQuestion; out AError: string): Boolean;
+begin
+  Result := False;
+  var types := FContent.GetEditableTypes;
+  try
+    var foundQuestion: TFibbageQuestion := nil;
+    var error := '';
+    for var idx := 0 to types.Count - 1 do
+    begin
+      FContent.ForEachQuestion(types[idx],
+      procedure (AItem: TFibbageQuestion)
+      begin
+        if Assigned(foundQuestion) then
+          Exit;
+        if FContent.HasMissingBlank(types[idx], AItem, error) then
+          foundQuestion := AItem;
+      end);
+
+      if Assigned(foundQuestion) then
+      begin
+        Result := True;
+        AQuestion := foundQuestion;
+        AType := types[idx];
+        AError := error;
+        Exit;
+      end;
+    end;
+  finally
+    types.Free;
+  end;
 end;
 
 function TFrmMain.GetFirstQuestionWithTooFewSuggestions(out AType: string;
   out AQuestion: TFibbageQuestion): Boolean;
 begin
-  Result := FContent.GetQuestionWithTooFewSuggestions(AType, AQuestion);
+  Result := False;
+  var types := FContent.GetEditableTypes;
+  try
+    var foundQuestion: TFibbageQuestion := nil;
+    for var idx := 0 to types.Count - 1 do
+    begin
+      FContent.ForEachQuestion(types[idx],
+      procedure (AItem: TFibbageQuestion)
+      begin
+        if Assigned(foundQuestion) then
+          Exit;
+        if FContent.HasTooFewSuggestions(types[idx], AItem) then
+          foundQuestion := AItem;
+      end);
+
+      if Assigned(foundQuestion) then
+      begin
+        Result := True;
+        AQuestion := foundQuestion;
+        AType := types[idx];
+        Exit;
+      end;
+    end;
+  finally
+    types.Free;
+  end;
+end;
+
+function TFrmMain.GetFirstTypeWithTooFewQuestions(out AType: string): Boolean;
+begin
+  Result := False;
+  var types := FContent.GetEditableTypes;
+  try
+    for var idx := 0 to types.Count - 1 do
+    begin
+      if not FContent.HasTooFewQuestions(types[idx]) then
+        Continue;
+
+      AType := types[idx];
+      Exit(True);
+    end;
+  finally
+    types.Free;
+  end;
 end;
 
 procedure TFrmMain.SaveProc;
@@ -917,11 +1022,10 @@ function TFrmMain.CheckForDuplicatedCategoriesPreSave: Boolean;
 var
   question: TFibbageQuestion;
   qType: string;
-  qCategory: string;
 begin
   Result := True;
-  if TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories and GetFirstQuestionWithDuplicatedCategory(qType, qCategory, question) then
-    if not ShowInfoAboutDuplicatedCategories(Format('Found questions with the same category "%s", you might experience the same category during "Pick category" part in the game. Continue?', [qCategory])) then
+  if TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories and GetFirstQuestionWithDuplicatedCategory(qType, question) then
+    if not ShowInfoAboutDuplicatedCategories('Found questions with the same category, you might experience the same category during "Pick category" part in the game. Continue?', True) then
     begin
       SetActiveQuestionsType(qType);
       GoToAllQuestions;
@@ -932,21 +1036,39 @@ begin
     end;
 end;
 
-function TFrmMain.CheckForTooFewShortieQuestions: Boolean;
+function TFrmMain.CheckForMissingBlanks: Boolean;
 var
   qType: string;
-  minCnt: UInt32;
+  question: TFibbageQuestion;
+  error: string;
+begin
+  Result := True;
+  if TAppConfig.GetInstance.ShowInfoAboutMissingBlanks and GetFirstQuestionWithMissingBlank(qType, question, error) then
+    if not ShowInfoAboutMissingBlanks(Format('%s. Continue?', [error]), True) then
+    begin
+      SetActiveQuestionsType(qType);
+      GoToAllQuestions;
+      FQuestionVisItems.Select(question);
+      sbxQuestions.ViewportPosition := TPointF.Create(0, FQuestionVisItems.Selected.Top);
+      FLastClickedItemToEdit := FQuestionVisItems.Selected;
+      Result := False;
+    end;
+end;
+
+function TFrmMain.CheckForTooFewQuestions: Boolean;
+var
+  qType: string;
 begin
   Result := True;
 
-  if FContent.HasTooFewShortieQuestions(qType, minCnt) and (not ShowInfoAboutTooFewShortieQuestions(
-    Format('Too few shortie questions. Game may freeze on start or during gameplay. A minimum of %u questions is required. Continue?', [minCnt]))) then
-  begin
-    SetActiveQuestionsType(qType);
-    GoToAllQuestions;
-    sbxQuestions.ViewportPosition := TPointF.Zero;
-    Result := False;
-  end;
+  if TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions and GetFirstTypeWithTooFewQuestions(qType) then
+    if not ShowInfoAboutTooFewQuestions('Too few questions. Game may freeze on start or during gameplay. Continue?', True) then
+    begin
+      SetActiveQuestionsType(qType);
+      GoToAllQuestions;
+      sbxQuestions.ViewportPosition := TPointF.Zero;
+      Result := False;
+    end;
 end;
 
 function TFrmMain.CheckForTooFewSuggestions: Boolean;
@@ -956,7 +1078,7 @@ var
 begin
   Result := True;
   if TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions and GetFirstQuestionWithTooFewSuggestions(qType, question) then
-    if not ShowInfoAboutTooFewSuggestions('Found question with too few suggestions, the game can freeze because of this. The optimal number of suggestions is 17 (Max number of players * 2 + 1). Continue?') then
+    if not ShowInfoAboutTooFewSuggestions('Found question with too few suggestions, the game can freeze because of this. The optimal number of suggestions is 17 (Max number of players * 2 + 1). Continue?', True) then
     begin
       SetActiveQuestionsType(qType);
       GoToAllQuestions;
@@ -967,67 +1089,6 @@ begin
     end;
 end;
 
-function TFrmMain.CheckIfFinalQuestionForFibbage3Ok: Boolean;
-begin
-  Result := False;
-//  var firstBlank := mSingleItemQuestion.Text.IndexOf('<BLANK>');
-//  var secondBlank := mSingleItemQuestion.Text.IndexOf('<BLANK>', firstBlank + 1);
-//
-//  if (firstBlank = -1) or (secondBlank = -1) then
-//  begin
-//    ShowSimpleInfo('Question is missing at least two <BLANK> entries, question won''t work');
-//    Exit;
-//  end;
-//
-//  if (not mSingleItemAnswer.Text.IsEmpty) and (not mSingleItemAnswer.Text.Contains('|')) then
-//  begin
-//    ShowSimpleInfo('Answer is missing | (it should look like this: answer_part1|answer_part2), question won''t work');
-//    Exit;
-//  end;
-//
-//  var sl := TStringList.Create;
-//  try
-//    sl.CommaText := mSingleItemAlternateSpelling.Text;
-//    for var idx := 0 to sl.Count - 1 do
-//      if not sl[idx].Contains('|') then
-//      begin
-//        ShowSimpleInfo(Format('Alternate spelling (%s) is missing | (it should look like this: altspell_part1|altspell_part2), question won''t work', [sl[idx]]));
-//        Exit;
-//      end;
-//
-//    sl.CommaText := mSingleItemSuggestions.Text;
-//    for var idx := 0 to sl.Count - 1 do
-//      if not sl[idx].Contains('|') then
-//      begin
-//        ShowSimpleInfo(Format('Suggestion (%s) is missing | (it should look like this: sugg_part1|sugg_part2), question won''t work', [sl[idx]]));
-//        Exit;
-//      end;
-//  finally
-//    sl.Free;
-//  end;
-//  Result := True;
-end;
-
-function TFrmMain.CheckIfFinalQuestionForFibbage4Ok: Boolean;
-begin
-  Result := False;
-//  var blankPos := mSingleItemQuestion.Text.IndexOf('{{BLANK}}');
-//  if blankPos = -1 then
-//  begin
-//    ShowSimpleInfo('Question is missing {{BLANK}} entry, question won''t work');
-//    Exit;
-//  end;
-//
-//  blankPos := mSingleItemQuestion2.Text.IndexOf('{{BLANK}}');
-//  if blankPos = -1 then
-//  begin
-//    ShowSimpleInfo('Question2 is missing {{BLANK}} entry, question won''t work');
-//    Exit;
-//  end;
-//
-//  Result := True;
-end;
-
 function TFrmMain.ShouldSaveProject: Boolean;
 begin
   Result := False;
@@ -1035,7 +1096,9 @@ begin
     Exit;
   if not CheckForTooFewSuggestions then
     Exit;
-  if not CheckForTooFewShortieQuestions then
+  if not CheckForTooFewQuestions then
+    Exit;
+  if not CheckForMissingBlanks then
     Exit;
 
   Result := True;
@@ -1059,13 +1122,13 @@ begin
   Result := FContent.HasDuplicatedCategory(FActiveQuestionsType, FSelectedQuestion);
 end;
 
-function TFrmMain.IsMissingBlanks(out AError: string): Boolean;
+function TFrmMain.IsMissingBlank(out AError: string): Boolean;
 begin
-  Result := FContent.HasMissingBlanks(FActiveQuestionsType, FSelectedQuestion, AError);
+  Result := FContent.HasMissingBlank(FActiveQuestionsType, FSelectedQuestion, AError);
 end;
 
-function TFrmMain.ShowInfoAboutTooFewShortieQuestions(
-  const AInfo: string): Boolean;
+function TFrmMain.ShowInfoAboutTooFewQuestions(
+  const AInfo: string; ACanCancel: Boolean): Boolean;
 var
   dontAskAgain: Boolean;
 begin
@@ -1073,19 +1136,20 @@ begin
   rDim.Visible := True;
   var dlg := TUserDialog.Create(Self);
   try
-    if dlg.MakeInfo(AInfo, dontAskAgain) then
-    begin
-      Result := True;
-      if dontAskAgain then
-        TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions := False;
-    end;
+    if not ACanCancel then
+      dlg.MakeSimpleInfo(AInfo, dontAskAgain)
+    else if not dlg.MakeInfo(AInfo, dontAskAgain) then
+      Exit;
+    Result := True;
+    if dontAskAgain then
+      TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions := False;
   finally
     dlg.Free;
     rDim.Visible := False;
   end;
 end;
 
-function TFrmMain.ShowInfoAboutTooFewSuggestions(const AInfo: string): Boolean;
+function TFrmMain.ShowInfoAboutTooFewSuggestions(const AInfo: string; ACanCancel: Boolean): Boolean;
 var
   dontAskAgain: Boolean;
 begin
@@ -1093,12 +1157,13 @@ begin
   rDim.Visible := True;
   var dlg := TUserDialog.Create(Self);
   try
-    if dlg.MakeInfo(AInfo, dontAskAgain) then
-    begin
-      Result := True;
-      if dontAskAgain then
-        TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := False;
-    end;
+    if not ACanCancel then
+      dlg.MakeSimpleInfo(AInfo, dontAskAgain)
+    else if not dlg.MakeInfo(AInfo, dontAskAgain) then
+      Exit;
+    Result := True;
+    if dontAskAgain then
+      TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := False;
   finally
     dlg.Free;
     rDim.Visible := False;
@@ -1117,19 +1182,21 @@ begin
   end;
 end;
 
-function TFrmMain.ShowSimpleInfoWithQuestion(const AInfo: string): Boolean;
+procedure TFrmMain.ShowErrorsIfEditedQuestionIsNotOk;
+var
+  error: string;
 begin
-  rDim.Visible := True;
-  var dlg := TUserDialog.Create(Self);
-  try
-    Result := dlg.MakeSimpleInfoWithResult(AInfo);
-  finally
-    dlg.Free;
-    rDim.Visible := False;
-  end;
+  if TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories and IsCategoryDuplicated then
+    ShowInfoAboutDuplicatedCategories('Found question with the same category, you might experience the same category during "Pick category" part in the game.', False);
+
+  if TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions and IsTooFewSuggestions then
+    ShowInfoAboutTooFewSuggestions('Too few suggestions, the game can freeze because of this. The optimal number of suggestions is 17 (Max number of players * 2 + 1).', False);
+
+  if TAppConfig.GetInstance.ShowInfoAboutMissingBlanks and IsMissingBlank(error) then
+    ShowInfoAboutMissingBlanks(error, False);
 end;
 
-function TFrmMain.ShowInfoAboutDuplicatedCategories(const AInfo: string): Boolean;
+function TFrmMain.ShowInfoAboutDuplicatedCategories(const AInfo: string; ACanCancel: Boolean): Boolean;
 var
   dontAskAgain: Boolean;
 begin
@@ -1137,19 +1204,20 @@ begin
   rDim.Visible := True;
   var dlg := TUserDialog.Create(Self);
   try
-    if dlg.MakeInfo(AInfo, dontAskAgain) then
-    begin
-      Result := True;
-      if dontAskAgain then
-        TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := False;
-    end;
+    if not ACanCancel then
+      dlg.MakeSimpleInfo(AInfo, dontAskAgain)
+    else if not dlg.MakeInfo(AInfo, dontAskAgain) then
+      Exit;
+    Result := True;
+    if dontAskAgain then
+      TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := False;
   finally
     dlg.Free;
     rDim.Visible := False;
   end;
 end;
 
-function TFrmMain.ShowInfoAboutMissingBlanks(const AInfo: string): Boolean;
+function TFrmMain.ShowInfoAboutMissingBlanks(const AInfo: string; ACanCancel: Boolean): Boolean;
 var
   dontAskAgain: Boolean;
 begin
@@ -1157,53 +1225,25 @@ begin
   rDim.Visible := True;
   var dlg := TUserDialog.Create(Self);
   try
-    if dlg.MakeInfo(AInfo, dontAskAgain) then
-    begin
-      Result := True;
-      if dontAskAgain then
-        TAppConfig.GetInstance.ShowInfoAboutMissingBlanks := False;
-    end;
+    if not ACanCancel then
+      dlg.MakeSimpleInfo(AInfo, dontAskAgain)
+    else if not dlg.MakeInfo(AInfo, dontAskAgain) then
+      Exit;
+    Result := True;
+    if dontAskAgain then
+      TAppConfig.GetInstance.ShowInfoAboutMissingBlanks := False;
   finally
     dlg.Free;
     rDim.Visible := False;
-  end;
-end;
-
-function TFrmMain.GetSingleQuestionSuggestions: string;
-begin
-  var suggestions := TStringList.Create;
-  try
-    suggestions.StrictDelimiter := True;
-    suggestions.Delimiter := ',';
-//    suggestions.DelimitedText := mSingleItemSuggestions.Text.Replace(', ', ',').Trim;
-
-    for var idx := suggestions.Count - 1 downto 0 do
-    begin
-      suggestions[idx] := suggestions[idx].Trim;
-      if suggestions[idx].IsEmpty then
-        suggestions.Delete(idx);
-    end;
-    Result := suggestions.DelimitedText;
-  finally
-    suggestions.Free;
   end;
 end;
 
 procedure TFrmMain.aSaveQuestionChangesExecute(Sender: TObject);
-var
-  error: string;
 begin
   if FChangingTab then
     Exit;
 
-  if TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories and IsCategoryDuplicated then
-    ShowInfoAboutDuplicatedCategories('Found question with the same category, you might experience the same category during "Pick category" part in the game.');
-
-  if TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions and IsTooFewSuggestions then
-    ShowInfoAboutTooFewSuggestions('Too few suggestions, the game can freeze because of this. The optimal number of suggestions is 17 (Max number of players * 2 + 1).');
-
-  if TAppConfig.GetInstance.ShowInfoAboutMissingBlanks and IsMissingBlanks(error) then
-    ShowInfoAboutMissingBlanks(error);
+  ShowErrorsIfEditedQuestionIsNotOk;
 
   FQuestionsChanged := True;
 
@@ -1269,18 +1309,6 @@ begin
 end;
 
 procedure TFrmMain.StartSplash;
-begin
-  pLoading.Visible := True;
-  aiContentLoading.Enabled := True;
-end;
-
-procedure TFrmMain.OnAfterQuestionTypeChanged;
-begin
-  pLoading.Visible := False;
-  aiContentLoading.Enabled := False;
-end;
-
-procedure TFrmMain.OnBeforeQuestionTypeChanged;
 begin
   pLoading.Visible := True;
   aiContentLoading.Enabled := True;
@@ -1756,7 +1784,7 @@ begin
     eSettingsFibbage4PP9Path.Text := TAppConfig.GetInstance.Fibbage4PartyPack9Path;
     cbShowCategoryDuplicatedInfo.IsChecked := TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories;
     cbShowDialogAboutTooFewSuggestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions;
-    cbShowDialogAboutTooFewShortieQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewShortieQuestions;
+    cbShowDialogAboutTooFewQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions;
 
     aGoToSettings.Execute;
   finally
@@ -1970,6 +1998,11 @@ begin
 
   if ClientWidth < 640 then
     ClientWidth := 640;
+end;
+
+procedure TFrmMain.frmEditQuestionbSaveQuestionChangesClick(Sender: TObject);
+begin
+  frmEditQuestion.bSaveQuestionChangesClick(Sender);
 end;
 
 procedure TFrmMain.GoToQuestionDetails;

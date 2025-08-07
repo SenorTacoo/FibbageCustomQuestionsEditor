@@ -7,7 +7,6 @@ uses
   uConfig in 'uConfig.pas',
   uInterfaces in 'uInterfaces.pas',
   uPathChecker in 'uPathChecker.pas',
-  uRecordForm in 'uRecordForm.pas' {RecordForm},
   uLastQuestionsLoader in 'uLastQuestionsLoader.pas',
   uLog in 'uLog.pas',
   uGetTextDlg in 'uGetTextDlg.pas' {GetTextDlg},
@@ -26,7 +25,9 @@ uses
   uEditableBoolItemFrame in 'GUI\uEditableBoolItemFrame.pas' {FrmEditableBoolItem: TFrame},
   uEditableLongStringItemFrame in 'GUI\uEditableLongStringItemFrame.pas' {FrmEditableLongStringItem: TFrame},
   uEditableAudioItemFrame in 'GUI\uEditableAudioItemFrame.pas' {FrmEditableAudioItem: TFrame},
-  uFibbageContentFactory in 'uFibbageContentFactory.pas';
+  uFibbageContentFactory in 'uFibbageContentFactory.pas',
+  uFibbageXLContent in 'FibbageXL\uFibbageXLContent.pas',
+  uFibbageXLQuestions in 'FibbageXL\uFibbageXLQuestions.pas';
 
 {$R *.res}
 

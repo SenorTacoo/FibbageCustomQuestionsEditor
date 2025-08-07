@@ -170,10 +170,6 @@
         <DCCReference Include="uConfig.pas"/>
         <DCCReference Include="uInterfaces.pas"/>
         <DCCReference Include="uPathChecker.pas"/>
-        <DCCReference Include="uRecordForm.pas">
-            <Form>RecordForm</Form>
-            <FormType>fmx</FormType>
-        </DCCReference>
         <DCCReference Include="uLastQuestionsLoader.pas"/>
         <DCCReference Include="uLog.pas"/>
         <DCCReference Include="uGetTextDlg.pas">
@@ -226,6 +222,8 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uFibbageContentFactory.pas"/>
+        <DCCReference Include="FibbageXL\uFibbageXLContent.pas"/>
+        <DCCReference Include="FibbageXL\uFibbageXLQuestions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -38,8 +38,8 @@ type
     procedure SetShowInfoAboutDuplicatedCategories(const Value: Boolean);
     function GetShowInfoAboutTooFewSuggestions: Boolean;
     procedure SetShowInfoAboutTooFewSuggestions(const Value: Boolean);
-    function GetShowInfoAboutTooFewShortieQuestions: Boolean;
-    procedure SetShowInfoAboutTooFewShortieQuestions(const Value: Boolean);
+    function GetShowInfoAboutTooFewQuestions: Boolean;
+    procedure SetShowInfoAboutTooFewQuestions(const Value: Boolean);
     function GetFibbage3PartyPack4Path: string;
     function GetFibbageXLPartyPack1Path: string;
     procedure SetFibbage3PartyPack4Path(const Value: string);
@@ -66,7 +66,7 @@ type
 
     property ShowInfoAboutDuplicatedCategories: Boolean read GetShowInfoAboutDuplicatedCategories write SetShowInfoAboutDuplicatedCategories;
     property ShowInfoAboutTooFewSuggestions: Boolean read GetShowInfoAboutTooFewSuggestions write SetShowInfoAboutTooFewSuggestions;
-    property ShowInfoAboutTooFewShortieQuestions: Boolean read GetShowInfoAboutTooFewShortieQuestions write SetShowInfoAboutTooFewShortieQuestions;
+    property ShowInfoAboutTooFewQuestions: Boolean read GetShowInfoAboutTooFewQuestions write SetShowInfoAboutTooFewQuestions;
     property ShowInfoAboutMissingBlanks: Boolean read GetShowInfoAboutMissingBlanks write SetShowInfoAboutMissingBlanks;
   end;
 
@@ -159,9 +159,9 @@ begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutMissingBlanks', True);
 end;
 
-function TAppConfig.GetShowInfoAboutTooFewShortieQuestions: Boolean;
+function TAppConfig.GetShowInfoAboutTooFewQuestions: Boolean;
 begin
-  Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewShortieQuestions', True);
+  Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewQuestions', True);
 end;
 
 function TAppConfig.GetShowInfoAboutTooFewSuggestions: Boolean;
@@ -229,10 +229,10 @@ begin
   FIniFile.WriteBool('General', 'ShowInfoAboutMissingBlanks', Value);
 end;
 
-procedure TAppConfig.SetShowInfoAboutTooFewShortieQuestions(
+procedure TAppConfig.SetShowInfoAboutTooFewQuestions(
   const Value: Boolean);
 begin
-  FIniFile.WriteBool('General', 'ShowInfoAboutTooFewShortieQuestions', Value);
+  FIniFile.WriteBool('General', 'ShowInfoAboutTooFewQuestions', Value);
 end;
 
 procedure TAppConfig.SetShowInfoAboutTooFewSuggestions(const Value: Boolean);

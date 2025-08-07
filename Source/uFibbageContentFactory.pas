@@ -5,7 +5,8 @@ interface
 uses
   uInterfaces,
   uContentConfiguration,
-  uFibbageContent;
+  uFibbageContent,
+  uFibbageXLContent;
 
 type
   TFibbageContentFactory = class
@@ -20,6 +21,7 @@ implementation
 class function TFibbageContentFactory.Generate(
   AContentConfig: TContentConfiguration): TFibbageContent;
 begin
+  Result := nil;
   case AContentConfig.GetGameType of
   FibbageXL: Result := TFibbageXLContent.Create(AContentConfig);
     // TODO
