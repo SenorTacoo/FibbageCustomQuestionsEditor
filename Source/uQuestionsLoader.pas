@@ -399,7 +399,12 @@ end;
 
 procedure TFibbageQuestions<T>.DoInitialize;
 begin
-  DoParseItem(FReader.Read(GetName));
+  var item := FReader.Read(GetName);
+  try
+    DoParseItem(item);
+  finally
+    item.Free;
+  end;
 end;
 
 function TFibbageQuestions<T>.GetItem(AIndex: Int32): T;

@@ -330,8 +330,6 @@ type
     procedure OnPreSave;
     procedure OnRemoveProjectEnd;
     procedure OnRemoveProjectStart;
-    procedure OnRemoveProject;
-    procedure OnRemoveProjectFullWipe;
     procedure ActivateProjectProc;
     procedure StopSplash;
     procedure StartSplash;
@@ -624,7 +622,7 @@ end;
 
 procedure TFrmMain.InitializeContentTask;
 begin
-  FContent.Free;//
+  FreeAndNil(FContent);
   case FSelectedConfiguration.GetGameType of
     FibbageXL: FContent := TFibbageXLContent.Create(FSelectedConfiguration);
     // TODO
@@ -702,32 +700,26 @@ begin
   aiContentLoading.Enabled := False;
 end;
 
-procedure TFrmMain.OnRemoveProject;
-begin
-  for var idx := 0 to FProjectVisItems.Count - 1 do
-  begin
-    if not FProjectVisItems[idx].Selected then
-      Continue;
-
-    FLastQuestionProjects.Remove(FProjectVisItems[idx].OrgConfiguration);
-  end;
-end;
-
-procedure TFrmMain.OnRemoveProjectFullWipe;
-begin
-  for var idx := 0 to FProjectVisItems.Count - 1 do
-  begin
-    if not FProjectVisItems[idx].Selected then
-      Continue;
-    TDirectory.Delete(FProjectVisItems[idx].OrgConfiguration.GetPath, True);
-    FLastQuestionProjects.Remove(FProjectVisItems[idx].OrgConfiguration);
-  end;
-end;
-
 procedure TFrmMain.aRemoveProjectsAllDataExecute(Sender: TObject);
 begin
-  //kontrolki w watku
-//  TAsyncAction.Create(OnRemoveProjectStart, OnRemoveProjectEnd, OnRemoveProjectFullWipe).Start
+  var list := TList<TContentConfiguration>.Create;
+  for var idx := 0 to FProjectVisItems.Count - 1 do
+    if FProjectVisItems[idx].Selected then
+      list.Add(FProjectVisItems[idx].OrgConfiguration);
+
+  TAsyncAction.Create(
+    OnRemoveProjectStart, OnRemoveProjectEnd, procedure
+      begin
+        try
+          for var item in list do
+          begin
+            TDirectory.Delete(item.GetPath, True);
+            FLastQuestionProjects.Remove(item);
+          end;
+        finally
+          list.Free;
+        end;
+      end).Start
 end;
 
 procedure TFrmMain.aRemoveProjectsExecute(Sender: TObject);
@@ -782,8 +774,21 @@ end;
 
 procedure TFrmMain.aRemoveProjectsJustLastInfoExecute(Sender: TObject);
 begin
-//kontrolki w watku
-//  TAsyncAction.Create(OnRemoveProjectStart, OnRemoveProjectEnd, OnRemoveProject).Start;
+  var list := TList<TContentConfiguration>.Create;
+  for var idx := 0 to FProjectVisItems.Count - 1 do
+    if FProjectVisItems[idx].Selected then
+      list.Add(FProjectVisItems[idx].OrgConfiguration);
+
+  TAsyncAction.Create(
+    OnRemoveProjectStart, OnRemoveProjectEnd, procedure
+      begin
+        try
+          for var item in list do
+            FLastQuestionProjects.Remove(item);
+        finally
+          list.Free;
+        end;
+      end).Start;
 end;
 
 procedure TFrmMain.aRemoveQuestionsExecute(Sender: TObject);
@@ -1871,6 +1876,8 @@ end;
 procedure TFrmMain.FormDestroy(Sender: TObject);
 begin
   Log('Destroying');
+  FContent.Free;
+  FLastQuestionProjects.Free;
   FQuestionVisItems.Free;
   FProjectVisItems.Free;
   Log('Destroyed');
@@ -1954,7 +1961,7 @@ begin
   else if Key = vkRight then
     if FQuestionVisItems.SelectedCount = 1 then
     begin
-//      RefreshQuestionsFormActions; //
+      RefreshQuestionsFormActions;
       aEditQuestion.Execute;
     end;
 end;
@@ -1980,11 +1987,15 @@ end;
 
 procedure TFrmMain.InitializeLastQuestionProjects;
 begin
-  var items := FLastQuestionProjects.GetAll;
   sbxProjects.BeginUpdate;
   try
-    items.OwnsObjects := False;
-    for var item in items do
+    while FProjectVisItems.Count > 0 do
+    begin
+      var item := FProjectVisItems.ExtractAt(0);
+      FreeAndNil(item);
+    end;
+
+    for var item in FLastQuestionProjects.Configurations do
     begin
       var pItem := TProjectScrollItem.CreateItem(sbxProjects, item);
       pItem.Parent := sbxProjects;
@@ -1995,7 +2006,6 @@ begin
       FProjectVisItems.Add(pItem);
     end;
   finally
-    items.Free;
     sbxProjects.EndUpdate;
   end;
 end;

@@ -19,6 +19,7 @@ type
   private
     FPaths: TStringList;
     FUpdateCount: Integer;
+    FConfigurations: TContentConfigurations;
     function GetLastsFile: string;
   public
     constructor Create;
@@ -28,10 +29,11 @@ type
 
     procedure Add(AConfiguration: TContentConfiguration);
     procedure Remove(AConfiguration: TContentConfiguration);
-    function GetAll: TContentConfigurations;
     function Count: Integer;
     procedure BeginUpdate;
     procedure EndUpdate;
+
+    property Configurations: TContentConfigurations read FConfigurations;
   end;
 
 implementation
@@ -66,11 +68,13 @@ begin
   inherited;
   FPaths := TStringList.Create;
   FPaths.StrictDelimiter := True;
+  FConfigurations := TContentConfigurations.Create;
 end;
 
 destructor TLastQuestionsLoader.Destroy;
 begin
   FPaths.Free;
+  FConfigurations.Free;
   inherited;
 end;
 
@@ -79,28 +83,6 @@ begin
   Dec(FUpdateCount);
   if FUpdateCount = 0 then
     FPaths.SaveToFile(GetLastsFile);
-end;
-
-function TLastQuestionsLoader.GetAll: TContentConfigurations;
-begin
-  Result := TContentConfigurations.Create;
-
-  for var path in FPaths do
-  begin
-    if path.Trim.IsEmpty then
-      Continue;
-
-    var item := TContentConfiguration.Create;
-    try
-      if item.Initialize(path) then
-      begin
-        Result.Add(item);
-        item := nil;
-      end;
-    finally
-      item.Free;
-    end;
-  end;
 end;
 
 function TLastQuestionsLoader.GetLastsFile: string;
@@ -118,6 +100,24 @@ begin
   ForceDirectories(TPath.Combine(TPath.GetCachePath, FIBBAGE_DIRECTORY));
   if FileExists(GetLastsFile) then
     FPaths.LoadFromFile(GetLastsFile);
+
+  for var path in FPaths do
+  begin
+    if path.Trim.IsEmpty then
+      Continue;
+
+    var item := TContentConfiguration.Create;
+    try
+      if item.Initialize(path) then
+      begin
+        FConfigurations.Add(item);
+        item := nil;
+      end;
+    finally
+      item.Free;
+    end;
+  end;
+
 end;
 
 procedure TLastQuestionsLoader.Remove(AConfiguration: TContentConfiguration);
