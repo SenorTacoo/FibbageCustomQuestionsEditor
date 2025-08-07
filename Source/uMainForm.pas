@@ -20,7 +20,7 @@ uses
   uContentConfiguration, uProjectActivator, uLastQuestionsLoader,
   FMX.Effects, Winapi.Windows, Winapi.ShellAPI, FMX.Platform.Win, Grijjy.CloudLogging,
   uUserDialog, uGetGameTypeDlg, uQuestionsLoader, uFibbageContent,
-  uEditQuestionFrame;
+  uEditQuestionFrame, uFibbageContentFactory;
 
 type
   TQuestionScrollItem = class(TPanel)
@@ -623,10 +623,7 @@ end;
 procedure TFrmMain.InitializeContentTask;
 begin
   FreeAndNil(FContent);
-  case FSelectedConfiguration.GetGameType of
-    FibbageXL: FContent := TFibbageXLContent.Create(FSelectedConfiguration);
-    // TODO
-  end;
+  FContent := TFibbageContentFactory.Generate(FSelectedConfiguration);
   FContent.Initialize;
 end;
 
@@ -1347,13 +1344,13 @@ var
 begin
   case FSelectedConfiguration.GetGameType of
     TGameType.FibbageXL:
-      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbageXLPath, 'content');
+      destPath := TAppConfig.GetInstance.FibbageXLPath;
     TGameType.FibbageXLPartyPack1:
-      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.FibbageXLPartyPack1Path, 'content');
+      destPath := TAppConfig.GetInstance.FibbageXLPartyPack1Path;
     TGameType.Fibbage3PartyPack4:
-      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.Fibbage3PartyPack4Path, 'content');
+      destPath := TAppConfig.GetInstance.Fibbage3PartyPack4Path;
     TGameType.Fibbage4PartyPack9:
-      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.Fibbage4PartyPack9Path, 'content', 'en');
+      destPath := TAppConfig.GetInstance.Fibbage4PartyPack9Path;
   end;
 
   try

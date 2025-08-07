@@ -26,8 +26,8 @@ type
     destructor Destroy; override;
 
     function Initialize: Boolean;
-    procedure Save(const APath: string; ASaveOptions: TSaveOptions); overload;
-    procedure Save; overload; virtual; abstract;
+    procedure Activate(const APath: string); virtual; abstract;
+    procedure Save; virtual; abstract;
 
     function CreateNewQuestion(const AType: string): TFibbageQuestion; virtual; abstract;
     procedure RemoveQuestion(const AType: string; AQuestion: TFibbageQuestion); virtual; abstract;
@@ -67,6 +67,7 @@ type
     procedure CopyQuestion(const AType: string; AQuestion: TFibbageQuestion); override;
     procedure MoveQuestion(const ASrcType, ADstType: string; AQuestion: TFibbageQuestion); override;
 
+    procedure Activate(const APath: string); override;
     procedure Save; override;
 
     function GetQuestionWithTooFewSuggestions(out AType: string; out AQuestion: TFibbageQuestion): Boolean; override;
@@ -99,11 +100,6 @@ begin
   Result := DoInitialize;
 end;
 
-procedure TFibbageContent.Save(const APath: string; ASaveOptions: TSaveOptions);
-begin
-
-end;
-
 { TFibbageXLContent }
 
 function TFibbageXLContent.CreateNewQuestion(
@@ -116,6 +112,35 @@ begin
     Result := FFinalQuestions.CreateNewQuestion
   else
     Assert(False);
+end;
+
+procedure TFibbageXLContent.Activate(const APath: string);
+begin
+  var destPath := TPath.Combine(APath, 'content');
+  var savePath := TPath.Combine(TPath.GetTempPath, TPath.GetRandomFileName);
+  try
+    try
+      ForceDirectories(savePath);
+      if SameText(FConfiguration.GetPath, destPath) then
+        FConfiguration.Save(savePath);
+      FShortieQuestions.Save(savePath);
+      FFinalQuestions.Save(savePath);
+      SaveManifest(savePath);
+    except
+      on E: Exception do
+      begin
+        TDirectory.Delete(savePath, True);
+        raise;
+      end;
+    end;
+  finally
+    if TDirectory.Exists(savePath) then
+    begin
+      TDirectory.Delete(destPath, True);
+      TDirectory.Copy(savePath, destPath); {CANNOT USE MOVE - NOT WORKING FOR MULTIPLE DRIVES}
+      TDirectory.Delete(savePath, True);
+    end;
+  end;
 end;
 
 procedure TFibbageXLContent.CopyQuestion(const AType: string;

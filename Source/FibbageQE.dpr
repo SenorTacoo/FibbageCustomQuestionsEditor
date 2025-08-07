@@ -25,7 +25,8 @@ uses
   uEditableU32ItemFrame in 'GUI\uEditableU32ItemFrame.pas' {FrmEditableU32Item: TFrame},
   uEditableBoolItemFrame in 'GUI\uEditableBoolItemFrame.pas' {FrmEditableBoolItem: TFrame},
   uEditableLongStringItemFrame in 'GUI\uEditableLongStringItemFrame.pas' {FrmEditableLongStringItem: TFrame},
-  uEditableAudioItemFrame in 'GUI\uEditableAudioItemFrame.pas' {FrmEditableAudioItem: TFrame};
+  uEditableAudioItemFrame in 'GUI\uEditableAudioItemFrame.pas' {FrmEditableAudioItem: TFrame},
+  uFibbageContentFactory in 'uFibbageContentFactory.pas';
 
 {$R *.res}
 

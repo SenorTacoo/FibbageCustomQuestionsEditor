@@ -6,6 +6,7 @@ uses
   uPathChecker,
   uFibbageContent,
   uContentConfiguration,
+  uFibbageContentFactory,
   uInterfaces;
 
 type
@@ -21,10 +22,10 @@ implementation
 class procedure TProjectActivator.Activate(AConfig: TContentConfiguration;
   const APath: string);
 begin
-  var content := TFibbageContent.Create(AConfig);
+  var content := TFibbageContentFactory.Generate(AConfig);
   try
     content.Initialize;
-    content.Save(APath, [soActivatingProject]);
+    content.Activate(APath);
   finally
     content.Free;
   end;
