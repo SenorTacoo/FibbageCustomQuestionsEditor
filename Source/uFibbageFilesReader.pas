@@ -19,17 +19,19 @@ type
   end;
 
   TFibbageFilesReader = class
-  private
-    procedure DoRead(const ACategoryFile, AQuestionsDirectory: string);
   protected
     FQuestionData: TQuestionData;
     FBasePath: string;
+
+    procedure DoRead(const ACategoryFile, AQuestionsDirectory: string); virtual;
   public
     constructor Create(const ABasePath: string);
     destructor Destroy; override;
 
     function Read(const AType: string): TQuestionData;
     function ReadWithCustomQuestionsDir(const AType, AQuestionsDir: string): TQuestionData;
+
+    function FileExists(const AFile: string): Boolean; virtual;
 
     property BasePath: string read FBasePath;
   end;
@@ -105,6 +107,11 @@ begin
       sr.Free;
     end;
   end;
+end;
+
+function TFibbageFilesReader.FileExists(const AFile: string): Boolean;
+begin
+  Result := TFile.Exists(AFile);
 end;
 
 function TFibbageFilesReader.Read(const AType: string): TQuestionData;

@@ -77,7 +77,7 @@ object FrmEditableAudioItem: TFrmEditableAudioItem
     object bPlay: TButton
       Align = Client
       Size.Width = 86.250000000000000000
-      Size.Height = 50.000000000000000000
+      Size.Height = 234.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'playtoolbuttonmultiview'
       TabOrder = 1
@@ -99,7 +99,7 @@ object FrmEditableAudioItem: TFrmEditableAudioItem
     object bRemoveAllAudio: TButton
       Align = Client
       Size.Width = 86.250000000000000000
-      Size.Height = 50.000000000000000000
+      Size.Height = 234.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'trashtoolbuttonmultiview'
       TabOrder = 18
@@ -110,7 +110,7 @@ object FrmEditableAudioItem: TFrmEditableAudioItem
     object bSelectAudioFromFile: TButton
       Align = Client
       Size.Width = 86.250000000000000000
-      Size.Height = 50.000000000000000000
+      Size.Height = 234.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'filetoolbuttonmultiview'
       TabOrder = 17

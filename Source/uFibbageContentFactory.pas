@@ -6,6 +6,7 @@ uses
   uInterfaces,
   uContentConfiguration,
   uFibbageContent,
+  uFibbage3Content,
   uFibbageXLContent,
   uFibbageXLPartyPack1Content;
 
@@ -26,7 +27,7 @@ begin
   case AContentConfig.GetGameType of
     FibbageXL: Result := TFibbageXLContent.Create(AContentConfig);
     FibbageXLPartyPack1: Result := TFibbageXLPartyPack1Content.Create(AContentConfig);
-    // TODO
+    Fibbage3PartyPack4: Result := TFibbage3Content.Create(AContentConfig);
   end;
 end;
 

@@ -29,7 +29,7 @@ type
     constructor Create(ACfg: TContentConfiguration);
     destructor Destroy; override;
 
-    function GetEditableTypes: TStringList; override;
+    function GetEditableTypes: TPreviewTypes; override;
     procedure ForEachQuestion(const AType: string; AProc: TProc<TFibbageQuestion>); override;
     function CreateNewQuestion(const AType: string): TFibbageQuestion; override;
     procedure RemoveQuestion(const AType: string; AQuestion: TFibbageQuestion); override;
@@ -151,11 +151,11 @@ begin
     Assert(False);
 end;
 
-function TFibbageXLPartyPack1Content.GetEditableTypes: TStringList;
+function TFibbageXLPartyPack1Content.GetEditableTypes: TPreviewTypes;
 begin
-  Result := TStringList.Create;
-  Result.Add(FShortieQuestions.GetName);
-  Result.Add(FFinalQuestions.GetName);
+  Result := TPreviewTypes.Create;
+  Result.Add(FShortieQuestions.GetTypePreview);
+  Result.Add(FFinalQuestions.GetTypePreview);
 end;
 
 function TFibbageXLPartyPack1Content.GetManifestJSON: string;

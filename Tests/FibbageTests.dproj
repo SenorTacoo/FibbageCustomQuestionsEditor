@@ -109,7 +109,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="uQuestionsLoaderTests.pas"/>
+        <DCCReference Include="TestuFibbageXL.pas"/>
         <DCCReference Include="..\Source\uInterfaces.pas"/>
         <DCCReference Include="..\Source\uLog.pas"/>
         <DCCReference Include="..\Source\uFibbageContent.pas"/>
@@ -117,6 +117,9 @@
         <DCCReference Include="..\Source\uFibbageFilesReader.pas"/>
         <DCCReference Include="..\Source\uContentConfiguration.pas"/>
         <DCCReference Include="..\Source\uFibbageJSONWriter.pas"/>
+        <DCCReference Include="..\Source\FibbageXL\uFibbageXLQuestions.pas"/>
+        <DCCReference Include="TestuFibbage3.pas"/>
+        <DCCReference Include="..\Source\JackboxPartyPack4\uFibbage3Questions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -103,11 +103,13 @@ type
   TFibbageXLPartyPack1Questions_Shortie = class(TFibbageXLPartyPack1Questions)
   public
     function GetName: string; override;
+    function GetTypePreview: TTypePreview; override;
   end;
 
   TFibbageXLPartyPack1Questions_Final = class(TFibbageXLPartyPack1Questions)
   public
     function GetName: string; override;
+    function GetTypePreview: TTypePreview; override;
   end;
 
 implementation
@@ -385,14 +387,10 @@ end;
 constructor TFibbageXLPartyPack1Question.Create;
 begin
   inherited Create;
-  FCorrectAudio := TFibbageAudioEntry.Create;
-  FQuestionAudio := TFibbageAudioEntry.Create;
 end;
 
 destructor TFibbageXLPartyPack1Question.Destroy;
 begin
-  FCorrectAudio.Free;
-  FQuestionAudio.Free;
   inherited;
 end;
 
@@ -543,11 +541,23 @@ begin
   Result := 'shortie';
 end;
 
+function TFibbageXLPartyPack1Questions_Shortie.GetTypePreview: TTypePreview;
+begin
+  Result.InternalName := GetName;
+  Result.DisplayName := 'Round 1 + Round 2';
+end;
+
 { TFibbageXLPartyPack1Questions_Final }
 
 function TFibbageXLPartyPack1Questions_Final.GetName: string;
 begin
   Result := 'finalfibbage';
+end;
+
+function TFibbageXLPartyPack1Questions_Final.GetTypePreview: TTypePreview;
+begin
+  Result.InternalName := GetName;
+  Result.DisplayName := 'Round 3';
 end;
 
 end.

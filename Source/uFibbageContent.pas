@@ -12,6 +12,8 @@ uses
   uInterfaces;
 
 type
+  TPreviewTypes = TList<TTypePreview>;
+
   TFibbageContent = class abstract
   protected
     FConfiguration: TContentConfiguration;
@@ -32,7 +34,7 @@ type
     procedure CopyQuestion(const AType: string; AQuestion: TFibbageQuestion); virtual; abstract;
     procedure MoveQuestion(const ASrcType, ADstType: string; AQuestion: TFibbageQuestion); virtual; abstract;
 
-    function GetEditableTypes: TStringList; virtual; abstract;
+    function GetEditableTypes: TPreviewTypes; virtual; abstract;
     procedure ForEachQuestion(const AType: string; AProc: TProc<TFibbageQuestion>); virtual; abstract;
 
     function HasDuplicatedCategory(const AType: string; AQuestion: TFibbageQuestion): Boolean; overload; virtual; abstract;

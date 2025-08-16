@@ -13,14 +13,17 @@ uses
   {$ENDIF }
   DUnitX.Loggers.Xml.NUnit,
   DUnitX.TestFramework,
-  uQuestionsLoaderTests in 'uQuestionsLoaderTests.pas',
+  TestuFibbageXL in 'TestuFibbageXL.pas',
   uInterfaces in '..\Source\uInterfaces.pas',
   uLog in '..\Source\uLog.pas',
   uFibbageContent in '..\Source\uFibbageContent.pas',
   uQuestionsLoader in '..\Source\uQuestionsLoader.pas',
   uFibbageFilesReader in '..\Source\uFibbageFilesReader.pas',
   uContentConfiguration in '..\Source\uContentConfiguration.pas',
-  uFibbageJSONWriter in '..\Source\uFibbageJSONWriter.pas';
+  uFibbageJSONWriter in '..\Source\uFibbageJSONWriter.pas',
+  uFibbageXLQuestions in '..\Source\FibbageXL\uFibbageXLQuestions.pas',
+  TestuFibbage3 in 'TestuFibbage3.pas',
+  uFibbage3Questions in '..\Source\JackboxPartyPack4\uFibbage3Questions.pas';
 
 begin
 {$IFDEF TESTINSIGHT}

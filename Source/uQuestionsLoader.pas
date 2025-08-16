@@ -37,7 +37,18 @@ type
     Value: Boolean;
   end;
 
+  TEditablePicField = class(TEditableFieldBase)
+    Name: string;
+    Value: string;
+    BasePath: string;
+  end;
+
   TEditableFields = TObjectList<TEditableFieldBase>;
+
+  TTypePreview = record
+    InternalName: string;
+    DisplayName: string;
+  end;
 
   TQuestionPreview = record
     Header: string;
@@ -53,7 +64,12 @@ type
     function IsMissingBlank: Boolean; virtual; abstract;
   end;
 
-  TFibbageAudioEntry = class
+  TFibbageAudioEntry = record
+    BasePath: string;
+    Name: string;
+  end;
+
+  TFibbagePicEntry = record
     BasePath: string;
     Name: string;
   end;
@@ -81,6 +97,8 @@ type
     procedure RemoveQuestion(AQuestion: T); virtual; abstract;
 
     function Count: Int32;
+
+    function GetTypePreview: TTypePreview; virtual; abstract;
 
     function GetFirstQuestionWithDuplicatedCategory: T; virtual; abstract;
     function GetFirstQuestionWithTooFewSuggestions: T; virtual; abstract;

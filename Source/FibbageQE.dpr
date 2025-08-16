@@ -29,7 +29,10 @@ uses
   uFibbageXLContent in 'FibbageXL\uFibbageXLContent.pas',
   uFibbageXLQuestions in 'FibbageXL\uFibbageXLQuestions.pas',
   uFibbageXLPartyPack1Content in 'FibbageXLPartyPack1\uFibbageXLPartyPack1Content.pas',
-  uFibbageXLPartyPack1Questions in 'FibbageXLPartyPack1\uFibbageXLPartyPack1Questions.pas';
+  uFibbageXLPartyPack1Questions in 'FibbageXLPartyPack1\uFibbageXLPartyPack1Questions.pas',
+  uFibbage3Questions in 'JackboxPartyPack4\uFibbage3Questions.pas',
+  uFibbage3Content in 'JackboxPartyPack4\uFibbage3Content.pas',
+  uEditablePicItemFrame in 'GUI\uEditablePicItemFrame.pas' {frmEditablePicItem: TFrame};
 
 {$R *.res}
 

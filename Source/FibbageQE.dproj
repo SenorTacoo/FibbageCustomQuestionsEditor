@@ -226,6 +226,13 @@
         <DCCReference Include="FibbageXL\uFibbageXLQuestions.pas"/>
         <DCCReference Include="FibbageXLPartyPack1\uFibbageXLPartyPack1Content.pas"/>
         <DCCReference Include="FibbageXLPartyPack1\uFibbageXLPartyPack1Questions.pas"/>
+        <DCCReference Include="JackboxPartyPack4\uFibbage3Questions.pas"/>
+        <DCCReference Include="JackboxPartyPack4\uFibbage3Content.pas"/>
+        <DCCReference Include="GUI\uEditablePicItemFrame.pas">
+            <Form>frmEditablePicItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

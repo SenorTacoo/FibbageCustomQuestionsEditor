@@ -8,7 +8,7 @@ uses
   uQuestionsLoader, FMX.Layouts, FMX.Memo.Types, FMX.Controls.Presentation,
   FMX.ScrollBox, FMX.Memo, uEditableStringItemFrame, uEditableU32ItemFrame,
   uEditableBoolItemFrame, uEditableLongStringItemFrame, uEditableAudioItemFrame,
-  System.Math, FMX.Effects, System.Generics.Collections;
+  System.Math, FMX.Effects, System.Generics.Collections, uEditablePicItemFrame;
 
 type
   TFrmEditQuestion = class(TFrame)
@@ -36,6 +36,7 @@ type
     procedure DoAddU32Field(AField: TEditableU32Field);
     procedure DoAddBoolField(AField: TEditableBoolField);
     procedure DoAddAudioField(AField: TEditableAudioField);
+    procedure DoAddPicField(AField: TEditablePicField);
 
     procedure ProcessFillScrollBox;
     procedure ClearScrollBox;
@@ -128,6 +129,17 @@ begin
   FFieldsVis.Add(frame);
 end;
 
+procedure TFrmEditQuestion.DoAddPicField(AField: TEditablePicField);
+begin
+  var frame := TFrmEditablePicItem.Create(Self, AField);
+  frame.Name := Format('editField_%d', [sbxQuestionItems.Content.ChildrenCount]);
+  frame.Align := TAlignLayout.Top;
+  frame.Position.Y := MaxInt;
+  frame.Height := 256;
+  frame.Parent := sbxQuestionItems;
+  FFieldsVis.Add(frame);
+end;
+
 procedure TFrmEditQuestion.DoAddStringField(AField: TEditableStringField);
 begin
   var frame := TFrmEditableStringItem.Create(Self, AField);
@@ -175,6 +187,8 @@ begin
         DoAddBoolField(field as TEditableBoolField)
       else if field is TEditableAudioField then
         DoAddAudioField(field as TEditableAudioField)
+      else if field is TEditablePicField then
+        DoAddPicField(field as TEditablePicField)
       else
         Assert(False, field.ClassName);
     end;

@@ -1,4 +1,4 @@
-unit uQuestionsLoaderTests;
+unit TestuFibbageXL;
 
 interface
 
@@ -6,12 +6,12 @@ uses
   DUnitX.TestFramework,
   System.Generics.Collections,
   uFibbageFilesReader,
-  uQuestionsLoader;
+  uFibbageXLQuestions;
 
 type
   TTestXLReader = class(TFibbageFilesReader)
-  public
-    procedure Read(const AType: string); override;
+  protected
+    procedure DoRead(const ACategoryFile, AQuestionsDirectory: string); override;
   end;
 
   [TestFixture]
@@ -282,25 +282,40 @@ end;
 
 procedure TFibbageXLQuestionsLoader.SetUp;
 begin
-  FReader := TTestXLReader.Create;
+  FReader := TTestXLReader.Create('');
 end;
 
 procedure TFibbageXLQuestionsLoader.should_load_final_questions;
 begin
+  FReader.FQuestionData.CategoryData := CategoryJSON_3;
+  FReader.FQuestionData.QuestionData.Add('1234', QuestionJSON1);
+  FReader.FQuestionData.QuestionData.Add('2345', QuestionJSON2);
+  FReader.FQuestionData.QuestionData.Add('3456', QuestionJSON3);
+
+  var loader := TFibbageXLQuestions_Final.Create;
+
+  loader.Initialize(FReader);
+
+  Assert.AreEqual(3, loader.Count, '1');
+
+  Assert.AreEqual(CategoryJSON_3, loader.GetCategoriesJSON);
+  Assert.AreEqual(QuestionJSON1, loader[0].GetJSON);
+  Assert.AreEqual(QuestionJSON2, loader[1].GetJSON);
+  Assert.AreEqual(QuestionJSON3, loader[2].GetJSON);
+
+  loader.Free;
 end;
 
 procedure TFibbageXLQuestionsLoader.should_load_shortie_questions;
 begin
-  var data := TQuestionData.Create;
-  data.CategoryData := CategoryJSON_3;
-  data.QuestionData.Add('1234', QuestionJSON1);
-  data.QuestionData.Add('2345', QuestionJSON2);
-  data.QuestionData.Add('3456', QuestionJSON3);
-  FReader.FQuestions.Add(data);
+  FReader.FQuestionData.CategoryData := CategoryJSON_3;
+  FReader.FQuestionData.QuestionData.Add('1234', QuestionJSON1);
+  FReader.FQuestionData.QuestionData.Add('2345', QuestionJSON2);
+  FReader.FQuestionData.QuestionData.Add('3456', QuestionJSON3);
 
-  var loader := TFibbageXLQuestions.Create;
+  var loader := TFibbageXLQuestions_Shortie.Create;
 
-  loader.Initialize(FReader, '');
+  loader.Initialize(FReader);
 
   Assert.AreEqual(3, loader.Count, '1');
 
@@ -319,7 +334,7 @@ end;
 
 { TTestXLReader }
 
-procedure TTestXLReader.Read;
+procedure TTestXLReader.DoRead;
 begin
   {}
 end;
