@@ -110,7 +110,6 @@ type
     lProjects: TLabel;
     ToolBar2: TToolBar;
     lProjectQuestions: TLabel;
-    gplQuestions: TGridPanelLayout;
     bNewProject: TButton;
     lineTabs: TLine;
     miAddQuestion: TMenuItem;
@@ -160,7 +159,6 @@ type
     pProjectsToolbar: TPanel;
     GlowEffect1: TGlowEffect;
     GlowEffect3: TGlowEffect;
-    pQuestionsButtons: TPanel;
     pQuestionsMultiview: TPanel;
     pProjectsMultiview: TPanel;
     MenuItem1: TMenuItem;
@@ -230,6 +228,7 @@ type
     miCopyTo: TMenuItem;
     miMoveTo: TMenuItem;
     cbShowDialogAboutMissingBlanks: TCheckBox;
+    lyTypes: TFlowLayout;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -273,9 +272,8 @@ type
     procedure bSettingsFibbage4PP9PathClick(Sender: TObject);
     procedure cbAudioOutputChange(Sender: TObject);
     procedure cbAudioInputChange(Sender: TObject);
-    procedure sbxQuestionsCalcContentBounds(Sender: TObject;
-      var ContentBounds: TRectF);
     procedure frmEditQuestionbSaveQuestionChangesClick(Sender: TObject);
+    procedure lyTypesResize(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -432,11 +430,11 @@ end;
 function TFrmMain.AddQuestionScrollItem(AQuestion: TFibbageQuestion): TQuestionScrollItem;
 begin
   Result := TQuestionScrollItem.CreateItem(sbxQuestions, AQuestion);
-  Result.Parent := sbxQuestions;
   Result.Align := TAlignLayout.Top;
   Result.Position.Y := MaxInt;
   Result.OnMouseDown := OnQuestionItemMouseDown;
   Result.OnDblClick := OnQuestionItemDoubleClick;
+  Result.Parent := sbxQuestions;
 
   FQuestionVisItems.Add(Result);
 end;
@@ -586,19 +584,25 @@ begin
 end;
 
 procedure TFrmMain.PostContentInitialized;
+const
+  BUTTON_HEIGHT = 50;
 begin
   try
-    gplQuestions.ControlCollection.Clear;
+    while lyTypes.ControlsCount > 0 do
+      lyTypes.Controls.ExtractAt(0).Free;
 
     for var sType in FContent.EditableTypes do
     begin
       var button := TButton.Create(Self);
-      button.Parent := gplQuestions;
-      button.Align := TAlignLayout.Client;
+      button.Height := BUTTON_HEIGHT;
+      button.Width := lyTypes.Width / 2;
       button.Text := sType.DisplayName;
       button.StaysPressed := True;
       button.OnClick := OnQuestionTypeButtonClick;
+      button.Parent := lyTypes;
     end;
+
+    lyTypes.Height := BUTTON_HEIGHT * (FContent.EditableTypes.Count / 2);
 
     SetActiveQuestionsType(FContent.EditableTypes.First);
 
@@ -1400,15 +1404,6 @@ begin
   GoToAllQuestions;
 end;
 
-procedure TFrmMain.sbxQuestionsCalcContentBounds(Sender: TObject;
-  var ContentBounds: TRectF);
-begin
-  ContentBounds.Top := 0;
-  ContentBounds.Bottom := pQuestionsButtons.Height + ToolBar2.Height; {fix for last question not showing}
-  for var idx := 0 to FQuestionVisItems.Count - 1 do
-    ContentBounds.Bottom := ContentBounds.Bottom + FQuestionVisItems[idx].Height + FQuestionVisItems[idx].Margins.Top + FQuestionVisItems[idx].Margins.Bottom;
-end;
-
 procedure TFrmMain.sDarkModeOptionsSwitch(Sender: TObject);
 begin
   SetDarkMode(sDarkModeOptions.IsChecked);
@@ -1587,6 +1582,13 @@ end;
 procedure TFrmMain.OnQuestionTypeButtonClick(Sender: TObject);
 begin
   var qType := FContent.EditableTypes.GetItemWithDisplayText((Sender as TButton).Text);
+
+  if qType.InternalName = FActiveQuestionsType.InternalName then
+  begin
+    (Sender as TButton).IsPressed := True;
+    Exit;
+  end;
+
   SetActiveQuestionsType(qType);
 end;
 
@@ -2083,7 +2085,7 @@ end;
 
 procedure TFrmMain.SetButtonPressed;
 begin
-  for var item in gplQuestions.Controls do
+  for var item in lyTypes.Controls do
     if item is TButton then
       (item as TButton).IsPressed := (item as TButton).Text = FActiveQuestionsType.DisplayName;
 end;
@@ -2138,6 +2140,18 @@ begin
   cdDrawable.Width := baseLV.Width - cdDrawable.PlaceOffset.X;
 
   AItem.Height := Round(sDrawable.PlaceOffset.Y + sDrawable.Height + 6);
+end;
+
+procedure TFrmMain.lyTypesResize(Sender: TObject);
+begin
+  lyTypes.BeginUpdate;
+  try
+    var wantedWidth := lyTypes.Width / 2;
+    for var item in lyTypes.Controls do
+      item.Width := wantedWidth;
+  finally
+    lyTypes.EndUpdate;
+  end;
 end;
 
 procedure TFrmMain.mDisableEnter(Sender: TObject; var Key: Word;

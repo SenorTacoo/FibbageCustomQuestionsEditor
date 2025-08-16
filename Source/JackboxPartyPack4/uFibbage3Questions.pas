@@ -729,7 +729,7 @@ end;
 function TFibbage3Questions_Final.GetTypePreview: TTypePreview;
 begin
   Result.InternalName := GetName;
-  Result.DisplayName := 'Result 3';
+  Result.DisplayName := 'Round 3';
 end;
 
 { TFibbage3Questions_Special }

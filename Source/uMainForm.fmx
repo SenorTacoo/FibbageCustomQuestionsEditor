@@ -117639,37 +117639,6 @@ object FrmMain: TFrmMain
           Size.Height = 600.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 1
-          object pQuestionsButtons: TPanel
-            Align = Top
-            Position.Y = 46.000000000000000000
-            Size.Width = 744.000000000000000000
-            Size.Height = 50.000000000000000000
-            Size.PlatformDefault = False
-            TabOrder = 1
-            object gplQuestions: TGridPanelLayout
-              Align = Client
-              Size.Width = 744.000000000000000000
-              Size.Height = 50.000000000000000000
-              Size.PlatformDefault = False
-              TabOrder = 1
-              ColumnCollection = <
-                item
-                  Value = 50.000001907348710000
-                end
-                item
-                  Value = 50.000001907348710000
-                end>
-              ControlCollection = <>
-              ExpandStyle = AddColumns
-              RowCollection = <
-                item
-                  Value = 100.000000000000000000
-                end
-                item
-                  SizeStyle = Auto
-                end>
-            end
-          end
           object ToolBar2: TToolBar
             Align = MostTop
             Size.Width = 744.000000000000000000
@@ -117708,10 +117677,21 @@ object FrmMain: TFrmMain
             Size.Width = 744.000000000000000000
             Size.Height = 504.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 2
-            OnCalcContentBounds = sbxQuestionsCalcContentBounds
+            TabOrder = 1
             Viewport.Width = 744.000000000000000000
             Viewport.Height = 504.000000000000000000
+          end
+          object lyTypes: TFlowLayout
+            Align = Top
+            Position.Y = 46.000000000000000000
+            Size.Width = 744.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 2
+            Justify = Left
+            JustifyLastLine = Left
+            FlowDirection = LeftToRight
+            OnResize = lyTypesResize
           end
         end
         object mvQuestionsOptions: TMultiView
