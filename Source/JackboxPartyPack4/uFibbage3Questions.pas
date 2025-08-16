@@ -94,7 +94,6 @@ type
     procedure SaveAudioFile(const ABasePath: string; AEntry: TFibbageAudioEntry);
     procedure ClearAudioEntryIfNotExistingFile(AEntry: TFibbageAudioEntry);
     procedure DoParseItem(AItem: TQuestionData);
-    function EncodeUnicodeEscapes(const AText: string): string;
   protected
     procedure DoInitialize; override;
     procedure DoSaveCategory; override;
@@ -270,20 +269,6 @@ begin
 
     if not item.FKeywordAudio.Name.IsEmpty then
       SaveAudioFile(basePath, item.FKeywordAudio);
-  end;
-end;
-
-function TFibbage3Questions.EncodeUnicodeEscapes(const AText: string): string;
-var
-  I: Integer;
-begin
-  Result := '';
-  for I := 1 to Length(AText) do
-  begin
-    if Ord(AText[I]) > 127 then
-      Result := Result + '\u' + IntToHex(Ord(AText[I]), 4)
-    else
-      Result := Result + AText[I];
   end;
 end;
 
@@ -757,7 +742,7 @@ end;
 function TFibbage3Questions_Special.GetTypePreview: TTypePreview;
 begin
   Result.InternalName := GetName;
-  Result.DisplayName := 'Special (random in R1/R2)';
+  Result.DisplayName := 'Special (random during R1/R2)';
 end;
 
 { TFibbage3Questions_TmiShortie }

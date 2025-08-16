@@ -12,14 +12,22 @@ uses
   uInterfaces;
 
 type
-  TPreviewTypes = TList<TTypePreview>;
+  TPreviewTypes = class(TList<TTypePreview>)
+  public
+    function GetItemWithDisplayText(const ADisplayText: string): TTypePreview;
+  end;
 
   TFibbageContent = class abstract
+  private
+    function GetEditableTypes: TPreviewTypes;
   protected
     FConfiguration: TContentConfiguration;
     FFilesReader: TFibbageFilesReader;
+    FEditableTypes: TPreviewTypes;
 
     function DoInitialize: Boolean; virtual; abstract;
+
+    function DoGetEditableTypes: TPreviewTypes; virtual; abstract;
   public
     constructor Create(ACfg: TContentConfiguration);
     destructor Destroy; override;
@@ -28,19 +36,20 @@ type
     procedure Activate(const APath: string); virtual; abstract;
     procedure Save; virtual; abstract;
 
-    function CreateNewQuestion(const AType: string): TFibbageQuestion; virtual; abstract;
-    procedure RemoveQuestion(const AType: string; AQuestion: TFibbageQuestion); virtual; abstract;
+    function CreateNewQuestion(AType: TTypePreview): TFibbageQuestion; virtual; abstract;
+    procedure RemoveQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion); virtual; abstract;
 
-    procedure CopyQuestion(const AType: string; AQuestion: TFibbageQuestion); virtual; abstract;
-    procedure MoveQuestion(const ASrcType, ADstType: string; AQuestion: TFibbageQuestion); virtual; abstract;
+    procedure CopyQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion); virtual; abstract;
+    procedure MoveQuestion(ASrcType, ADstType: TTypePreview; AQuestion: TFibbageQuestion); virtual; abstract;
 
-    function GetEditableTypes: TPreviewTypes; virtual; abstract;
-    procedure ForEachQuestion(const AType: string; AProc: TProc<TFibbageQuestion>); virtual; abstract;
+    procedure ForEachQuestion(AType: TTypePreview; AProc: TProc<TFibbageQuestion>); virtual; abstract;
 
-    function HasDuplicatedCategory(const AType: string; AQuestion: TFibbageQuestion): Boolean; overload; virtual; abstract;
-    function HasTooFewSuggestions(const AType: string; AQuestion: TFibbageQuestion): Boolean; virtual; abstract;
-    function HasMissingBlank(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean; overload; virtual; abstract;
-    function HasTooFewQuestions(const AType: string): Boolean; virtual; abstract;
+    function HasDuplicatedCategory(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; overload; virtual; abstract;
+    function HasTooFewSuggestions(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; virtual; abstract;
+    function HasMissingBlank(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; overload; virtual; abstract;
+    function HasTooFewQuestions(AType: TTypePreview): Boolean; virtual; abstract;
+
+    property EditableTypes: TPreviewTypes read GetEditableTypes;
   end;
 
 implementation
@@ -58,13 +67,32 @@ destructor TFibbageContent.Destroy;
 begin
   if Assigned(FConfiguration) and FConfiguration.ImportedContent then
     FConfiguration.Free;
+  FEditableTypes.Free;
   FFilesReader.Free;
   inherited;
+end;
+
+function TFibbageContent.GetEditableTypes: TPreviewTypes;
+begin
+  if FEditableTypes = nil then
+    FEditableTypes := DoGetEditableTypes;
+  Result := FEditableTypes;
 end;
 
 function TFibbageContent.Initialize: Boolean;
 begin
   Result := DoInitialize;
+end;
+
+{ TPreviewTypes }
+
+function TPreviewTypes.GetItemWithDisplayText(
+  const ADisplayText: string): TTypePreview;
+begin
+  Result := Default(TTypePreview);
+  for var item in Self do
+    if item.DisplayName = ADisplayText then
+      Exit(item);
 end;
 
 end.

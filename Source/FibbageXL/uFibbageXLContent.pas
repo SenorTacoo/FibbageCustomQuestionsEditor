@@ -23,38 +23,37 @@ type
     procedure SaveManifest(const APath: string);
   protected
     function DoInitialize: Boolean; override;
+    function DoGetEditableTypes: TPreviewTypes; override;
   public
     constructor Create(ACfg: TContentConfiguration);
     destructor Destroy; override;
 
-    function GetEditableTypes: TPreviewTypes; override;
-    procedure ForEachQuestion(const AType: string; AProc: TProc<TFibbageQuestion>); override;
-    function CreateNewQuestion(const AType: string): TFibbageQuestion; override;
-    procedure RemoveQuestion(const AType: string; AQuestion: TFibbageQuestion); override;
+    procedure ForEachQuestion(AType: TTypePreview; AProc: TProc<TFibbageQuestion>); override;
+    function CreateNewQuestion(AType: TTypePreview): TFibbageQuestion; override;
+    procedure RemoveQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion); override;
 
-    procedure CopyQuestion(const AType: string; AQuestion: TFibbageQuestion); override;
-    procedure MoveQuestion(const ASrcType, ADstType: string; AQuestion: TFibbageQuestion); override;
+    procedure CopyQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion); override;
+    procedure MoveQuestion(ASrcType, ADstType: TTypePreview; AQuestion: TFibbageQuestion); override;
 
     procedure Activate(const APath: string); override;
     procedure Save; override;
 
-    function HasDuplicatedCategory(const AType: string; AQuestion: TFibbageQuestion): Boolean; overload; override;
-    function HasTooFewSuggestions(const AType: string; AQuestion: TFibbageQuestion): Boolean; override;
-    function HasMissingBlank(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
-    function HasTooFewQuestions(const AType: string): Boolean; override;
+    function HasDuplicatedCategory(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; overload; override;
+    function HasTooFewSuggestions(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; override;
+    function HasMissingBlank(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
+    function HasTooFewQuestions(AType: TTypePreview): Boolean; override;
   end;
 
 implementation
 
 { TFibbageXLContent }
 
-function TFibbageXLContent.CreateNewQuestion(
-  const AType: string): TFibbageQuestion;
+function TFibbageXLContent.CreateNewQuestion;
 begin
   Result := nil;
-  if AType = FShortieQuestions.GetName then
+  if AType.InternalName = FShortieQuestions.GetName then
     Result := FShortieQuestions.CreateNewQuestion
-  else if AType = FFinalQuestions.GetName then
+  else if AType.InternalName = FFinalQuestions.GetName then
     Result := FFinalQuestions.CreateNewQuestion
   else
     Assert(False);
@@ -89,14 +88,13 @@ begin
   end;
 end;
 
-procedure TFibbageXLContent.CopyQuestion(const AType: string;
-  AQuestion: TFibbageQuestion);
+procedure TFibbageXLContent.CopyQuestion;
 var
   question: TFibbageXLQuestion;
 begin
-  if FShortieQuestions.GetName = AType then
+  if FShortieQuestions.GetName = AType.InternalName then
     question := FShortieQuestions.CreateNewQuestion
-  else if FFinalQuestions.GetName = AType then
+  else if FFinalQuestions.GetName = AType.InternalName then
     question := FFinalQuestions.CreateNewQuestion
   else
   begin
@@ -130,15 +128,14 @@ begin
   Result := True;
 end;
 
-procedure TFibbageXLContent.ForEachQuestion(const AType: string;
-  AProc: TProc<TFibbageQuestion>);
+procedure TFibbageXLContent.ForEachQuestion;
 begin
-  if AType = FShortieQuestions.GetName then
+  if AType.InternalName = FShortieQuestions.GetName then
   begin
     for var idx := 0 to FShortieQuestions.Count - 1 do
       AProc(FShortieQuestions[idx]);
   end
-  else if AType = FFinalQuestions.GetName then
+  else if AType.InternalName = FFinalQuestions.GetName then
   begin
     for var idx := 0 to FFinalQuestions.Count - 1 do
       AProc(FFinalQuestions[idx]);
@@ -147,7 +144,7 @@ begin
     Assert(False);
 end;
 
-function TFibbageXLContent.GetEditableTypes: TPreviewTypes;
+function TFibbageXLContent.DoGetEditableTypes: TPreviewTypes;
 begin
   Result := TPreviewTypes.Create;
   Result.Add(FShortieQuestions.GetTypePreview);
@@ -172,55 +169,55 @@ begin
   end;
 end;
 
-function TFibbageXLContent.HasDuplicatedCategory(const AType: string;
+function TFibbageXLContent.HasDuplicatedCategory(AType: TTypePreview;
   AQuestion: TFibbageQuestion): Boolean;
 begin
   Result := False;
-  if AType = FShortieQuestions.GetName then
+  if AType.InternalName = FShortieQuestions.GetName then
     Result := FShortieQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbageXLQuestion)
-  else if AType = FFinalQuestions.GetName then
+  else if AType.InternalName = FFinalQuestions.GetName then
     Result := FFinalQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbageXLQuestion)
   else
     Assert(False);
 end;
 
-function TFibbageXLContent.HasMissingBlank(const AType: string; AQuestion: TFibbageQuestion; out AError: string): Boolean;
+function TFibbageXLContent.HasMissingBlank(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean;
 begin
   Result := (AQuestion as TFibbageXLQuestion).IsMissingBlank;
 end;
 
-function TFibbageXLContent.HasTooFewQuestions(const AType: string): Boolean;
+function TFibbageXLContent.HasTooFewQuestions(AType: TTypePreview): Boolean;
 const
   MIN_SHORTIE_QUESTIONS_COUNT = 5;
   MIN_FINAL_QUESTIONS_COUNT = 1;
 begin
-  if AType = FShortieQuestions.GetName then
+  Result := False;
+  if AType.InternalName = FShortieQuestions.GetName then
     Result := FShortieQuestions.Count < MIN_SHORTIE_QUESTIONS_COUNT
+  else if AType.InternalName = FFinalQuestions.GetName then
+    Result := FFinalQuestions.Count < MIN_FINAL_QUESTIONS_COUNT
   else
-    Result := FFinalQuestions.Count < MIN_FINAL_QUESTIONS_COUNT;
+    Assert(False);
 end;
 
-function TFibbageXLContent.HasTooFewSuggestions(const AType: string;
-  AQuestion: TFibbageQuestion): Boolean;
+function TFibbageXLContent.HasTooFewSuggestions;
 const
   OPTIMAL_SUGGESTIONS_NR = 17;
 begin
   Result := (AQuestion as TFibbageXLQuestion).SuggestionsCount < OPTIMAL_SUGGESTIONS_NR;
 end;
 
-procedure TFibbageXLContent.MoveQuestion(const ASrcType, ADstType: string;
-  AQuestion: TFibbageQuestion);
+procedure TFibbageXLContent.MoveQuestion;
 begin
   CopyQuestion(ADstType, AQuestion);
   RemoveQuestion(ASrcType, AQuestion);
 end;
 
-procedure TFibbageXLContent.RemoveQuestion(const AType: string;
-  AQuestion: TFibbageQuestion);
+procedure TFibbageXLContent.RemoveQuestion;
 begin
-  if AType = FShortieQuestions.GetName then
+  if AType.InternalName = FShortieQuestions.GetName then
     FShortieQuestions.RemoveQuestion(AQuestion as TFibbageXLQuestion)
-  else if AType = FFinalQuestions.GetName then
+  else if AType.InternalName = FFinalQuestions.GetName then
     FFinalQuestions.RemoveQuestion(AQuestion as TFibbageXLQuestion)
   else
     Assert(False);

@@ -297,7 +297,7 @@ type
 
     FProjectVisItems: TProjectScrollItems;
 
-    FActiveQuestionsType: string;
+    FActiveQuestionsType: TTypePreview;
 
     procedure OnUnhandledException(Sender: TObject; E: Exception);
     procedure GoToQuestionDetails;
@@ -348,10 +348,10 @@ type
     procedure RefreshQuestionsFormActions;
     function IsCategoryDuplicated: Boolean;
 
-    function GetFirstQuestionWithDuplicatedCategory(out AType: string; out AQuestion: TFibbageQuestion): Boolean;
-    function GetFirstQuestionWithTooFewSuggestions(out AType: string; out AQuestion: TFibbageQuestion): Boolean;
-    function GetFirstQuestionWithMissingBlank(out AType: string; out AQuestion: TFibbageQuestion; out AError: string): Boolean;
-    function GetFirstTypeWithTooFewQuestions(out AType: string): Boolean;
+    function GetFirstQuestionWithDuplicatedCategory(out AType: TTypePreview; out AQuestion: TFibbageQuestion): Boolean;
+    function GetFirstQuestionWithTooFewSuggestions(out AType: TTypePreview; out AQuestion: TFibbageQuestion): Boolean;
+    function GetFirstQuestionWithMissingBlank(out AType: TTypePreview; out AQuestion: TFibbageQuestion; out AError: string): Boolean;
+    function GetFirstTypeWithTooFewQuestions(out AType: TTypePreview): Boolean;
 
     function ShowInfoAboutDuplicatedCategories(const AInfo: string; ACanCancel: Boolean): Boolean;
     function ShowInfoAboutTooFewSuggestions(const AInfo: string; ACanCancel: Boolean): Boolean;
@@ -370,7 +370,7 @@ type
     procedure InsertNewProject(AConfig: TContentConfiguration);
     procedure ShowSimpleInfo(const AInfo: string);
 
-    procedure SetActiveQuestionsType(const AType: string);
+    procedure SetActiveQuestionsType(AType: TTypePreview);
     procedure OnQuestionTypeButtonClick(Sender: TObject);
     procedure OnQuestionItemMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure OnQuestionItemDoubleClick(Sender: TObject);
@@ -589,22 +589,18 @@ procedure TFrmMain.PostContentInitialized;
 begin
   try
     gplQuestions.ControlCollection.Clear;
-    var types := FContent.GetEditableTypes;
-    try
-      for var idx := 0 to types.Count - 1 do
-      begin
-        var button := TButton.Create(Self);
-        button.Parent := gplQuestions;
-        button.Align := TAlignLayout.Client;
-        button.Text := types[idx];
-        button.StaysPressed := True;
-        button.OnClick := OnQuestionTypeButtonClick;
-      end;
-    finally
-      types.Free;
+
+    for var sType in FContent.EditableTypes do
+    begin
+      var button := TButton.Create(Self);
+      button.Parent := gplQuestions;
+      button.Align := TAlignLayout.Client;
+      button.Text := sType.DisplayName;
+      button.StaysPressed := True;
+      button.OnClick := OnQuestionTypeButtonClick;
     end;
 
-    SetActiveQuestionsType((gplQuestions.Controls[0] as TButton).Text);
+    SetActiveQuestionsType(FContent.EditableTypes.First);
 
     if (not FSelectedConfiguration.NewContent) and (not FSelectedConfiguration.ImportedContent) then
       AddLastChoosenProject;
@@ -650,11 +646,8 @@ begin
     Exit;
   if not GetGameType(gameType) then
     Exit;
-  if not GetProjectPath(str) then
-    Exit;
 
   cfg.SetName(str);
-  cfg.SetPath(str);
   cfg.SetGameType(gameType);
   cfg.Save(cfg.GetPath);
 
@@ -857,8 +850,8 @@ var
   path: string;
 begin
   if not ShouldSaveProject then
-    Exit
-  else if not GetDestinationPath(path) then
+    Exit;
+  if not GetDestinationPath(path) then
     Exit;
 
   FSelectedConfiguration.SetPath(path);
@@ -910,116 +903,96 @@ begin
   Result := SelectDirectory('Select "The Jackbox Party Pack 9" directory', '', APath);
 end;
 
-function TFrmMain.GetFirstQuestionWithDuplicatedCategory(out AType: string;
+function TFrmMain.GetFirstQuestionWithDuplicatedCategory(out AType: TTypePreview;
   out AQuestion: TFibbageQuestion): Boolean;
 begin
   Result := False;
-  var types := FContent.GetEditableTypes;
-  try
-    var foundQuestion: TFibbageQuestion := nil;
-    for var idx := 0 to types.Count - 1 do
+  var foundQuestion: TFibbageQuestion := nil;
+  for var sType in FContent.EditableTypes do
+  begin
+    FContent.ForEachQuestion(sType,
+    procedure (AItem: TFibbageQuestion)
     begin
-      FContent.ForEachQuestion(types[idx],
-      procedure (AItem: TFibbageQuestion)
-      begin
-        if Assigned(foundQuestion) then
-          Exit;
-        if FContent.HasDuplicatedCategory(types[idx], AItem) then
-          foundQuestion := AItem;
-      end);
-
       if Assigned(foundQuestion) then
-      begin
-        Result := True;
-        AQuestion := foundQuestion;
-        AType := types[idx];
         Exit;
-      end;
+      if FContent.HasDuplicatedCategory(sType, AItem) then
+        foundQuestion := AItem;
+    end);
+
+    if Assigned(foundQuestion) then
+    begin
+      Result := True;
+      AQuestion := foundQuestion;
+      AType := sType;
+      Exit;
     end;
-  finally
-    types.Free;
   end;
 end;
 
-function TFrmMain.GetFirstQuestionWithMissingBlank(out AType: string;
+function TFrmMain.GetFirstQuestionWithMissingBlank(out AType: TTypePreview;
   out AQuestion: TFibbageQuestion; out AError: string): Boolean;
 begin
   Result := False;
-  var types := FContent.GetEditableTypes;
-  try
-    var foundQuestion: TFibbageQuestion := nil;
-    var error := '';
-    for var idx := 0 to types.Count - 1 do
+  var foundQuestion: TFibbageQuestion := nil;
+  var error := '';
+  for var sType in FContent.EditableTypes do
+  begin
+    FContent.ForEachQuestion(sType,
+    procedure (AItem: TFibbageQuestion)
     begin
-      FContent.ForEachQuestion(types[idx],
-      procedure (AItem: TFibbageQuestion)
-      begin
-        if Assigned(foundQuestion) then
-          Exit;
-        if FContent.HasMissingBlank(types[idx], AItem, error) then
-          foundQuestion := AItem;
-      end);
-
       if Assigned(foundQuestion) then
-      begin
-        Result := True;
-        AQuestion := foundQuestion;
-        AType := types[idx];
-        AError := error;
         Exit;
-      end;
+      if FContent.HasMissingBlank(sType, AItem, error) then
+        foundQuestion := AItem;
+    end);
+
+    if Assigned(foundQuestion) then
+    begin
+      Result := True;
+      AQuestion := foundQuestion;
+      AType := sType;
+      AError := error;
+      Exit;
     end;
-  finally
-    types.Free;
   end;
 end;
 
-function TFrmMain.GetFirstQuestionWithTooFewSuggestions(out AType: string;
+function TFrmMain.GetFirstQuestionWithTooFewSuggestions(out AType: TTypePreview;
   out AQuestion: TFibbageQuestion): Boolean;
 begin
   Result := False;
-  var types := FContent.GetEditableTypes;
-  try
-    var foundQuestion: TFibbageQuestion := nil;
-    for var idx := 0 to types.Count - 1 do
-    begin
-      FContent.ForEachQuestion(types[idx],
+  var foundQuestion: TFibbageQuestion := nil;
+  for var sType in FContent.EditableTypes do
+  begin
+    FContent.ForEachQuestion(sType,
       procedure (AItem: TFibbageQuestion)
       begin
         if Assigned(foundQuestion) then
           Exit;
-        if FContent.HasTooFewSuggestions(types[idx], AItem) then
+        if FContent.HasTooFewSuggestions(sType, AItem) then
           foundQuestion := AItem;
       end);
 
-      if Assigned(foundQuestion) then
-      begin
-        Result := True;
-        AQuestion := foundQuestion;
-        AType := types[idx];
-        Exit;
-      end;
+    if Assigned(foundQuestion) then
+    begin
+      Result := True;
+      AQuestion := foundQuestion;
+      AType := sType;
+      Exit;
     end;
-  finally
-    types.Free;
   end;
 end;
 
-function TFrmMain.GetFirstTypeWithTooFewQuestions(out AType: string): Boolean;
+function TFrmMain.GetFirstTypeWithTooFewQuestions(out AType: TTypePreview): Boolean;
 begin
   Result := False;
-  var types := FContent.GetEditableTypes;
-  try
-    for var idx := 0 to types.Count - 1 do
-    begin
-      if not FContent.HasTooFewQuestions(types[idx]) then
-        Continue;
+  for var sType in FContent.EditableTypes do
+  begin
+    if not FContent.HasTooFewQuestions(sType) then
+      Continue;
 
-      AType := types[idx];
-      Exit(True);
-    end;
-  finally
-    types.Free;
+    AType := sType;
+    Exit(True);
   end;
 end;
 
@@ -1031,7 +1004,7 @@ end;
 function TFrmMain.CheckForDuplicatedCategoriesPreSave: Boolean;
 var
   question: TFibbageQuestion;
-  qType: string;
+  qType: TTypePreview;
 begin
   Result := True;
   if TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories and GetFirstQuestionWithDuplicatedCategory(qType, question) then
@@ -1048,7 +1021,7 @@ end;
 
 function TFrmMain.CheckForMissingBlanks: Boolean;
 var
-  qType: string;
+  qType: TTypePreview;
   question: TFibbageQuestion;
   error: string;
 begin
@@ -1067,7 +1040,7 @@ end;
 
 function TFrmMain.CheckForTooFewQuestions: Boolean;
 var
-  qType: string;
+  qType: TTypePreview;
 begin
   Result := True;
 
@@ -1083,7 +1056,7 @@ end;
 
 function TFrmMain.CheckForTooFewSuggestions: Boolean;
 var
-  qType: string;
+  qType: TTypePreview;
   question: TFibbageQuestion;
 begin
   Result := True;
@@ -1115,9 +1088,17 @@ begin
 end;
 
 procedure TFrmMain.aSaveProjectExecute(Sender: TObject);
+var
+  path: string;
 begin
   if not ShouldSaveProject then
     Exit;
+
+  if FSelectedConfiguration.NewContent and FSelectedConfiguration.GetPath.IsEmpty then
+    if GetDestinationPath(path) then
+      FSelectedConfiguration.SetPath(path)
+    else
+      Exit;
 
   TAsyncAction.Create(OnPreSave, OnPostSave, SaveProc).Start;
 end;
@@ -1337,7 +1318,9 @@ begin
   if not (Sender is TMenuItem) then
     Exit;
 
-  var destType := (Sender as TMenuItem).Text;
+  var destType := FContent.EditableTypes.GetItemWithDisplayText((Sender as TMenuItem).Text);
+
+
   for var idx := 0 to FQuestionVisItems.Count - 1 do
   begin
     if not FQuestionVisItems[idx].Selected then
@@ -1354,7 +1337,7 @@ begin
 
   sbxQuestions.BeginUpdate;
   try
-    var destType := (Sender as TMenuItem).Text;
+    var destType := FContent.EditableTypes.GetItemWithDisplayText((Sender as TMenuItem).Text);
     for var idx := FQuestionVisItems.Count - 1 downto 0 do
     begin
       if not FQuestionVisItems[idx].Selected then
@@ -1603,7 +1586,8 @@ end;
 
 procedure TFrmMain.OnQuestionTypeButtonClick(Sender: TObject);
 begin
-  SetActiveQuestionsType((Sender as TButton).Text);
+  var qType := FContent.EditableTypes.GetItemWithDisplayText((Sender as TButton).Text);
+  SetActiveQuestionsType(qType);
 end;
 
 procedure TFrmMain.OnUnhandledException(Sender: TObject; E: Exception);
@@ -1827,25 +1811,20 @@ begin
     FreeAndNil(item);
   end;
 
-  var types := FContent.GetEditableTypes;
-  try
-    for var idx := 0 to types.Count - 1 do
-    begin
-      if types[idx] = FActiveQuestionsType then
-        Continue;
+  for var sType in FContent.EditableTypes do
+  begin
+    if sType.InternalName = FActiveQuestionsType.InternalName then
+      Continue;
 
-      var copyItem := TMenuItem.Create(Self);
-      copyItem.Text := types[idx];
-      copyItem.OnClick := OnCopyQuestionTo;
-      miCopyTo.AddObject(copyItem);
+    var copyItem := TMenuItem.Create(Self);
+    copyItem.Text := sType.DisplayName;
+    copyItem.OnClick := OnCopyQuestionTo;
+    miCopyTo.AddObject(copyItem);
 
-      var moveItem := TMenuItem.Create(Self);
-      moveItem.Text := types[idx];
-      moveItem.OnClick := OnMoveQuestionTo;
-      miMoveTo.AddObject(moveItem);
-    end;
-  finally
-    types.Free;
+    var moveItem := TMenuItem.Create(Self);
+    moveItem.Text := sType.DisplayName;
+    moveItem.OnClick := OnMoveQuestionTo;
+    miMoveTo.AddObject(moveItem);
   end;
 end;
 
@@ -2081,7 +2060,7 @@ begin
   sDarkModeOptions.IsChecked := not sDarkModeOptions.IsChecked;
 end;
 
-procedure TFrmMain.SetActiveQuestionsType(const AType: string);
+procedure TFrmMain.SetActiveQuestionsType(AType: TTypePreview);
 begin
   FActiveQuestionsType := AType;
   UpdateMoveCopyOptions;
@@ -2106,7 +2085,7 @@ procedure TFrmMain.SetButtonPressed;
 begin
   for var item in gplQuestions.Controls do
     if item is TButton then
-      (item as TButton).IsPressed := (item as TButton).Text = FActiveQuestionsType;
+      (item as TButton).IsPressed := (item as TButton).Text = FActiveQuestionsType.DisplayName;
 end;
 
 procedure TFrmMain.SetDarkMode(AEnabled: Boolean);
