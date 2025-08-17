@@ -23,7 +23,9 @@ uses
   uFibbageJSONWriter in '..\Source\uFibbageJSONWriter.pas',
   uFibbageXLQuestions in '..\Source\FibbageXL\uFibbageXLQuestions.pas',
   TestuFibbage3 in 'TestuFibbage3.pas',
-  uFibbage3Questions in '..\Source\JackboxPartyPack4\uFibbage3Questions.pas';
+  uFibbage3Questions in '..\Source\JackboxPartyPack4\uFibbage3Questions.pas',
+  TestuFibbage2 in 'TestuFibbage2.pas',
+  uFibbage2Questions in '..\Source\JackboxPartyPack2\uFibbage2Questions.pas';
 
 begin
 {$IFDEF TESTINSIGHT}

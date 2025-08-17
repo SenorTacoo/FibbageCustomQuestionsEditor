@@ -1,4 +1,4 @@
-unit uFibbageXLPartyPack1Questions;
+unit uFibbage2Questions;
 
 interface
 
@@ -15,18 +15,21 @@ uses
   uFibbageJSONWriter,
   uFibbageFilesReader;
 
+
 type
-  TFibbageXLPartyPack1Question = class(TFibbageQuestion)
+  TFibbage2Question = class(TFibbageQuestion)
   private
     FId: UInt32;
     FCategory: string;
-    FQuestionAudio: TFibbageAudioEntry;
+    FFamilyFriendly: Boolean;
+    FBumperAudio: TFibbageAudioEntry;
+    FBumperType: string;
     FCorrectAudio: TFibbageAudioEntry;
+    FQuestionAudio: TFibbageAudioEntry;
     FSuggestions: TArray<string>;
     FCorrectText: string;
-    FStamp: string;
-    FAlternateSpellings: TArray<string>;
     FQuestionText: string;
+    FAlternateSpellings: TArray<string>;
   protected
     procedure AssignTo(Dest: TPersistent); override;
   public
@@ -43,18 +46,16 @@ type
     property Category: string read FCategory;
   end;
 
-  TOnGetNextQuestionId = function: UInt32 of object;
-
-  TFibbageXLPartyPack1Questions = class(TFibbageQuestions<TFibbageXLPartyPack1Question>)
+  TFibbage2Questions = class(TFibbageQuestions<TFibbage2Question>)
   strict private type
     TCategory = class
     private
+      FX: Boolean;
       FId: UInt32;
     end;
     TCategories = class
     private
-      FQuestions: TArray<TCategory>;
-      FEpisodeId: UInt32;
+      FContent: TArray<TCategory>;
     public
       destructor Destroy; override;
     end;
@@ -72,40 +73,33 @@ type
   strict private const
     OPTIMAL_SUGGESTIONS_COUNT = 17;
   private
-    FEpisodeId: UInt32;
-    FOnGetNextQuestionId: TOnGetNextQuestionId;
-
     function GetNextRandomId: UInt32;
 
     procedure SaveAudioFile(const ABasePath: string; AEntry: TFibbageAudioEntry);
     procedure DoParseItem(AItem: TQuestionData);
   protected
+    procedure DoInitialize; override;
     procedure DoSaveCategory; override;
     procedure DoSaveQuestions; override;
-    procedure DoInitialize; override;
   public
     function GetCategoriesJSON: string;
 
-    function CreateNewQuestion: TFibbageXLPartyPack1Question; override;
-    procedure RemoveQuestion(AQuestion: TFibbageXLPartyPack1Question); override;
+    function CreateNewQuestion: TFibbage2Question; override;
+    procedure RemoveQuestion(AQuestion: TFibbage2Question); override;
 
-    function HasQuestionWithTheSameCategory(AQuestion: TFibbageXLPartyPack1Question): Boolean;
-    function GetFirstQuestionWithDuplicatedCategory: TFibbageXLPartyPack1Question; override;
-    function GetFirstQuestionWithTooFewSuggestions: TFibbageXLPartyPack1Question; override;
-    function GetFirstQuestionWithMissingSpecialEntry: TFibbageXLPartyPack1Question; override;
-
-    function GetFirstQuestionWithId(AId: UInt32): TFibbageXLPartyPack1Question;
-
-    property OnGetNextQuestionId: TOnGetNextQuestionId read FOnGetNextQuestionId write FOnGetNextQuestionId;
+    function HasQuestionWithTheSameCategory(AQuestion: TFibbage2Question): Boolean;
+    function GetFirstQuestionWithDuplicatedCategory: TFibbage2Question; override;
+    function GetFirstQuestionWithTooFewSuggestions: TFibbage2Question; override;
+    function GetFirstQuestionWithMissingSpecialEntry: TFibbage2Question; override;
   end;
 
-  TFibbageXLPartyPack1Questions_Shortie = class(TFibbageXLPartyPack1Questions)
+  TFibbage2Questions_Shortie = class(TFibbage2Questions)
   public
     function GetName: string; override;
     function GetTypePreview: TTypePreview; override;
   end;
 
-  TFibbageXLPartyPack1Questions_Final = class(TFibbageXLPartyPack1Questions)
+  TFibbage2Questions_Final = class(TFibbage2Questions)
   public
     function GetName: string; override;
     function GetTypePreview: TTypePreview; override;
@@ -113,18 +107,18 @@ type
 
 implementation
 
-{ TFibbageXLPartyPack1Questions }
+{ TFibbage2Questions }
 
-function TFibbageXLPartyPack1Questions.CreateNewQuestion: TFibbageXLPartyPack1Question;
+function TFibbage2Questions.CreateNewQuestion: TFibbage2Question;
 begin
-  Result := TFibbageXLPartyPack1Question.Create;
+  Result := TFibbage2Question.Create;
   Result.FId := GetNextRandomId;
   FList.Add(Result);
 end;
 
-procedure TFibbageXLPartyPack1Questions.DoInitialize;
+procedure TFibbage2Questions.DoInitialize;
 begin
-  var item := FReader.ReadWithCustomQuestionsDir(GetName, 'questions');
+  var item := FReader.Read(GetName);
   try
     DoParseItem(item);
   finally
@@ -132,36 +126,41 @@ begin
   end;
 end;
 
-procedure TFibbageXLPartyPack1Questions.DoParseItem(AItem: TQuestionData);
+procedure TFibbage2Questions.DoParseItem(AItem: TQuestionData);
 begin
   var rawCategory := TJson.JsonToObject<TCategories>(AItem.CategoryData);
   try
-    FEpisodeId := rawCategory.FEpisodeId;
-    for var idx := 0 to Length(rawCategory.FQuestions) - 1 do
+    for var idx := 0 to Length(rawCategory.FContent) - 1 do
     begin
-      if not AItem.QuestionData.ContainsKey(rawCategory.FQuestions[idx].FId.ToString) then
+      if not AItem.QuestionData.ContainsKey(rawCategory.FContent[idx].FId.ToString) then
         Continue;
 
-      var newItem: TFibbageXLPartyPack1Question := nil;
-      var rawQuestion := TJson.JsonToObject<TQuestions>(AItem.QuestionData[rawCategory.FQuestions[idx].FId.ToString]);
+      var newItem: TFibbage2Question := nil;
+      var rawQuestion := TJson.JsonToObject<TQuestions>(AItem.QuestionData[rawCategory.FContent[idx].FId.ToString]);
       try
-        newItem := TFibbageXLPartyPack1Question.Create;
-        newItem.FId := rawCategory.FQuestions[idx].FId;
+        newItem := TFibbage2Question.Create;
+        newItem.FId := rawCategory.FContent[idx].FId;
         newItem.FCategory := rawQuestion.GetValue('Category');
+        newItem.FFamilyFriendly := not rawCategory.FContent[idx].FX;
+
+        newItem.FBumperAudio.Name := rawQuestion.GetValue('BumperAudio');
+        newItem.FBumperAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
+        ClearAudioEntryIfNotExistingFile(@newItem.FBumperAudio);
+
+        newItem.FBumperType := rawQuestion.GetValue('BumperType');
 
         newItem.FCorrectAudio.Name := rawQuestion.GetValue('CorrectAudio');
-        newItem.FCorrectAudio.BasePath := TPath.Combine(FReader.BasePath, 'questions', UIntToStr(rawCategory.FQuestions[idx].FId));
+        newItem.FCorrectAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
         ClearAudioEntryIfNotExistingFile(@newItem.FCorrectAudio);
 
         newItem.FQuestionAudio.Name := rawQuestion.GetValue('QuestionAudio');
-        newItem.FQuestionAudio.BasePath := TPath.Combine(FReader.BasePath, 'questions', UIntToStr(rawCategory.FQuestions[idx].FId));
+        newItem.FQuestionAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
         ClearAudioEntryIfNotExistingFile(@newItem.FQuestionAudio);
 
         newItem.FSuggestions := rawQuestion.GetValue('Suggestions').Split([',']);
         newItem.FCorrectText := rawQuestion.GetValue('CorrectText');
         newItem.FQuestionText := rawQuestion.GetValue('QuestionText');
         newItem.FAlternateSpellings := rawQuestion.GetValue('AlternateSpellings').Split([',']);
-        newItem.FStamp := rawQuestion.GetValue('Stamp');
 
         FList.Add(newItem);
         newItem := nil;
@@ -175,7 +174,7 @@ begin
   end;
 end;
 
-procedure TFibbageXLPartyPack1Questions.DoSaveCategory;
+procedure TFibbage2Questions.DoSaveCategory;
 begin
   var filePath := TPath.Combine(FSavePath, Format('%s.jet', [GetName]));
   var fs := TFileStream.Create(filePath, fmCreate);
@@ -186,23 +185,13 @@ begin
   finally
     sw.Free;
   end;
-
-  filePath := TPath.Combine(FSavePath, Format('demo%s.jet', [GetName]));
-  fs := TFileStream.Create(filePath, fmCreate);
-  sw := TStreamWriter.Create(fs);
-  try
-    sw.OwnStream;
-    sw.Write(GetCategoriesJSON);
-  finally
-    sw.Free;
-  end;
 end;
 
-procedure TFibbageXLPartyPack1Questions.DoSaveQuestions;
+procedure TFibbage2Questions.DoSaveQuestions;
 begin
   for var item in FList do
   begin
-    var basePath := TPath.Combine(FSavePath, 'questions', UIntToStr(item.FId));
+    var basePath := TPath.Combine(FSavePath, GetName, UIntToStr(item.FId));
     ForceDirectories(basePath);
     var filePath := TPath.Combine(basePath, 'data.jet');
     var fs := TFileStream.Create(filePath, fmCreate);
@@ -214,6 +203,9 @@ begin
       sw.Free;
     end;
 
+    if not item.FBumperAudio.Name.IsEmpty then
+      SaveAudioFile(basePath, item.FBumperAudio);
+
     if not item.FCorrectAudio.Name.IsEmpty then
       SaveAudioFile(basePath, item.FCorrectAudio);
 
@@ -222,21 +214,20 @@ begin
   end;
 end;
 
-function TFibbageXLPartyPack1Questions.GetCategoriesJSON: string;
+function TFibbage2Questions.GetCategoriesJSON: string;
 begin
   var builder := TFibbageJSONBuilder.Create;
   try
-    var contentArr :=
-      builder
-        .BeginObject
-          .Add('episodeid', IfThen(FEpisodeId = 0, 1210, FEpisodeId))
-          .BeginArray('questions');
+    var contentArr := builder.BeginObject
+      .BeginArray('content');
 
     for var question in FList do
     begin
       contentArr.BeginObject
+        .Add('x', not question.FFamilyFriendly)
         .Add('id', question.FId)
         .Add('category', question.FCategory)
+        .Add('bumper', question.FBumperAudio.Name)
       .EndObject;
     end;
 
@@ -248,7 +239,7 @@ begin
   end;
 end;
 
-function TFibbageXLPartyPack1Questions.GetFirstQuestionWithDuplicatedCategory: TFibbageXLPartyPack1Question;
+function TFibbage2Questions.GetFirstQuestionWithDuplicatedCategory: TFibbage2Question;
 begin
   Result := nil;
   for var idx := 0 to FList.Count - 2 do
@@ -257,16 +248,7 @@ begin
         Exit(FList[idx]);
 end;
 
-function TFibbageXLPartyPack1Questions.GetFirstQuestionWithId(
-  AId: UInt32): TFibbageXLPartyPack1Question;
-begin
-  Result := nil;
-  for var idx := 0 to FList.Count - 1 do
-    if not FList[idx].FId = AId then
-      Exit(FList[idx]);
-end;
-
-function TFibbageXLPartyPack1Questions.GetFirstQuestionWithMissingSpecialEntry: TFibbageXLPartyPack1Question;
+function TFibbage2Questions.GetFirstQuestionWithMissingSpecialEntry: TFibbage2Question;
 var
   dummy: string;
 begin
@@ -276,7 +258,7 @@ begin
       Exit(FList[idx]);
 end;
 
-function TFibbageXLPartyPack1Questions.GetFirstQuestionWithTooFewSuggestions: TFibbageXLPartyPack1Question;
+function TFibbage2Questions.GetFirstQuestionWithTooFewSuggestions: TFibbage2Question;
 begin
   Result := nil;
   for var idx := 0 to FList.Count - 1 do
@@ -284,13 +266,24 @@ begin
       Exit(FList[idx]);
 end;
 
-function TFibbageXLPartyPack1Questions.GetNextRandomId: UInt32;
+function TFibbage2Questions.GetNextRandomId: UInt32;
+var
+  found: Boolean;
 begin
-  Result := FOnGetNextQuestionId;
+  repeat
+    found := False;
+    Result := RandomRange(30000, 50000);
+    for var item in FList do
+      if item.FId = Result then
+      begin
+        found := True;
+        Break;
+      end;
+  until not found;
 end;
 
-function TFibbageXLPartyPack1Questions.HasQuestionWithTheSameCategory(
-  AQuestion: TFibbageXLPartyPack1Question): Boolean;
+function TFibbage2Questions.HasQuestionWithTheSameCategory(
+  AQuestion: TFibbage2Question): Boolean;
 begin
   Result := False;
   for var item in FList do
@@ -302,12 +295,12 @@ begin
   end;
 end;
 
-procedure TFibbageXLPartyPack1Questions.RemoveQuestion(AQuestion: TFibbageXLPartyPack1Question);
+procedure TFibbage2Questions.RemoveQuestion(AQuestion: TFibbage2Question);
 begin
   FList.Remove(AQuestion);
 end;
 
-procedure TFibbageXLPartyPack1Questions.SaveAudioFile(const ABasePath: string; AEntry: TFibbageAudioEntry);
+procedure TFibbage2Questions.SaveAudioFile(const ABasePath: string; AEntry: TFibbageAudioEntry);
 begin
   var srcPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.ogg');
   var dstPath := TPath.Combine(ABasePath, AEntry.Name + '.ogg');
@@ -321,19 +314,19 @@ begin
     TFile.Copy(srcPath, dstPath);
 end;
 
-{ TFibbageXLPartyPack1Questions.TCategories }
+{ TFibbage2Questions.TCategories }
 
-destructor TFibbageXLPartyPack1Questions.TCategories.Destroy;
+destructor TFibbage2Questions.TCategories.Destroy;
 begin
-  for var idx := Length(FQuestions) - 1 downto 0 do
-    FQuestions[idx].Free;
-  SetLength(FQuestions, 0);
+  for var idx := Length(FContent) - 1 downto 0 do
+    FContent[idx].Free;
+  SetLength(FContent, 0);
   inherited;
 end;
 
-{ TFibbageXLPartyPack1Questions.TQuestions }
+{ TFibbage2Questions.TQuestions }
 
-destructor TFibbageXLPartyPack1Questions.TQuestions.Destroy;
+destructor TFibbage2Questions.TQuestions.Destroy;
 begin
   for var idx := Length(FFields) - 1 downto 0 do
     FFields[idx].Free;
@@ -341,7 +334,7 @@ begin
   inherited;
 end;
 
-function TFibbageXLPartyPack1Questions.TQuestions.GetValue(const AName: string): string;
+function TFibbage2Questions.TQuestions.GetValue(const AName: string): string;
 begin
   Result := '';
   for var idx := 0 to Length(FFields) - 1 do
@@ -349,20 +342,23 @@ begin
       Exit(FFields[idx].FV);
 end;
 
-{ TFibbageXLPartyPack1Question }
+{ TFibbage2Question }
 
-procedure TFibbageXLPartyPack1Question.AssignTo(Dest: TPersistent);
+procedure TFibbage2Question.AssignTo(Dest: TPersistent);
 begin
-  if not (Dest is TFibbageXLPartyPack1Question) then
+  if not (Dest is TFibbage2Question) then
   begin
     Assert(False);
     Exit;
   end;
 
-  var destQuestion := Dest as TFibbageXLPartyPack1Question;
+  var destQuestion := Dest as TFibbage2Question;
 
   {destQuestion.FId := FId;}
   destQuestion.FCategory := FCategory;
+  destQuestion.FFamilyFriendly := FFamilyFriendly;
+  destQuestion.FBumperAudio := FBumperAudio;
+  destQuestion.FBumperType := FBumperType;
   destQuestion.FCorrectAudio.BasePath := FCorrectAudio.BasePath;
   destQuestion.FCorrectAudio.Name := FCorrectAudio.Name;
   destQuestion.FQuestionAudio.BasePath := FQuestionAudio.BasePath;
@@ -371,20 +367,19 @@ begin
   destQuestion.FCorrectText := FCorrectText;
   destQuestion.FQuestionText := FQuestionText;
   destQuestion.FAlternateSpellings := FAlternateSpellings;
-  destQuestion.FStamp := FStamp;
 end;
 
-constructor TFibbageXLPartyPack1Question.Create;
+constructor TFibbage2Question.Create;
 begin
   inherited Create;
 end;
 
-destructor TFibbageXLPartyPack1Question.Destroy;
+destructor TFibbage2Question.Destroy;
 begin
   inherited;
 end;
 
-function TFibbageXLPartyPack1Question.GetEditableFields: TEditableFields;
+function TFibbage2Question.GetEditableFields: TEditableFields;
 begin
   Result := TEditableFields.Create;
 
@@ -413,6 +408,11 @@ begin
   strLongItem.Value := string.Join(', ', FSuggestions);
   Result.Add(strLongItem);
 
+  var boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'Family Friendly';
+  boolItem.Value := FFamilyFriendly;
+  Result.Add(boolItem);
+
   var audioItem := TEditableAudioField.Create;
   audioItem.Name := 'Question Audio';
   audioItem.Value := FQuestionAudio.Name;
@@ -426,7 +426,7 @@ begin
   Result.Add(audioItem);
 end;
 
-function TFibbageXLPartyPack1Question.GetJSON: string;
+function TFibbage2Question.GetJSON: string;
 begin
   var builder := TFibbageJSONBuilder.Create;
   try
@@ -434,56 +434,74 @@ begin
 
     fields
       .BeginObject
-        .Add('v', BoolToStr(not FQuestionAudio.Name.IsEmpty, True).ToLowerInvariant)
         .Add('t', 'B')
-        .Add('n', 'HasQuestionAudio')
+        .Add('v', BoolToStr(not FBumperAudio.Name.IsEmpty, True).ToLowerInvariant)
+        .Add('n', 'HasBumperAudio')
       .EndObject
       .BeginObject
-        .Add('v', BoolToStr(not FCorrectAudio.Name.IsEmpty, True).ToLowerInvariant)
         .Add('t', 'B')
+        .Add('v', BoolToStr((not FBumperType.IsEmpty) and (FBumperType <> 'None'), True).ToLowerInvariant)
+        .Add('n', 'HasBumperType')
+      .EndObject
+      .BeginObject
+        .Add('t', 'B')
+        .Add('v', BoolToStr(not FCorrectAudio.Name.IsEmpty, True).ToLowerInvariant)
         .Add('n', 'HasCorrectAudio')
       .EndObject
       .BeginObject
-        .Add('v', string.Join(',', FSuggestions))
+        .Add('t', 'B')
+        .Add('v', BoolToStr(not FQuestionAudio.Name.IsEmpty, True).ToLowerInvariant)
+        .Add('n', 'HasQuestionAudio')
+      .EndObject
+      .BeginObject
         .Add('t', 'S')
+        .Add('v', string.Join(',', FSuggestions))
         .Add('n', 'Suggestions')
       .EndObject
       .BeginObject
-        .Add('v', FCategory)
         .Add('t', 'S')
+        .Add('v', FCategory)
         .Add('n', 'Category')
       .EndObject
       .BeginObject
-        .Add('v', FCorrectText)
         .Add('t', 'S')
+        .Add('v', FCorrectText)
         .Add('n', 'CorrectText')
       .EndObject
       .BeginObject
-        .Add('v', FStamp)
         .Add('t', 'S')
-        .Add('n', 'Stamp')
+        .Add('v', IfThen(FBumperType.IsEmpty, 'None', FBumperType))
+        .Add('n', 'BumperType')
       .EndObject
       .BeginObject
-        .Add('v', string.Join(',', FAlternateSpellings))
         .Add('t', 'S')
-        .Add('n', 'AlternateSpellings')
-      .EndObject
-      .BeginObject
         .Add('v', FQuestionText)
-        .Add('t', 'S')
         .Add('n', 'QuestionText')
       .EndObject
       .BeginObject
-        .Add('v', FQuestionAudio.Name)
-        .Add('t', 'A')
-        .Add('n', 'QuestionAudio')
+        .Add('t', 'S')
+        .Add('v', string.Join(',', FAlternateSpellings))
+        .Add('n', 'AlternateSpellings')
+      .EndObject;
+
+      var bumperAudio := fields.BeginObject;
+        bumperAudio.Add('t', 'A');
+        if not FBumperAudio.Name.IsEmpty then
+          bumperAudio.Add('v', FBumperAudio.Name);
+        bumperAudio.Add('n', 'BumperAudio')
+
       .EndObject
       .BeginObject
-        .Add('v', FCorrectAudio.Name)
         .Add('t', 'A')
+        .Add('v', FCorrectAudio.Name)
         .Add('n', 'CorrectAudio')
       .EndObject
-      .EndArray
+      .BeginObject
+        .Add('t', 'A')
+        .Add('v', FQuestionAudio.Name)
+        .Add('n', 'QuestionAudio')
+      .EndObject
+    .EndArray
     .EndObject;
 
     Result := builder.Build;
@@ -492,64 +510,65 @@ begin
   end;
 end;
 
-function TFibbageXLPartyPack1Question.GetPreview: TQuestionPreview;
+function TFibbage2Question.GetPreview: TQuestionPreview;
 begin
   Result := Default(TQuestionPreview);
   Result.Header := Format('Id: %d, Category: %s', [FId, FCategory]);
   Result.Question := FQuestionText;
 end;
 
-function TFibbageXLPartyPack1Question.IsMissingSpecialEntry(out AError: string): Boolean;
+function TFibbage2Question.IsMissingSpecialEntry(out AError: string): Boolean;
 const
   BLANK = '<BLANK>';
 begin
   Result := False;
   if not FQuestionText.Contains(BLANK) then
   begin
-    Result := False;
+    Result := True;
     AError := 'Question is missing <BLANK>';
   end;
 end;
 
-procedure TFibbageXLPartyPack1Question.SetEditableFields(AFields: TEditableFields);
+procedure TFibbage2Question.SetEditableFields(AFields: TEditableFields);
 begin
   FCategory := (AFields[0] as TEditableStringField).Value;
   FQuestionText := (AFields[1] as TEditableLongStringField).Value;
   FCorrectText := (AFields[2] as TEditableStringField).Value;
   FAlternateSpellings := (AFields[3] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
   FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
-  FQuestionAudio.Name := (AFields[5] as TEditableAudioField).Value;
-  FQuestionAudio.BasePath := (AFields[5] as TEditableAudioField).BasePath;
-  FCorrectAudio.Name := (AFields[6] as TEditableAudioField).Value;
-  FCorrectAudio.BasePath := (AFields[6] as TEditableAudioField).BasePath;
+  FFamilyFriendly := (AFields[5] as TEditableBoolField).Value;
+  FQuestionAudio.Name := (AFields[6] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[6] as TEditableAudioField).BasePath;
+  FCorrectAudio.Name := (AFields[7] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[7] as TEditableAudioField).BasePath;
 end;
 
-function TFibbageXLPartyPack1Question.SuggestionsCount: Int32;
+function TFibbage2Question.SuggestionsCount: Int32;
 begin
   Result := Length(FSuggestions);
 end;
 
-{ TFibbageXLPartyPack1Questions_Shortie }
+{ TFibbage2Questions_Shortie }
 
-function TFibbageXLPartyPack1Questions_Shortie.GetName: string;
+function TFibbage2Questions_Shortie.GetName: string;
 begin
-  Result := 'shortie';
+  Result := 'fibbageshortie';
 end;
 
-function TFibbageXLPartyPack1Questions_Shortie.GetTypePreview: TTypePreview;
+function TFibbage2Questions_Shortie.GetTypePreview: TTypePreview;
 begin
   Result.InternalName := GetName;
   Result.DisplayName := 'Round 1 + Round 2';
 end;
 
-{ TFibbageXLPartyPack1Questions_Final }
+{ TFibbage2Questions_Final }
 
-function TFibbageXLPartyPack1Questions_Final.GetName: string;
+function TFibbage2Questions_Final.GetName: string;
 begin
   Result := 'finalfibbage';
 end;
 
-function TFibbageXLPartyPack1Questions_Final.GetTypePreview: TTypePreview;
+function TFibbage2Questions_Final.GetTypePreview: TTypePreview;
 begin
   Result.InternalName := GetName;
   Result.DisplayName := 'Round 3';

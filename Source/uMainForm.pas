@@ -203,13 +203,6 @@ type
     bSettingsFibbageXLPP1Path: TButton;
     lSettingsFibbagePP1Path: TLabel;
     eSettingsFibbageXLPP1Path: TEdit;
-    miMigrate: TMenuItem;
-    miMigrateToFibbageXL: TMenuItem;
-    miMigrateToFibbage3: TMenuItem;
-    aMigrateToFibbageXL: TAction;
-    aMigrateToFibbage3: TAction;
-    MenuItem4: TMenuItem;
-    aMigrateToFibbageXLPartyPack1: TAction;
     aSaveProjectAndInitialize: TAction;
     Layout6: TLayout;
     bSettingsFibbage4PP9Path: TButton;
@@ -229,6 +222,10 @@ type
     miMoveTo: TMenuItem;
     cbShowDialogAboutMissingSpecialEntries: TCheckBox;
     lyTypes: TFlowLayout;
+    Layout8: TLayout;
+    bJackboxPartyPack2Path: TButton;
+    Label1: TLabel;
+    eJackboxPartyPack2Path: TEdit;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -274,6 +271,7 @@ type
     procedure cbAudioInputChange(Sender: TObject);
     procedure frmEditQuestionbSaveQuestionChangesClick(Sender: TObject);
     procedure lyTypesResize(Sender: TObject);
+    procedure bJackboxPartyPack2PathClick(Sender: TObject);
   private
     FAppCreated: Boolean;
     FChangingTab: Boolean;
@@ -337,6 +335,7 @@ type
     function GetJackboxPartyPack1Path(out APath: string): Boolean;
     function GetJackboxPartyPack4Path(out APath: string): Boolean;
     function GetJackboxPartyPack9Path(out APath: string): Boolean;
+    function GetJackboxPartyPack2Path(out APath: string): Boolean;
     procedure OnPostSaveClose;
     procedure OnPostSaveInitialize;
     procedure ProcessKeyDown_Questions(var Key: Word; Shift: TShiftState);
@@ -813,6 +812,7 @@ begin
   TAppConfig.GetInstance.JackboxPartyPack1Path := eSettingsFibbageXLPP1Path.Text;
   TAppConfig.GetInstance.JackboxPartyPack4Path := eSettingsFibbage3PP4Path.Text;
   TAppConfig.GetInstance.JackboxPartyPack9Path := eSettingsFibbage4PP9Path.Text;
+  TAppConfig.GetInstance.JackboxPartyPack2Path := eJackboxPartyPack2Path.Text;
   TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := cbShowCategoryDuplicatedInfo.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := cbShowDialogAboutTooFewSuggestions.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions := cbShowDialogAboutTooFewQuestions.IsChecked;
@@ -897,6 +897,11 @@ end;
 function TFrmMain.GetJackboxPartyPack1Path(out APath: string): Boolean;
 begin
   Result := SelectDirectory('Select "The Jackbox Party Pack" directory', '', APath);
+end;
+
+function TFrmMain.GetJackboxPartyPack2Path(out APath: string): Boolean;
+begin
+  Result := SelectDirectory('Select "The Jackbox Party Pack 2" directory', '', APath);
 end;
 
 function TFrmMain.GetJackboxPartyPack4Path(out APath: string): Boolean;
@@ -1295,6 +1300,14 @@ begin
           else
             Exit;
       end;
+    TGameType.Fibbage2PartyPack2:
+      begin
+        if TAppConfig.GetInstance.JackboxPartyPack2Path.IsEmpty then
+          if GetJackboxPartyPack2Path(path) then
+            TAppConfig.GetInstance.JackboxPartyPack2Path := path
+          else
+            Exit;
+      end;
     TGameType.Fibbage3PartyPack4:
       begin
         if TAppConfig.GetInstance.JackboxPartyPack4Path.IsEmpty then
@@ -1390,6 +1403,8 @@ begin
       destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.JackboxPartyPack4Path, 'games', 'Fibbage3');
     TGameType.Fibbage4PartyPack9:
       destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.JackboxPartyPack9Path, 'games', 'Fibbage4');
+    TGameType.Fibbage2PartyPack2:
+      destPath := System.IOUtils.TPath.Combine(TAppConfig.GetInstance.JackboxPartyPack2Path, 'games', 'Fibbage2');
   end;
 
   try
@@ -1682,10 +1697,6 @@ begin
   aSetProjectAsActive.Visible := selCnt > 0;
   aSetProjectAsActive.Enabled := selCnt = 1;
   MenuItem1.Visible := aOpenInWindowsExplorer.Visible or aSetProjectAsActive.Visible;
-  miMigrate.Enabled := selCnt = 1;
-  aMigrateToFibbageXL.Enabled := miMigrate.Enabled and Assigned(FLastClickedConfigurationToEdit) and (FLastClickedConfiguration.OrgConfiguration.GetGameType <> TGameType.FibbageXL);
-  aMigrateToFibbageXLPartyPack1.Enabled := miMigrate.Enabled and Assigned(FLastClickedConfigurationToEdit) and (FLastClickedConfiguration.OrgConfiguration.GetGameType <> TGameType.FibbageXLPartyPack1);
-  aMigrateToFibbage3.Enabled := miMigrate.Enabled and Assigned(FLastClickedConfigurationToEdit) and (FLastClickedConfiguration.OrgConfiguration.GetGameType <> TGameType.Fibbage3PartyPack4);
 end;
 
 procedure TFrmMain.RefreshQuestionsFormActions;
@@ -1736,6 +1747,16 @@ end;
 procedure TFrmMain.bHomeButtonClick(Sender: TObject);
 begin
   GoToHome;
+end;
+
+procedure TFrmMain.bJackboxPartyPack2PathClick(Sender: TObject);
+var
+  path: string;
+begin
+  if not GetJackboxPartyPack2Path(path) then
+    Exit;
+
+  eJackboxPartyPack2Path.Text := path;
 end;
 
 procedure TFrmMain.bSettingsClick(Sender: TObject);
@@ -1792,6 +1813,7 @@ begin
     eSettingsFibbageXLPP1Path.Text := TAppConfig.GetInstance.JackboxPartyPack1Path;
     eSettingsFibbage3PP4Path.Text := TAppConfig.GetInstance.JackboxPartyPack4Path;
     eSettingsFibbage4PP9Path.Text := TAppConfig.GetInstance.JackboxPartyPack9Path;
+    eJackboxPartyPack2Path.Text := TAppConfig.GetInstance.JackboxPartyPack2Path;
     cbShowCategoryDuplicatedInfo.IsChecked := TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories;
     cbShowDialogAboutTooFewSuggestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions;
     cbShowDialogAboutTooFewQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions;
@@ -2345,7 +2367,7 @@ end;
 
 procedure TProjectScrollItem.RefreshData;
 begin
-  FName.Text := Format('%s (%s)', [FOrgConfiguration.GetName, FOrgConfiguration.GetGameType.ToString]);
+  FName.Text := Format('%s (%s)', [FOrgConfiguration.GetName, FOrgConfiguration.GetGameType.ToUserString]);
   FPath.Text := FOrgConfiguration.GetPath;
 end;
 

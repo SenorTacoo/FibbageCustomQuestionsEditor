@@ -14,9 +14,10 @@ type
 
   TQuestionType = (qtShortie, qtFinal, qtSpecial, qtPersonalShortie, qtUnknown);
 
-  TGameType = (FibbageXL, FibbageXLPartyPack1, Fibbage3PartyPack4, Fibbage4PartyPack9);
+  TGameType = (FibbageXL, FibbageXLPartyPack1, Fibbage2PartyPack2, Fibbage3PartyPack4, Fibbage4PartyPack9);
   TGameTypeHelper = record helper for TGameType
     function ToString: string;
+    function ToUserString: string;
   end;
 
   TOnContentInitialized = procedure of object;
@@ -48,6 +49,17 @@ begin
       Result := Result + Ch
     else
       Result := Result + Format('\u%.4x', [Ord(Ch)]);
+  end;
+end;
+
+function TGameTypeHelper.ToUserString: string;
+begin
+  case Self of
+    FibbageXL: Result := 'FibbageXL';
+    FibbageXLPartyPack1: Result := 'FibbageXL from The Jackbox Party Pack';
+    Fibbage3PartyPack4: Result := 'Fibbage3 from The Jackbox Party Pack 4';
+    Fibbage4PartyPack9: Result := 'Fibbage4 from The Jackbox Party Pack 9';
+    Fibbage2PartyPack2: Result := 'Fibbage2 from The Jackbox Party Pack 2';
   end;
 end;
 

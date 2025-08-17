@@ -115,7 +115,6 @@ type
     function GetNextRandomId: UInt32;
 
     procedure SaveAudioFile(const ABasePath: string; AEntry: TFibbageAudioEntry);
-    procedure ClearAudioEntryIfNotExistingFile(AEntry: TFibbageAudioEntry);
     procedure DoParseItem(AItem: TQuestionData);
   protected
     procedure DoInitialize; override;
@@ -165,17 +164,6 @@ implementation
 
 { TFibbage3Questions }
 
-procedure TFibbage3Questions.ClearAudioEntryIfNotExistingFile(
-  AEntry: TFibbageAudioEntry);
-begin
-  if AEntry.Name = '' then
-    Exit;
-
-  var wantedPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.ogg');
-  if not FReader.FileExists(wantedPath) then
-    AEntry.Name := '';
-end;
-
 procedure TFibbage3Questions.DoInitialize;
 begin
   var item := FReader.Read(GetName);
@@ -208,19 +196,19 @@ begin
 
         newItem.FKeywordAudio.Name := rawQuestion.GetValue('KeywordResponseAudio');
         newItem.FKeywordAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
-        ClearAudioEntryIfNotExistingFile(newItem.FKeywordAudio);
+        ClearAudioEntryIfNotExistingFile(@newItem.FKeywordAudio);
 
         newItem.FBumperAudio.Name := rawQuestion.GetValue('BumperAudio');
         newItem.FBumperAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
-        ClearAudioEntryIfNotExistingFile(newItem.FBumperAudio);
+        ClearAudioEntryIfNotExistingFile(@newItem.FBumperAudio);
 
         newItem.FCorrectAudio.Name := rawQuestion.GetValue('CorrectAudio');
         newItem.FCorrectAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
-        ClearAudioEntryIfNotExistingFile(newItem.FCorrectAudio);
+        ClearAudioEntryIfNotExistingFile(@newItem.FCorrectAudio);
 
         newItem.FQuestionAudio.Name := rawQuestion.GetValue('QuestionAudio');
         newItem.FQuestionAudio.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
-        ClearAudioEntryIfNotExistingFile(newItem.FQuestionAudio);
+        ClearAudioEntryIfNotExistingFile(@newItem.FQuestionAudio);
 
         newItem.FBumperType := rawQuestion.GetValue('BumperType');
         newItem.FSuggestions := rawQuestion.GetValue('Suggestions').Split([',']);

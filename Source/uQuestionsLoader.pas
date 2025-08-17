@@ -6,6 +6,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  System.IOUtils,
   uFibbageFilesReader;
 
 type
@@ -69,6 +70,8 @@ type
     Name: string;
   end;
 
+  PFibbageAudioEntry = ^TFibbageAudioEntry;
+
   TFibbagePicEntry = record
     BasePath: string;
     Name: string;
@@ -85,6 +88,8 @@ type
     procedure DoInitialize; virtual; abstract;
     procedure DoSaveCategory; virtual; abstract;
     procedure DoSaveQuestions; virtual; abstract;
+
+    procedure ClearAudioEntryIfNotExistingFile(AEntry: PFibbageAudioEntry);
   public
     constructor Create;
     destructor Destroy; override;
@@ -112,6 +117,17 @@ type
 implementation
 
 { TFibbageQuestions<T> }
+
+procedure TFibbageQuestions<T>.ClearAudioEntryIfNotExistingFile(
+  AEntry: PFibbageAudioEntry);
+begin
+  if AEntry.Name = '' then
+    Exit;
+
+  var wantedPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.ogg');
+  if not FReader.FileExists(wantedPath) then
+    AEntry.Name := '';
+end;
 
 function TFibbageQuestions<T>.Count: Int32;
 begin

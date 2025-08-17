@@ -8,6 +8,7 @@ uses
   uFibbageContent,
   uFibbage3Content,
   uFibbageXLContent,
+  uFibbage2Content,
   uFibbageXLPartyPack1Content;
 
 type
@@ -28,6 +29,7 @@ begin
     FibbageXL: Result := TFibbageXLContent.Create(AContentConfig);
     FibbageXLPartyPack1: Result := TFibbageXLPartyPack1Content.Create(AContentConfig);
     Fibbage3PartyPack4: Result := TFibbage3Content.Create(AContentConfig);
+    Fibbage2PartyPack2: Result := TFibbage2Content.Create(AContentConfig);
   end;
 end;
 

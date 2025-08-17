@@ -120,6 +120,8 @@
         <DCCReference Include="..\Source\FibbageXL\uFibbageXLQuestions.pas"/>
         <DCCReference Include="TestuFibbage3.pas"/>
         <DCCReference Include="..\Source\JackboxPartyPack4\uFibbage3Questions.pas"/>
+        <DCCReference Include="TestuFibbage2.pas"/>
+        <DCCReference Include="..\Source\JackboxPartyPack2\uFibbage2Questions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

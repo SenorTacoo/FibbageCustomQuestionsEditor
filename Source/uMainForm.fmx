@@ -116966,24 +116966,6 @@ object FrmMain: TFrmMain
       Action = aImportProject
       ImageIndex = -1
     end
-    object miMigrate: TMenuItem
-      Text = 'Migrate project to'
-      object miMigrateToFibbageXL: TMenuItem
-        Action = aMigrateToFibbageXL
-        Locked = True
-        ImageIndex = -1
-      end
-      object MenuItem4: TMenuItem
-        Action = aMigrateToFibbageXLPartyPack1
-        Locked = True
-        ImageIndex = -1
-      end
-      object miMigrateToFibbage3: TMenuItem
-        Action = aMigrateToFibbage3
-        Locked = True
-        ImageIndex = -1
-      end
-    end
     object miAddSeparator: TMenuItem
       Locked = True
       StyleLookup = 'menuseparatorstyle'
@@ -117287,7 +117269,7 @@ object FrmMain: TFrmMain
           Size.Width = 794.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 6
+          TabOrder = 7
           object bSettingsFibbageXLPath: TButton
             Align = Right
             Margins.Left = 5.000000000000000000
@@ -117386,25 +117368,14 @@ object FrmMain: TFrmMain
           Align = Top
           Margins.Left = 10.000000000000000000
           Position.X = 10.000000000000000000
-          Position.Y = 246.000000000000000000
-          Size.Width = 784.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 7
-          Text = 'Show dialog about duplicated categories'
-        end
-        object cbShowDialogAboutTooFewSuggestions: TCheckBox
-          Align = Top
-          Margins.Left = 10.000000000000000000
-          Position.X = 10.000000000000000000
           Position.Y = 296.000000000000000000
           Size.Width = 784.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 8
-          Text = 'Show dialog about too few suggestions'
+          Text = 'Show dialog about duplicated categories'
         end
-        object cbShowDialogAboutTooFewQuestions: TCheckBox
+        object cbShowDialogAboutTooFewSuggestions: TCheckBox
           Align = Top
           Margins.Left = 10.000000000000000000
           Position.X = 10.000000000000000000
@@ -117412,16 +117383,27 @@ object FrmMain: TFrmMain
           Size.Width = 784.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 10
+          TabOrder = 9
+          Text = 'Show dialog about too few suggestions'
+        end
+        object cbShowDialogAboutTooFewQuestions: TCheckBox
+          Align = Top
+          Margins.Left = 10.000000000000000000
+          Position.X = 10.000000000000000000
+          Position.Y = 396.000000000000000000
+          Size.Width = 784.000000000000000000
+          Size.Height = 50.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 11
           Text = 'Show dialog about too few questions'
         end
         object Layout4: TLayout
           Align = Top
-          Position.Y = 146.000000000000000000
+          Position.Y = 196.000000000000000000
           Size.Width = 794.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 5
+          TabOrder = 6
           object bSettingsFibbage3PP4Path: TButton
             Align = Right
             Margins.Left = 5.000000000000000000
@@ -117465,7 +117447,7 @@ object FrmMain: TFrmMain
           Size.Width = 794.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 3
+          TabOrder = 4
           object bSettingsFibbageXLPP1Path: TButton
             Align = Right
             Margins.Left = 5.000000000000000000
@@ -117505,11 +117487,11 @@ object FrmMain: TFrmMain
         end
         object Layout6: TLayout
           Align = Top
-          Position.Y = 196.000000000000000000
+          Position.Y = 246.000000000000000000
           Size.Width = 794.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 4
+          TabOrder = 5
           object bSettingsFibbage4PP9Path: TButton
             Align = Right
             Margins.Left = 5.000000000000000000
@@ -117552,7 +117534,7 @@ object FrmMain: TFrmMain
           Margins.Left = 10.000000000000000000
           Margins.Right = 10.000000000000000000
           Position.X = 10.000000000000000000
-          Position.Y = 446.000000000000000000
+          Position.Y = 496.000000000000000000
           Size.Width = 774.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
@@ -117582,7 +117564,7 @@ object FrmMain: TFrmMain
           Margins.Left = 10.000000000000000000
           Margins.Right = 10.000000000000000000
           Position.X = 10.000000000000000000
-          Position.Y = 496.000000000000000000
+          Position.Y = 546.000000000000000000
           Size.Width = 774.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
@@ -117610,12 +117592,56 @@ object FrmMain: TFrmMain
           Align = Top
           Margins.Left = 10.000000000000000000
           Position.X = 10.000000000000000000
-          Position.Y = 396.000000000000000000
+          Position.Y = 446.000000000000000000
           Size.Width = 784.000000000000000000
           Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 9
+          TabOrder = 10
           Text = 'Show dialog about missing entries (eg. BLANK)'
+        end
+        object Layout8: TLayout
+          Align = Top
+          Position.Y = 146.000000000000000000
+          Size.Width = 794.000000000000000000
+          Size.Height = 50.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 3
+          object bJackboxPartyPack2Path: TButton
+            Align = Right
+            Margins.Left = 5.000000000000000000
+            Margins.Right = 10.000000000000000000
+            Position.X = 738.000000000000000000
+            Position.Y = 2.000000000000000000
+            Size.Width = 46.000000000000000000
+            Size.Height = 46.000000000000000000
+            Size.PlatformDefault = False
+            StyleLookup = 'arrowdowntoolbutton'
+            TabOrder = 2
+            Text = 'Action1'
+            TextSettings.Trimming = None
+            OnClick = bJackboxPartyPack2PathClick
+          end
+          object Label1: TLabel
+            Align = Left
+            AutoSize = True
+            Margins.Left = 10.000000000000000000
+            Position.X = 10.000000000000000000
+            Size.Width = 181.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.WordWrap = False
+            Text = 'Jackbox Party Pack 2 path'
+            TabOrder = 0
+          end
+          object eJackboxPartyPack2Path: TEdit
+            Touch.InteractiveGestures = [LongTap, DoubleTap]
+            Align = Client
+            TabOrder = 1
+            Margins.Left = 10.000000000000000000
+            Size.Width = 532.000000000000000000
+            Size.Height = 32.000000000000000000
+            Size.PlatformDefault = False
+          end
         end
       end
       object tiQuestions: TTabItem
@@ -118037,18 +118063,6 @@ object FrmMain: TFrmMain
     object aSaveProjectAndClose: TAction
       Text = 'aSaveProjectAndClose'
       OnExecute = aSaveProjectAndCloseExecute
-    end
-    object aMigrateToFibbageXL: TAction
-      Category = 'Migration'
-      Text = 'FibbageXL'
-    end
-    object aMigrateToFibbage3: TAction
-      Category = 'Migration'
-      Text = 'Fibbage3'
-    end
-    object aMigrateToFibbageXLPartyPack1: TAction
-      Category = 'Migration'
-      Text = 'FibbageXL Party Pack 1'
     end
     object aSaveProjectAndInitialize: TAction
       Text = 'aSaveProjectAndInitialize'

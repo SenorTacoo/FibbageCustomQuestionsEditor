@@ -48,6 +48,8 @@ type
     procedure SetJackboxPartyPack9Path(const Value: string);
     function GetShowInfoAboutMissingSpecialEntries: Boolean;
     procedure SetShowInfoAboutMissingSpecialEntries(const Value: Boolean);
+    function GetJackboxPartyPack2Path: string;
+    procedure SetJackboxPartyPack2Path(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -63,6 +65,7 @@ type
     property JackboxPartyPack1Path: string read GetJackboxPartyPack1Path write SetJackboxPartyPack1Path;
     property JackboxPartyPack4Path: string read GetJackboxPartyPack4Path write SetJackboxPartyPack4Path;
     property JackboxPartyPack9Path: string read GetJackboxPartyPack9Path write SetJackboxPartyPack9Path;
+    property JackboxPartyPack2Path: string read GetJackboxPartyPack2Path write SetJackboxPartyPack2Path;
 
     property ShowInfoAboutDuplicatedCategories: Boolean read GetShowInfoAboutDuplicatedCategories write SetShowInfoAboutDuplicatedCategories;
     property ShowInfoAboutTooFewSuggestions: Boolean read GetShowInfoAboutTooFewSuggestions write SetShowInfoAboutTooFewSuggestions;
@@ -115,6 +118,11 @@ end;
 function TAppConfig.GetJackboxPartyPack1Path: string;
 begin
   Result := FIniFile.ReadString('General', 'JackboxPartyPack1Path', '');
+end;
+
+function TAppConfig.GetJackboxPartyPack2Path: string;
+begin
+  Result := FIniFile.ReadString('General', 'JackboxPartyPack2Path', '');
 end;
 
 function TAppConfig.GetInputDeviceName: string;
@@ -192,6 +200,11 @@ end;
 procedure TAppConfig.SetJackboxPartyPack1Path(const Value: string);
 begin
   FIniFile.WriteString('General', 'JackboxPartyPack1Path', Value);
+end;
+
+procedure TAppConfig.SetJackboxPartyPack2Path(const Value: string);
+begin
+  FIniFile.WriteString('General', 'JackboxPartyPack2Path', Value);
 end;
 
 procedure TAppConfig.SetInputDeviceName(const Value: string);

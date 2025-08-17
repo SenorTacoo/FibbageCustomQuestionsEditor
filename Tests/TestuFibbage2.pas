@@ -1,15 +1,14 @@
-unit TestuFibbageXL;
-
+﻿unit TestuFibbage2;
 interface
 
 uses
   DUnitX.TestFramework,
   System.Generics.Collections,
   uFibbageFilesReader,
-  uFibbageXLQuestions;
+  uFibbage2Questions;
 
 type
-  TTestXLReader = class(TFibbageFilesReader)
+  TTestReader = class(TFibbageFilesReader)
   protected
     procedure DoRead(const ACategoryFile, AQuestionsDirectory: string); override;
   public
@@ -17,14 +16,13 @@ type
   end;
 
   [TestFixture]
-  TFibbageXLQuestionsLoader = class
+  TFibbage2QuestionsLoader = class
   private
-    FReader: TTestXLReader;
+    FReader: TTestReader;
 
-    function CategoryJSON_3: string;
-    function QuestionJSON1: string;
-    function QuestionJSON2: string;
-    function QuestionJSON3: string;
+    function CategoryJSON: string;
+    function QuestionJSON_Shortie: string;
+    function QuestionJSON_Final: string;
   public
     [SetUp]
     procedure SetUp;
@@ -39,9 +37,9 @@ type
 
 implementation
 
-{ TFibbageXLQuestionsLoader }
+{ TFibbage2QuestionsLoader }
 
-function TFibbageXLQuestionsLoader.CategoryJSON_3: string;
+function TFibbage2QuestionsLoader.CategoryJSON: string;
 begin
   Result := '{' +
     '"content":[' +
@@ -50,23 +48,10 @@ begin
             '"id":1234,' +
             '"category":"a",' +
             '"bumper":""' +
-        '},' +
-        '{' +
-            '"x":false,' +
-            '"id":2345,' +
-            '"category":"b",' +
-            '"bumper":""' +
-        '},' +
-        '{' +
-            '"x":false,' +
-            '"id":3456,' +
-            '"category":"c",' +
-            '"bumper":""' +
-        '}' +
-  ']}';
+        '}]}';
 end;
 
-function TFibbageXLQuestionsLoader.QuestionJSON1: string;
+function TFibbage2QuestionsLoader.QuestionJSON_Shortie: string;
 begin
    Result := '{' +
     '"fields":[' +
@@ -138,7 +123,7 @@ begin
   '}';
 end;
 
-function TFibbageXLQuestionsLoader.QuestionJSON2: string;
+function TFibbage2QuestionsLoader.QuestionJSON_Final: string;
 begin
    Result := '{' +
     '"fields":[' +
@@ -169,7 +154,7 @@ begin
         '},' +
         '{' +
             '"t":"S",' +
-            '"v":"b",' +
+            '"v":"a",' +
             '"n":"Category"' +
         '},' +
         '{' +
@@ -210,144 +195,64 @@ begin
   '}';
 end;
 
-function TFibbageXLQuestionsLoader.QuestionJSON3: string;
+procedure TFibbage2QuestionsLoader.SetUp;
 begin
-   Result := '{' +
-    '"fields":[' +
-        '{' +
-            '"t":"B",' +
-            '"v":"false",' +
-            '"n":"HasBumperAudio"' +
-        '},' +
-        '{' +
-            '"t":"B",' +
-            '"v":"false",' +
-            '"n":"HasBumperType"' +
-        '},' +
-        '{' +
-            '"t":"B",' +
-            '"v":"true",' +
-            '"n":"HasCorrectAudio"' +
-        '},' +
-        '{' +
-            '"t":"B",' +
-            '"v":"true",' +
-            '"n":"HasQuestionAudio"' +
-        '},' +
-        '{' +
-            '"t":"S",' +
-            '"v":"s31,s32,s33",' +
-            '"n":"Suggestions"' +
-        '},' +
-        '{' +
-            '"t":"S",' +
-            '"v":"c",' +
-            '"n":"Category"' +
-        '},' +
-        '{' +
-            '"t":"S",' +
-            '"v":"text3",' +
-            '"n":"CorrectText"' +
-        '},' +
-        '{' +
-            '"t":"S",' +
-            '"v":"None",' +
-            '"n":"BumperType"' +
-        '},' +
-        '{' +
-            '"t":"S",' +
-            '"v":"question3",' +
-            '"n":"QuestionText"' +
-        '},' +
-        '{' +
-            '"t":"S",' +
-            '"v":"as31, as32",' +
-            '"n":"AlternateSpellings"' +
-        '},' +
-        '{' +
-            '"t":"A",' +
-            '"n":"BumperAudio"' +
-        '},' +
-        '{' +
-            '"t":"A",' +
-            '"v":"ca3",' +
-            '"n":"CorrectAudio"' +
-        '},' +
-        '{' +
-            '"t":"A",' +
-            '"v":"qa3",' +
-            '"n":"QuestionAudio"' +
-        '}' +
-    ']' +
-  '}';
+  FReader := TTestReader.Create('');
 end;
 
-procedure TFibbageXLQuestionsLoader.SetUp;
+procedure TFibbage2QuestionsLoader.should_load_final_questions;
 begin
-  FReader := TTestXLReader.Create('');
-end;
+  FReader.FQuestionData.CategoryData := CategoryJSON;
+  FReader.FQuestionData.QuestionData.Add('1234', QuestionJSON_Final);
 
-procedure TFibbageXLQuestionsLoader.should_load_final_questions;
-begin
-  FReader.FQuestionData.CategoryData := CategoryJSON_3;
-  FReader.FQuestionData.QuestionData.Add('1234', QuestionJSON1);
-  FReader.FQuestionData.QuestionData.Add('2345', QuestionJSON2);
-  FReader.FQuestionData.QuestionData.Add('3456', QuestionJSON3);
-
-  var loader := TFibbageXLQuestions_Final.Create;
+  var loader := TFibbage2Questions_Final.Create;
 
   loader.Initialize(FReader);
 
-  Assert.AreEqual(3, loader.Count, '1');
+  Assert.AreEqual(1, loader.Count, '1');
 
-  Assert.AreEqual(CategoryJSON_3, loader.GetCategoriesJSON);
-  Assert.AreEqual(QuestionJSON1, loader[0].GetJSON);
-  Assert.AreEqual(QuestionJSON2, loader[1].GetJSON);
-  Assert.AreEqual(QuestionJSON3, loader[2].GetJSON);
+  Assert.AreEqual(CategoryJSON, loader.GetCategoriesJSON);
+  Assert.AreEqual(QuestionJSON_Final, loader[0].GetJSON);
 
   loader.Free;
 end;
 
-procedure TFibbageXLQuestionsLoader.should_load_shortie_questions;
+procedure TFibbage2QuestionsLoader.should_load_shortie_questions;
 begin
-  FReader.FQuestionData.CategoryData := CategoryJSON_3;
-  FReader.FQuestionData.QuestionData.Add('1234', QuestionJSON1);
-  FReader.FQuestionData.QuestionData.Add('2345', QuestionJSON2);
-  FReader.FQuestionData.QuestionData.Add('3456', QuestionJSON3);
+  FReader.FQuestionData.CategoryData := CategoryJSON;
+  FReader.FQuestionData.QuestionData.Add('1234', QuestionJSON_Shortie);
 
-  var loader := TFibbageXLQuestions_Shortie.Create;
+  var loader := TFibbage2Questions_Shortie.Create;
 
   loader.Initialize(FReader);
 
-  Assert.AreEqual(3, loader.Count, '1');
+  Assert.AreEqual(1, loader.Count, '1');
 
-  Assert.AreEqual(CategoryJSON_3, loader.GetCategoriesJSON);
-  Assert.AreEqual(QuestionJSON1, loader[0].GetJSON);
-  Assert.AreEqual(QuestionJSON2, loader[1].GetJSON);
-  Assert.AreEqual(QuestionJSON3, loader[2].GetJSON);
+  Assert.AreEqual(CategoryJSON, loader.GetCategoriesJSON);
+  Assert.AreEqual(QuestionJSON_Shortie, loader[0].GetJSON);
 
   loader.Free;
 end;
 
-procedure TFibbageXLQuestionsLoader.TearDown;
+procedure TFibbage2QuestionsLoader.TearDown;
 begin
   FReader.Free;
 end;
 
-{ TTestXLReader }
+{ TTestReader }
 
-procedure TTestXLReader.DoRead;
+procedure TTestReader.DoRead;
 begin
   {}
 end;
 
-function TTestXLReader.FileExists;
+function TTestReader.FileExists;
 begin
   Result := True;
 end;
 
 initialization
 
-  TDUnitX.RegisterTestFixture(TFibbageXLQuestionsLoader);
+  TDUnitX.RegisterTestFixture(TFibbage2QuestionsLoader);
 
 end.

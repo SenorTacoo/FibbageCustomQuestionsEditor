@@ -32,7 +32,9 @@ uses
   uFibbageXLPartyPack1Questions in 'FibbageXLPartyPack1\uFibbageXLPartyPack1Questions.pas',
   uFibbage3Questions in 'JackboxPartyPack4\uFibbage3Questions.pas',
   uFibbage3Content in 'JackboxPartyPack4\uFibbage3Content.pas',
-  uEditablePicItemFrame in 'GUI\uEditablePicItemFrame.pas' {frmEditablePicItem: TFrame};
+  uEditablePicItemFrame in 'GUI\uEditablePicItemFrame.pas' {frmEditablePicItem: TFrame},
+  uFibbage2Content in 'JackboxPartyPack2\uFibbage2Content.pas',
+  uFibbage2Questions in 'JackboxPartyPack2\uFibbage2Questions.pas';
 
 {$R *.res}
 

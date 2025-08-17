@@ -233,6 +233,8 @@
             <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="JackboxPartyPack2\uFibbage2Content.pas"/>
+        <DCCReference Include="JackboxPartyPack2\uFibbage2Questions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -26,7 +26,8 @@ begin
     Exit;
 
   case AGameType of
-    FibbageXL:
+    FibbageXL,
+    Fibbage2PartyPack2:
       begin
         if not DirectoryExists(IncludeTrailingPathDelimiter(APath) +
           IncludeTrailingPathDelimiter('fibbageshortie')) then
@@ -66,7 +67,10 @@ begin
         Exit(True);
     end
     else
+    begin
+      Assert(False);
       Exit;
+    end;
   end;
 
   Result := True;
