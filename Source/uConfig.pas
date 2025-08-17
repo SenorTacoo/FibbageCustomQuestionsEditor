@@ -46,8 +46,8 @@ type
     procedure SetJackboxPartyPack1Path(const Value: string);
     function GetJackboxPartyPack9Path: string;
     procedure SetJackboxPartyPack9Path(const Value: string);
-    function GetShowInfoAboutMissingBlanks: Boolean;
-    procedure SetShowInfoAboutMissingBlanks(const Value: Boolean);
+    function GetShowInfoAboutMissingSpecialEntries: Boolean;
+    procedure SetShowInfoAboutMissingSpecialEntries(const Value: Boolean);
   public
     constructor Create;
     destructor Destroy; override;
@@ -67,7 +67,7 @@ type
     property ShowInfoAboutDuplicatedCategories: Boolean read GetShowInfoAboutDuplicatedCategories write SetShowInfoAboutDuplicatedCategories;
     property ShowInfoAboutTooFewSuggestions: Boolean read GetShowInfoAboutTooFewSuggestions write SetShowInfoAboutTooFewSuggestions;
     property ShowInfoAboutTooFewQuestions: Boolean read GetShowInfoAboutTooFewQuestions write SetShowInfoAboutTooFewQuestions;
-    property ShowInfoAboutMissingBlanks: Boolean read GetShowInfoAboutMissingBlanks write SetShowInfoAboutMissingBlanks;
+    property ShowInfoAboutMissingSpecialEntries: Boolean read GetShowInfoAboutMissingSpecialEntries write SetShowInfoAboutMissingSpecialEntries;
   end;
 
 implementation
@@ -154,9 +154,9 @@ begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutDuplicatedCategories', True);
 end;
 
-function TAppConfig.GetShowInfoAboutMissingBlanks: Boolean;
+function TAppConfig.GetShowInfoAboutMissingSpecialEntries: Boolean;
 begin
-  Result := FIniFile.ReadBool('General', 'ShowInfoAboutMissingBlanks', True);
+  Result := FIniFile.ReadBool('General', 'ShowInfoAboutMissingSpecialEntries', True);
 end;
 
 function TAppConfig.GetShowInfoAboutTooFewQuestions: Boolean;
@@ -224,9 +224,9 @@ begin
   FIniFile.WriteBool('General', 'ShowInfoAboutDuplicatedCategories', Value);
 end;
 
-procedure TAppConfig.SetShowInfoAboutMissingBlanks(const Value: Boolean);
+procedure TAppConfig.SetShowInfoAboutMissingSpecialEntries(const Value: Boolean);
 begin
-  FIniFile.WriteBool('General', 'ShowInfoAboutMissingBlanks', Value);
+  FIniFile.WriteBool('General', 'ShowInfoAboutMissingSpecialEntries', Value);
 end;
 
 procedure TAppConfig.SetShowInfoAboutTooFewQuestions(

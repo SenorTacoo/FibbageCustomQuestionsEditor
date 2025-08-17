@@ -46,7 +46,7 @@ type
 
     function HasDuplicatedCategory(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; overload; virtual; abstract;
     function HasTooFewSuggestions(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; virtual; abstract;
-    function HasMissingBlank(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; overload; virtual; abstract;
+    function HasMissingSpecialEntries(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; virtual; abstract;
     function HasTooFewQuestions(AType: TTypePreview): Boolean; virtual; abstract;
 
     property EditableTypes: TPreviewTypes read GetEditableTypes;

@@ -24,6 +24,8 @@ type
 
   EActivateError = class(Exception);
 
+  function UnicodeEscape(const S: UnicodeString): string;
+
 implementation
 
 { TGameTypeHelper }
@@ -31,6 +33,22 @@ implementation
 function TGameTypeHelper.ToString: string;
 begin
   Result := TRttiEnumerationType.GetName(Self);
+end;
+
+function UnicodeEscape(const S: UnicodeString): string;
+var
+  i: Integer;
+  Ch: Char;
+begin
+  Result := '';
+  for i := 1 to Length(S) do
+  begin
+    Ch := S[i];
+    if Ord(Ch) <= $7F then
+      Result := Result + Ch
+    else
+      Result := Result + Format('\u%.4x', [Ord(Ch)]);
+  end;
 end;
 
 end.

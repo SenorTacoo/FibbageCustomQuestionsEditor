@@ -42,7 +42,7 @@ type
 
     function HasDuplicatedCategory(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; overload; override;
     function HasTooFewSuggestions(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; override;
-    function HasMissingBlank(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
+    function HasMissingSpecialEntries(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
     function HasTooFewQuestions(AType: TTypePreview): Boolean; override;
   end;
 
@@ -217,9 +217,9 @@ begin
     Assert(False);
 end;
 
-function TFibbage3Content.HasMissingBlank(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean;
+function TFibbage3Content.HasMissingSpecialEntries(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean;
 begin
-  Result := (AQuestion as TFibbage3Question).IsMissingBlank;
+  Result := (AQuestion as TFibbage3Question).IsMissingSpecialEntry(AError);
 end;
 
 function TFibbage3Content.HasTooFewQuestions(AType: TTypePreview): Boolean;
@@ -266,7 +266,7 @@ begin
     FFinalQuestions.RemoveQuestion(AQuestion as TFibbage3Question)
   else if AType.InternalName = FSpecialQuestions.GetName then
     FSpecialQuestions.RemoveQuestion(AQuestion as TFibbage3Question)
-  else if AType.InternalName = FFinalQuestions.GetName then
+  else if AType.InternalName = FTMIQuestions.GetName then
     FTMIQuestions.RemoveQuestion(AQuestion as TFibbage3Question)
   else
     Assert(False);

@@ -10,6 +10,7 @@ uses
   System.Generics.Collections,
   System.Math,
   REST.Json,
+  uInterfaces,
   System.JSON.Builders,
   uQuestionsLoader,
   uFibbageJSONWriter,
@@ -43,14 +44,38 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure SetEditableFields(AFields: TEditableFields); override;
-    function GetEditableFields: TEditableFields; override;
     function GetPreview: TQuestionPreview; override;
     function GetJSON: string; override;
     function SuggestionsCount: Int32;
-    function IsMissingBlank: Boolean; override;
+    function IsMissingSpecialEntry(out AError: string): Boolean; override;
 
     property Category: string read FCategory;
+  end;
+
+  TFibbage3BasicQuestion = class(TFibbage3Question)
+  public
+    procedure SetEditableFields(AFields: TEditableFields); override;
+    function GetEditableFields: TEditableFields; override;
+  end;
+
+  TFibbage3FinalQuestion = class(TFibbage3BasicQuestion)
+  public
+    function GetPreview: TQuestionPreview; override;
+    function IsMissingSpecialEntry(out AError: string): Boolean; override;
+    function GetEditableFields: TEditableFields; override;
+  end;
+
+  TFibbage3SpecialQuestion = class(TFibbage3Question)
+  public
+    procedure SetEditableFields(AFields: TEditableFields); override;
+    function GetEditableFields: TEditableFields; override;
+  end;
+
+  TFibbage3PersonalQuestion = class(TFibbage3Question)
+  public
+    procedure SetEditableFields(AFields: TEditableFields); override;
+    function GetEditableFields: TEditableFields; override;
+    function IsMissingSpecialEntry(out AError: string): Boolean; override;
   end;
 
   TFibbage3Questions = class(TFibbageQuestions<TFibbage3Question>)
@@ -58,11 +83,9 @@ type
     TCategory = class
     private
       FX: Boolean;
-      FPersonal: string;
       FId: UInt32;
       FPortrait: Boolean;
       FCategory: string;
-      FBumper: string;
       FUs: Boolean;
     end;
     TCategories = class
@@ -101,37 +124,41 @@ type
   public
     function GetCategoriesJSON: string;
 
-    function CreateNewQuestion: TFibbage3Question; override;
     procedure RemoveQuestion(AQuestion: TFibbage3Question); override;
 
     function HasQuestionWithTheSameCategory(AQuestion: TFibbage3Question): Boolean;
     function GetFirstQuestionWithDuplicatedCategory: TFibbage3Question; override;
     function GetFirstQuestionWithTooFewSuggestions: TFibbage3Question; override;
-    function GetFirstQuestionWithMissingBlank: TFibbage3Question; override;
+    function GetFirstQuestionWithMissingSpecialEntry: TFibbage3Question; override;
   end;
 
   TFibbage3Questions_Shortie = class(TFibbage3Questions)
   public
     function GetName: string; override;
     function GetTypePreview: TTypePreview; override;
+    function CreateNewQuestion: TFibbage3Question; override;
   end;
 
   TFibbage3Questions_Final = class(TFibbage3Questions)
   public
     function GetName: string; override;
     function GetTypePreview: TTypePreview; override;
+    function CreateNewQuestion: TFibbage3Question; override;
   end;
 
   TFibbage3Questions_Special = class(TFibbage3Questions)
   public
+    procedure DoSaveCategory; override;
     function GetName: string; override;
     function GetTypePreview: TTypePreview; override;
+    function CreateNewQuestion: TFibbage3Question; override;
   end;
 
   TFibbage3Questions_TmiShortie = class(TFibbage3Questions)
   public
     function GetName: string; override;
     function GetTypePreview: TTypePreview; override;
+    function CreateNewQuestion: TFibbage3Question; override;
   end;
 
 implementation
@@ -147,13 +174,6 @@ begin
   var wantedPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.ogg');
   if not FReader.FileExists(wantedPath) then
     AEntry.Name := '';
-end;
-
-function TFibbage3Questions.CreateNewQuestion: TFibbage3Question;
-begin
-  Result := TFibbage3Question.Create;
-  Result.FId := GetNextRandomId;
-  FList.Add(Result);
 end;
 
 procedure TFibbage3Questions.DoInitialize;
@@ -179,12 +199,10 @@ begin
       var newItem: TFibbage3Question := nil;
       var rawQuestion := TJson.JsonToObject<TQuestions>(AItem.QuestionData[rawCategory.FContent[idx].FId.ToString]);
       try
-        newItem := TFibbage3Question.Create;
+        newItem := CreateNewQuestion;
         newItem.FId := rawCategory.FContent[idx].FId;
         newItem.FCategory := rawCategory.FContent[idx].FCategory;
         newItem.FFamilyFriendly := not rawCategory.FContent[idx].FX;
-        newItem.FPersonalQuestion := rawCategory.FContent[idx].FPersonal;
-
         newItem.FPortrait := rawCategory.FContent[idx].FPortrait;
         newItem.FUsCentric := rawCategory.FContent[idx].FUs;
 
@@ -208,19 +226,22 @@ begin
         newItem.FSuggestions := rawQuestion.GetValue('Suggestions').Split([',']);
         newItem.FCorrectText := rawQuestion.GetValue('CorrectText');
         newItem.FQuestionText := rawQuestion.GetValue('QuestionText');
+        newItem.FPersonalQuestion := rawQuestion.GetValue('PersonalQuestionText');
         newItem.FAlternateSpellings := rawQuestion.GetValue('AlternateSpellings').Split([',']);
         newItem.FSocialMediaDate := rawQuestion.GetValue('SocialMediaDate');
-        //10:00 AM <br /> 3 Jul 2013 ALBO July 14, 2013
+
+        {10:00 AM <br /> 3 Jul 2013 OR July 14, 2013}
         newItem.FKeywordResponse := rawQuestion.GetValue('KeywordResponse');
         newItem.FSocialMediaName := rawQuestion.GetValue('SocialMediaName');
-        //@50cent
+        {@50cent}
         newItem.FPic.Name := rawQuestion.GetValue('Pic');
         newItem.FPic.BasePath := TPath.Combine(FReader.BasePath, GetName, UIntToStr(rawCategory.FContent[idx].FId));
 
-        FList.Add(newItem);
         newItem := nil;
       finally
         rawQuestion.Free;
+        if Assigned(newItem) then
+          FList.Remove(newItem);
         newItem.Free;
       end;
     end;
@@ -233,10 +254,11 @@ procedure TFibbage3Questions.DoSaveCategory;
 begin
   var filePath := TPath.Combine(FSavePath, Format('%s.jet', [GetName]));
   var fs := TFileStream.Create(filePath, fmCreate);
-  var sw := TStreamWriter.Create(fs);
+  var sw := TStreamWriter.Create(fs, TEncoding.ANSI);
   try
     sw.OwnStream;
-    sw.Write(GetCategoriesJSON);
+    var uniStr := UnicodeEscape(GetCategoriesJSON);
+    sw.Write(uniStr);
   finally
     sw.Free;
   end;
@@ -250,10 +272,11 @@ begin
     ForceDirectories(basePath);
     var filePath := TPath.Combine(basePath, 'data.jet');
     var fs := TFileStream.Create(filePath, fmCreate);
-    var sw := TStreamWriter.Create(fs);
+    var sw := TStreamWriter.Create(fs, TEncoding.ANSI);
     try
       sw.OwnStream;
-      sw.Write(item.GetJSON);
+      var uniStr := UnicodeEscape(item.GetJSON);
+      sw.Write(uniStr);
     finally
       sw.Free;
     end;
@@ -310,11 +333,13 @@ begin
         Exit(FList[idx]);
 end;
 
-function TFibbage3Questions.GetFirstQuestionWithMissingBlank: TFibbage3Question;
+function TFibbage3Questions.GetFirstQuestionWithMissingSpecialEntry: TFibbage3Question;
+var
+  dummy: string;
 begin
   Result := nil;
   for var idx := 0 to FList.Count - 1 do
-    if FList[idx].IsMissingBlank then
+    if FList[idx].IsMissingSpecialEntry(dummy) then
       Exit(FList[idx]);
 end;
 
@@ -327,9 +352,11 @@ begin
 end;
 
 function TFibbage3Questions.GetNextRandomId: UInt32;
+var
+  found: Boolean;
 begin
-  var found := False;
   repeat
+    found := false;
     Result := RandomRange(30000, 50000);
     for var item in FList do
       if item.FId = Result then
@@ -347,6 +374,8 @@ begin
   for var item in FList do
   begin
     if AQuestion = item then
+      Continue;
+    if item.Category.IsEmpty then
       Continue;
     if AQuestion.FCategory = item.FCategory then
       Exit(True);
@@ -442,101 +471,6 @@ end;
 destructor TFibbage3Question.Destroy;
 begin
   inherited;
-end;
-
-function TFibbage3Question.GetEditableFields: TEditableFields;
-begin
-  Result := TEditableFields.Create;
-
-  var strItem := TEditableStringField.Create;
-  strItem.Name := 'Category';
-  strItem.Value := FCategory;
-  Result.Add(strItem);
-
-  var strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Question';
-  strLongItem.Value := FQuestionText;
-  Result.Add(strLongItem);
-
-  strItem := TEditableStringField.Create;
-  strItem.Name := 'Answer';
-  strItem.Value := FCorrectText;
-  Result.Add(strItem);
-
-  strItem := TEditableStringField.Create;
-  strItem.Name := 'Personal question';
-  strItem.Value := FCorrectText;
-  Result.Add(strItem);
-
-  strItem := TEditableStringField.Create;
-  strItem.Name := 'Keyword response';
-  strItem.Value := FKeywordResponse;
-  Result.Add(strItem);
-
-  strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Alternate Spellings';
-  strLongItem.Value := string.Join(', ', FAlternateSpellings);
-  Result.Add(strLongItem);
-
-  strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Suggestions';
-  strLongItem.Value := string.Join(', ', FSuggestions);
-  Result.Add(strLongItem);
-
-  strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Social media date';
-  strLongItem.Value := FSocialMediaDate;
-  Result.Add(strLongItem);
-
-  strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Social media name';
-  strLongItem.Value := FSocialMediaName;
-  Result.Add(strLongItem);
-
-  var boolItem := TEditableBoolField.Create;
-  boolItem.Name := 'Family Friendly';
-  boolItem.Value := FFamilyFriendly;
-  Result.Add(boolItem);
-
-  boolItem := TEditableBoolField.Create;
-  boolItem.Name := 'Portrait';
-  boolItem.Value := FPortrait;
-  Result.Add(boolItem);
-
-  boolItem := TEditableBoolField.Create;
-  boolItem.Name := 'US Centric';
-  boolItem.Value := FUsCentric;
-  Result.Add(boolItem);
-
-  var audioItem := TEditableAudioField.Create;
-  audioItem.Name := 'Question Audio';
-  audioItem.Value := FQuestionAudio.Name;
-  audioItem.BasePath := FQuestionAudio.BasePath;
-  Result.Add(audioItem);
-
-  audioItem := TEditableAudioField.Create;
-  audioItem.Name := 'Correct Audio';
-  audioItem.Value := FCorrectAudio.Name;
-  audioItem.BasePath := FCorrectAudio.BasePath;
-  Result.Add(audioItem);
-
-  audioItem := TEditableAudioField.Create;
-  audioItem.Name := 'Bumper Audio';
-  audioItem.Value := FBumperAudio.Name;
-  audioItem.BasePath := FBumperAudio.BasePath;
-  Result.Add(audioItem);
-
-  audioItem := TEditableAudioField.Create;
-  audioItem.Name := 'Keyword Audio';
-  audioItem.Value := FKeywordAudio.Name;
-  audioItem.BasePath := FKeywordAudio.BasePath;
-  Result.Add(audioItem);
-
-  var pic := TEditablePicField.Create; //512x512px
-  pic.Name := 'Picture';
-  pic.Value := FPic.Name;
-  pic.BasePath := FPic.BasePath;
-  Result.Add(pic);
 end;
 
 function TFibbage3Question.GetJSON: string;
@@ -680,25 +614,16 @@ begin
   Result.Question := FQuestionText;
 end;
 
-function TFibbage3Question.IsMissingBlank: Boolean;
+function TFibbage3Question.IsMissingSpecialEntry(out AError: string): Boolean;
 const
   BLANK = '<BLANK>';
 begin
-  Result := not FQuestionText.Contains(BLANK);
-end;
-
-procedure TFibbage3Question.SetEditableFields(AFields: TEditableFields);
-begin
-//  FCategory := (AFields[0] as TEditableStringField).Value;
-//  FQuestionText := (AFields[1] as TEditableLongStringField).Value;
-//  FCorrectText := (AFields[2] as TEditableStringField).Value;
-//  FAlternateSpellings := (AFields[3] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
-//  FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
-//  FFamilyFriendly := (AFields[5] as TEditableBoolField).Value;
-//  FQuestionAudio.Name := (AFields[6] as TEditableAudioField).Value;
-//  FQuestionAudio.BasePath := (AFields[6] as TEditableAudioField).BasePath;
-//  FCorrectAudio.Name := (AFields[7] as TEditableAudioField).Value;
-//  FCorrectAudio.BasePath := (AFields[7] as TEditableAudioField).BasePath;
+  Result := False;
+  if not FQuestionText.Contains(BLANK) then
+  begin
+    Result := True;
+    AError := 'Question is missing <BLANK>';
+  end;
 end;
 
 function TFibbage3Question.SuggestionsCount: Int32;
@@ -707,6 +632,13 @@ begin
 end;
 
 { TFibbage3Questions_Shortie }
+
+function TFibbage3Questions_Shortie.CreateNewQuestion: TFibbage3Question;
+begin
+  Result := TFibbage3BasicQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
 
 function TFibbage3Questions_Shortie.GetName: string;
 begin
@@ -721,6 +653,13 @@ end;
 
 { TFibbage3Questions_Final }
 
+function TFibbage3Questions_Final.CreateNewQuestion: TFibbage3Question;
+begin
+  Result := TFibbage3FinalQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
+
 function TFibbage3Questions_Final.GetName: string;
 begin
   Result := 'finalfibbage';
@@ -733,6 +672,23 @@ begin
 end;
 
 { TFibbage3Questions_Special }
+
+function TFibbage3Questions_Special.CreateNewQuestion: TFibbage3Question;
+begin
+  Result := TFibbage3SpecialQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
+
+procedure TFibbage3Questions_Special.DoSaveCategory;
+begin
+  for var idx := 0 to Count - 1 do
+    if Self[idx].FPic.Name.IsEmpty then
+      Self[idx].FBumperType := 'SayWhat'
+    else
+      Self[idx].FBumperType := 'Photo';
+  inherited;
+end;
 
 function TFibbage3Questions_Special.GetName: string;
 begin
@@ -747,6 +703,13 @@ end;
 
 { TFibbage3Questions_TmiShortie }
 
+function TFibbage3Questions_TmiShortie.CreateNewQuestion: TFibbage3Question;
+begin
+  Result := TFibbage3PersonalQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
+
 function TFibbage3Questions_TmiShortie.GetName: string;
 begin
   Result := 'tmishortie';
@@ -756,6 +719,315 @@ function TFibbage3Questions_TmiShortie.GetTypePreview: TTypePreview;
 begin
   Result.InternalName := GetName;
   Result.DisplayName := 'Personal';
+end;
+
+{ TFibbage3BasicQuestion }
+
+function TFibbage3BasicQuestion.GetEditableFields: TEditableFields;
+begin
+  Result := TEditableFields.Create;
+
+  var strItem := TEditableStringField.Create;
+  strItem.Name := 'Category';
+  strItem.Value := FCategory;
+  Result.Add(strItem);
+
+  var strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Question (with <BLANK>)';
+  strLongItem.Value := FQuestionText;
+  Result.Add(strLongItem);
+
+  strItem := TEditableStringField.Create;
+  strItem.Name := 'Answer';
+  strItem.Value := FCorrectText;
+  Result.Add(strItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Alternate Spellings';
+  strLongItem.Value := string.Join(', ', FAlternateSpellings);
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Suggestions';
+  strLongItem.Value := string.Join(', ', FSuggestions);
+  Result.Add(strLongItem);
+
+  var boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'Family Friendly';
+  boolItem.Value := FFamilyFriendly;
+  Result.Add(boolItem);
+
+  boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'US Centric';
+  boolItem.Value := FUsCentric;
+  Result.Add(boolItem);
+
+  var audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Question Audio';
+  audioItem.Value := FQuestionAudio.Name;
+  audioItem.BasePath := FQuestionAudio.BasePath;
+  Result.Add(audioItem);
+
+  audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Correct Audio';
+  audioItem.Value := FCorrectAudio.Name;
+  audioItem.BasePath := FCorrectAudio.BasePath;
+  Result.Add(audioItem);
+end;
+
+procedure TFibbage3BasicQuestion.SetEditableFields(AFields: TEditableFields);
+begin
+  FCategory := (AFields[0] as TEditableStringField).Value;
+  FQuestionText := (AFields[1] as TEditableLongStringField).Value;
+  FCorrectText := (AFields[2] as TEditableStringField).Value;
+  FAlternateSpellings := (AFields[3] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
+  FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
+  FFamilyFriendly := (AFields[5] as TEditableBoolField).Value;
+  FUsCentric := (AFields[6] as TEditableBoolField).Value;
+  FQuestionAudio.Name := (AFields[7] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[7] as TEditableAudioField).BasePath;
+  FCorrectAudio.Name := (AFields[8] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[8] as TEditableAudioField).BasePath;
+end;
+
+{ TFibbage3SpecialQuestion }
+
+function TFibbage3SpecialQuestion.GetEditableFields: TEditableFields;
+begin
+  Result := TEditableFields.Create;
+
+  var strItem := TEditableStringField.Create;
+  strItem.Name := 'Category';
+  strItem.Value := FCategory;
+  Result.Add(strItem);
+
+  var strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Question (with <BLANK>)';
+  strLongItem.Value := FQuestionText;
+  Result.Add(strLongItem);
+
+  strItem := TEditableStringField.Create;
+  strItem.Name := 'Answer';
+  strItem.Value := FCorrectText;
+  Result.Add(strItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Alternate Spellings';
+  strLongItem.Value := string.Join(', ', FAlternateSpellings);
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Suggestions';
+  strLongItem.Value := string.Join(', ', FSuggestions);
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Social media date';
+  strLongItem.Value := FSocialMediaDate;
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Social media name';
+  strLongItem.Value := FSocialMediaName;
+  Result.Add(strLongItem);
+
+  var boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'Family Friendly';
+  boolItem.Value := FFamilyFriendly;
+  Result.Add(boolItem);
+
+  boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'US Centric';
+  boolItem.Value := FUsCentric;
+  Result.Add(boolItem);
+
+  var audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Question Audio';
+  audioItem.Value := FQuestionAudio.Name;
+  audioItem.BasePath := FQuestionAudio.BasePath;
+  Result.Add(audioItem);
+
+  audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Correct Audio';
+  audioItem.Value := FCorrectAudio.Name;
+  audioItem.BasePath := FCorrectAudio.BasePath;
+  Result.Add(audioItem);
+
+  var pic := TEditablePicField.Create;
+  pic.Name := 'Picture';
+  pic.Value := FPic.Name;
+  pic.BasePath := FPic.BasePath;
+  Result.Add(pic);
+end;
+
+procedure TFibbage3SpecialQuestion.SetEditableFields(AFields: TEditableFields);
+begin
+  FCategory := (AFields[0] as TEditableStringField).Value;
+  FQuestionText := (AFields[1] as TEditableLongStringField).Value;
+  FCorrectText := (AFields[2] as TEditableStringField).Value;
+  FAlternateSpellings := (AFields[3] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
+  FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
+  FSocialMediaDate := (AFields[5] as TEditableLongStringField).Value;
+  FSocialMediaName := (AFields[6] as TEditableLongStringField).Value;
+  FFamilyFriendly := (AFields[7] as TEditableBoolField).Value;
+  FUsCentric := (AFields[8] as TEditableBoolField).Value;
+  FQuestionAudio.Name := (AFields[9] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[9] as TEditableAudioField).BasePath;
+  FCorrectAudio.Name := (AFields[10] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[10] as TEditableAudioField).BasePath;
+  FPic.Name := (AFields[11] as TEditableAudioField).Value;
+  FPic.BasePath := (AFields[11] as TEditableAudioField).BasePath;
+end;
+
+{ TFibbage3PersonalQuestion }
+
+function TFibbage3PersonalQuestion.GetEditableFields: TEditableFields;
+begin
+  Result := TEditableFields.Create;
+
+  var strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Question (when asked for truth,' + sLineBreak + 'without any special elements)';
+  strLongItem.Value := FPersonalQuestion;
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Question (when picking truth,' + sLineBreak + 'with <PLAYER>)';
+  strLongItem.Value := FQuestionText;
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Suggestions';
+  strLongItem.Value := string.Join(', ', FSuggestions);
+  Result.Add(strLongItem);
+
+  var boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'Family Friendly';
+  boolItem.Value := FFamilyFriendly;
+  Result.Add(boolItem);
+
+  boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'US Centric';
+  boolItem.Value := FUsCentric;
+  Result.Add(boolItem);
+
+  var audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Question Audio';
+  audioItem.Value := FQuestionAudio.Name;
+  audioItem.BasePath := FQuestionAudio.BasePath;
+  Result.Add(audioItem);
+
+  audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Correct Audio';
+  audioItem.Value := FCorrectAudio.Name;
+  audioItem.BasePath := FCorrectAudio.BasePath;
+  Result.Add(audioItem);
+end;
+
+function TFibbage3PersonalQuestion.IsMissingSpecialEntry(
+  out AError: string): Boolean;
+const
+  PLAYER = '<PLAYER>';
+begin
+  Result := False;
+
+  if not FQuestionText.Contains(PLAYER) then
+  begin
+    Result := True;
+    AError := 'Question is missing <PLAYER>';
+  end;
+end;
+
+procedure TFibbage3PersonalQuestion.SetEditableFields(AFields: TEditableFields);
+begin
+  FPersonalQuestion := (AFields[0] as TEditableLongStringField).Value;
+  FQuestionText := (AFields[1] as TEditableLongStringField).Value;
+  FSuggestions := (AFields[2] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
+  FFamilyFriendly := (AFields[3] as TEditableBoolField).Value;
+  FUsCentric := (AFields[4] as TEditableBoolField).Value;
+
+  FQuestionAudio.Name := (AFields[5] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[5] as TEditableAudioField).BasePath;
+
+  FCorrectAudio.Name := (AFields[6] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[6] as TEditableAudioField).BasePath;
+end;
+
+{ TFibbage3FinalQuestion }
+
+function TFibbage3FinalQuestion.GetEditableFields: TEditableFields;
+begin
+  Result := TEditableFields.Create;
+
+  var strItem := TEditableStringField.Create;
+  strItem.Name := 'Category';
+  strItem.Value := FCategory;
+  Result.Add(strItem);
+
+  var strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Question (with 2 <BLANK>''s)';
+  strLongItem.Value := FQuestionText;
+  Result.Add(strLongItem);
+
+  strItem := TEditableStringField.Create;
+  strItem.Name := 'Answer (eg. answer1|answer2)';
+  strItem.Value := FCorrectText;
+  Result.Add(strItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Alternate Spellings (eg. alt1|alt2, alt3|alt4)';
+  strLongItem.Value := string.Join(', ', FAlternateSpellings);
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Suggestions (eg. sug1|sug2, sug3|sug4)';
+  strLongItem.Value := string.Join(', ', FSuggestions);
+  Result.Add(strLongItem);
+
+  var boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'Family Friendly';
+  boolItem.Value := FFamilyFriendly;
+  Result.Add(boolItem);
+
+  boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'US Centric';
+  boolItem.Value := FUsCentric;
+  Result.Add(boolItem);
+
+  var audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Question Audio';
+  audioItem.Value := FQuestionAudio.Name;
+  audioItem.BasePath := FQuestionAudio.BasePath;
+  Result.Add(audioItem);
+
+  audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Correct Audio';
+  audioItem.Value := FCorrectAudio.Name;
+  audioItem.BasePath := FCorrectAudio.BasePath;
+  Result.Add(audioItem);
+end;
+
+function TFibbage3FinalQuestion.GetPreview: TQuestionPreview;
+begin
+  Result.Header := Format('Id: %u', [FId]);
+  Result.Question := FQuestionText;
+end;
+
+function TFibbage3FinalQuestion.IsMissingSpecialEntry(
+  out AError: string): Boolean;
+const
+  BLANK = '<BLANK>';
+begin
+  Result := True;
+
+  var fIdx := FQuestionText.IndexOf(BLANK);
+  var sIdx := FQuestionText.LastIndexOf(BLANK);
+
+  if fIdx = -1 then
+    AError := 'Question is missing two <BLANK>''s'
+  else if (sIdx = -1) or (fIdx = sIdx) then
+    AError := 'Question is missing second <BLANK>'
+  else
+    Result := False;
 end;
 
 end.

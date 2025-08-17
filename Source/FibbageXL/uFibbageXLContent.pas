@@ -40,7 +40,7 @@ type
 
     function HasDuplicatedCategory(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; overload; override;
     function HasTooFewSuggestions(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; override;
-    function HasMissingBlank(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
+    function HasMissingSpecialEntries(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
     function HasTooFewQuestions(AType: TTypePreview): Boolean; override;
   end;
 
@@ -181,9 +181,9 @@ begin
     Assert(False);
 end;
 
-function TFibbageXLContent.HasMissingBlank(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean;
+function TFibbageXLContent.HasMissingSpecialEntries(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean;
 begin
-  Result := (AQuestion as TFibbageXLQuestion).IsMissingBlank;
+  Result := (AQuestion as TFibbageXLQuestion).IsMissingSpecialEntry(AError);
 end;
 
 function TFibbageXLContent.HasTooFewQuestions(AType: TTypePreview): Boolean;

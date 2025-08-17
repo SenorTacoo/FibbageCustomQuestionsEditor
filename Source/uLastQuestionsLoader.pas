@@ -17,10 +17,12 @@ type
     FIBBAGE_DIRECTORY = 'FibbageCQE';
     LASTS_FILE_NAME = '.lasts';
   private
-    FPaths: TStringList;
     FUpdateCount: Integer;
     FConfigurations: TContentConfigurations;
     function GetLastsFile: string;
+    procedure SavePathsToFile;
+    procedure LoadPathsFromFile;
+    function GetConfiguration(const APath: string): TContentConfiguration;
   public
     constructor Create;
     destructor Destroy; override;
@@ -42,15 +44,12 @@ implementation
 
 procedure TLastQuestionsLoader.Add(AConfiguration: TContentConfiguration);
 begin
-  var index := FPaths.IndexOf(AConfiguration.GetPath);
-  case index of
-    -1: ;
-    0: Exit;
-    else
-      FPaths.Delete(index);
-  end;
+  var cfg := GetConfiguration(AConfiguration.GetPath);
 
-  FPaths.Insert(0, AConfiguration.GetPath);
+  if Assigned(cfg) then
+    FConfigurations.Move(FConfigurations.IndexOf(cfg), 0)
+  else
+    FConfigurations.Insert(0, AConfiguration);
 end;
 
 procedure TLastQuestionsLoader.BeginUpdate;
@@ -60,20 +59,17 @@ end;
 
 function TLastQuestionsLoader.Count: Integer;
 begin
-  Result := FPaths.Count;
+  Result := FConfigurations.Count;
 end;
 
 constructor TLastQuestionsLoader.Create;
 begin
   inherited;
-  FPaths := TStringList.Create;
-  FPaths.StrictDelimiter := True;
   FConfigurations := TContentConfigurations.Create;
 end;
 
 destructor TLastQuestionsLoader.Destroy;
 begin
-  FPaths.Free;
   FConfigurations.Free;
   inherited;
 end;
@@ -82,7 +78,16 @@ procedure TLastQuestionsLoader.EndUpdate;
 begin
   Dec(FUpdateCount);
   if FUpdateCount = 0 then
-    FPaths.SaveToFile(GetLastsFile);
+    SavePathsToFile;
+end;
+
+function TLastQuestionsLoader.GetConfiguration(
+  const APath: string): TContentConfiguration;
+begin
+  Result := nil;
+  for var item in FConfigurations do
+    if item.GetPath = APath then
+      Exit(item);
 end;
 
 function TLastQuestionsLoader.GetLastsFile: string;
@@ -98,35 +103,60 @@ end;
 procedure TLastQuestionsLoader.Initialize;
 begin
   ForceDirectories(TPath.Combine(TPath.GetCachePath, FIBBAGE_DIRECTORY));
-  if FileExists(GetLastsFile) then
-    FPaths.LoadFromFile(GetLastsFile);
+  LoadPathsFromFile;
+end;
 
-  for var path in FPaths do
-  begin
-    if path.Trim.IsEmpty then
-      Continue;
+procedure TLastQuestionsLoader.LoadPathsFromFile;
+begin
+  if not FileExists(GetLastsFile) then
+    Exit;
 
-    var item := TContentConfiguration.Create;
-    try
-      if item.Initialize(path) then
-      begin
-        FConfigurations.Add(item);
-        item := nil;
+  var lastFiles := TStringList.Create;
+  try
+    lastFiles.StrictDelimiter := True;
+    lastFiles.LoadFromFile(GetLastsFile);
+
+    for var path in lastFiles do
+    begin
+      if path.Trim.IsEmpty then
+        Continue;
+
+      var item := TContentConfiguration.Create;
+      try
+        if item.Initialize(path) then
+        begin
+          FConfigurations.Add(item);
+          item := nil;
+        end;
+      finally
+        item.Free;
       end;
-    finally
-      item.Free;
     end;
+  finally
+    lastFiles.Free;
   end;
-
 end;
 
 procedure TLastQuestionsLoader.Remove(AConfiguration: TContentConfiguration);
 begin
-  var index := FPaths.IndexOf(AConfiguration.GetPath);
-  if index = -1 then
-    Exit;
+  var cfg := GetConfiguration(AConfiguration.GetPath);
+  if Assigned(cfg) then
+    FConfigurations.Remove(cfg);
+end;
 
-  FPaths.Delete(index);
+procedure TLastQuestionsLoader.SavePathsToFile;
+begin
+  var lastFiles := TStringList.Create;
+  try
+    lastFiles.StrictDelimiter := True;
+
+    for var item in FConfigurations do
+      lastFiles.Add(item.GetPath);
+
+    lastFiles.SaveToFile(GetLastsFile);
+  finally
+    lastFiles.Free;
+  end;
 end;
 
 end.

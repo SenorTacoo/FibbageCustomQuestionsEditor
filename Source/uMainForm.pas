@@ -227,7 +227,7 @@ type
     DSAudioOut1: TDSAudioOut;
     miCopyTo: TMenuItem;
     miMoveTo: TMenuItem;
-    cbShowDialogAboutMissingBlanks: TCheckBox;
+    cbShowDialogAboutMissingSpecialEntries: TCheckBox;
     lyTypes: TFlowLayout;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -348,16 +348,16 @@ type
 
     function GetFirstQuestionWithDuplicatedCategory(out AType: TTypePreview; out AQuestion: TFibbageQuestion): Boolean;
     function GetFirstQuestionWithTooFewSuggestions(out AType: TTypePreview; out AQuestion: TFibbageQuestion): Boolean;
-    function GetFirstQuestionWithMissingBlank(out AType: TTypePreview; out AQuestion: TFibbageQuestion; out AError: string): Boolean;
+    function GetFirstQuestionWithMissingSpecialEntry(out AType: TTypePreview; out AQuestion: TFibbageQuestion; out AError: string): Boolean;
     function GetFirstTypeWithTooFewQuestions(out AType: TTypePreview): Boolean;
 
     function ShowInfoAboutDuplicatedCategories(const AInfo: string; ACanCancel: Boolean): Boolean;
     function ShowInfoAboutTooFewSuggestions(const AInfo: string; ACanCancel: Boolean): Boolean;
     function ShowInfoAboutTooFewQuestions(const AInfo: string; ACanCancel: Boolean): Boolean;
-    function ShowInfoAboutMissingBlanks(const AInfo: string; ACanCancel: Boolean): Boolean;
+    function ShowInfoAboutMissingSpecialEntries(const AInfo: string; ACanCancel: Boolean): Boolean;
 
     function IsTooFewSuggestions: Boolean;
-    function IsMissingBlank(out AError: string): Boolean;
+    function IsMissingSpecialEntry(out AError: string): Boolean;
 
     function CheckForDuplicatedCategoriesPreSave: Boolean;
     function CheckForTooFewSuggestions: Boolean;
@@ -421,6 +421,8 @@ procedure TFrmMain.AddLastChoosenProject;
 begin
   FLastQuestionProjects.BeginUpdate;
   try
+    FSelectedConfiguration.NewContent := False;
+    FSelectedConfiguration.ImportedContent := False;
     FLastQuestionProjects.Add(FSelectedConfiguration);
   finally
     FLastQuestionProjects.EndUpdate;
@@ -814,7 +816,7 @@ begin
   TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories := cbShowCategoryDuplicatedInfo.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions := cbShowDialogAboutTooFewSuggestions.IsChecked;
   TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions := cbShowDialogAboutTooFewQuestions.IsChecked;
-  TAppConfig.GetInstance.ShowInfoAboutMissingBlanks := cbShowDialogAboutMissingBlanks.IsChecked;
+  TAppConfig.GetInstance.ShowInfoAboutMissingSpecialEntries := cbShowDialogAboutMissingSpecialEntries.IsChecked;
 
   GoToHome;
 end;
@@ -933,12 +935,13 @@ begin
   end;
 end;
 
-function TFrmMain.GetFirstQuestionWithMissingBlank(out AType: TTypePreview;
+function TFrmMain.GetFirstQuestionWithMissingSpecialEntry(out AType: TTypePreview;
   out AQuestion: TFibbageQuestion; out AError: string): Boolean;
+var
+  error: string;
 begin
   Result := False;
   var foundQuestion: TFibbageQuestion := nil;
-  var error := '';
   for var sType in FContent.EditableTypes do
   begin
     FContent.ForEachQuestion(sType,
@@ -946,7 +949,7 @@ begin
     begin
       if Assigned(foundQuestion) then
         Exit;
-      if FContent.HasMissingBlank(sType, AItem, error) then
+      if FContent.HasMissingSpecialEntries(sType, AItem, error) then
         foundQuestion := AItem;
     end);
 
@@ -1030,8 +1033,8 @@ var
   error: string;
 begin
   Result := True;
-  if TAppConfig.GetInstance.ShowInfoAboutMissingBlanks and GetFirstQuestionWithMissingBlank(qType, question, error) then
-    if not ShowInfoAboutMissingBlanks(Format('%s. Continue?', [error]), True) then
+  if TAppConfig.GetInstance.ShowInfoAboutMissingSpecialEntries and GetFirstQuestionWithMissingSpecialEntry(qType, question, error) then
+    if not ShowInfoAboutMissingSpecialEntries(Format('%s. Continue?', [error]), True) then
     begin
       SetActiveQuestionsType(qType);
       GoToAllQuestions;
@@ -1100,9 +1103,20 @@ begin
 
   if FSelectedConfiguration.NewContent and FSelectedConfiguration.GetPath.IsEmpty then
     if GetDestinationPath(path) then
-      FSelectedConfiguration.SetPath(path)
+    begin
+      FSelectedConfiguration.SetPath(path);
+      AddLastChoosenProject;
+      InitializeLastQuestionProjects;
+    end
     else
       Exit;
+
+  if FSelectedConfiguration.ImportedContent then
+  begin
+    FSelectedConfiguration.ImportedContent := False;
+    AddLastChoosenProject;
+    InitializeLastQuestionProjects;
+  end;
 
   TAsyncAction.Create(OnPreSave, OnPostSave, SaveProc).Start;
 end;
@@ -1117,9 +1131,9 @@ begin
   Result := FContent.HasDuplicatedCategory(FActiveQuestionsType, FSelectedQuestion);
 end;
 
-function TFrmMain.IsMissingBlank(out AError: string): Boolean;
+function TFrmMain.IsMissingSpecialEntry(out AError: string): Boolean;
 begin
-  Result := FContent.HasMissingBlank(FActiveQuestionsType, FSelectedQuestion, AError);
+  Result := FContent.HasMissingSpecialEntries(FActiveQuestionsType, FSelectedQuestion, AError);
 end;
 
 function TFrmMain.ShowInfoAboutTooFewQuestions(
@@ -1187,8 +1201,8 @@ begin
   if TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions and IsTooFewSuggestions then
     ShowInfoAboutTooFewSuggestions('Too few suggestions, the game can freeze because of this. The optimal number of suggestions is 17 (Max number of players * 2 + 1).', False);
 
-  if TAppConfig.GetInstance.ShowInfoAboutMissingBlanks and IsMissingBlank(error) then
-    ShowInfoAboutMissingBlanks(error, False);
+  if TAppConfig.GetInstance.ShowInfoAboutMissingSpecialEntries and IsMissingSpecialEntry(error) then
+    ShowInfoAboutMissingSpecialEntries(error, False);
 end;
 
 function TFrmMain.ShowInfoAboutDuplicatedCategories(const AInfo: string; ACanCancel: Boolean): Boolean;
@@ -1212,7 +1226,7 @@ begin
   end;
 end;
 
-function TFrmMain.ShowInfoAboutMissingBlanks(const AInfo: string; ACanCancel: Boolean): Boolean;
+function TFrmMain.ShowInfoAboutMissingSpecialEntries(const AInfo: string; ACanCancel: Boolean): Boolean;
 var
   dontAskAgain: Boolean;
 begin
@@ -1226,7 +1240,7 @@ begin
       Exit;
     Result := True;
     if dontAskAgain then
-      TAppConfig.GetInstance.ShowInfoAboutMissingBlanks := False;
+      TAppConfig.GetInstance.ShowInfoAboutMissingSpecialEntries := False;
   finally
     dlg.Free;
     rDim.Visible := False;
@@ -1781,7 +1795,7 @@ begin
     cbShowCategoryDuplicatedInfo.IsChecked := TAppConfig.GetInstance.ShowInfoAboutDuplicatedCategories;
     cbShowDialogAboutTooFewSuggestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewSuggestions;
     cbShowDialogAboutTooFewQuestions.IsChecked := TAppConfig.GetInstance.ShowInfoAboutTooFewQuestions;
-    cbShowDialogAboutMissingBlanks.IsChecked := TAppConfig.GetInstance.ShowInfoAboutMissingBlanks;
+    cbShowDialogAboutMissingSpecialEntries.IsChecked := TAppConfig.GetInstance.ShowInfoAboutMissingSpecialEntries;
 
     aGoToSettings.Execute;
   finally

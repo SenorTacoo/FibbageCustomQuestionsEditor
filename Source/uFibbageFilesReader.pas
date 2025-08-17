@@ -84,7 +84,7 @@ begin
   if Length(jetFile) < 1 then
     raise EMissingFile.Create(TPath.Combine(FBasePath, ACategoryFile + '.jet'));
 
-  var sr := TStreamReader.Create(jetFile[0]);
+  var sr := TStreamReader.Create(jetFile[0], TEncoding.UTF8);
   try
     FQuestionData.CategoryData := sr.ReadToEnd;
   finally
@@ -100,7 +100,7 @@ begin
     if Length(dataFile) < 1 then
       raise EMissingFile.Create(TPath.Combine(dir, 'data.jet'));
 
-    sr := TStreamReader.Create(dataFile[0]);
+    sr := TStreamReader.Create(dataFile[0], TEncoding.UTF8);
     try
       FQuestionData.QuestionData.AddOrSetValue(questionId, sr.ReadToEnd);
     finally

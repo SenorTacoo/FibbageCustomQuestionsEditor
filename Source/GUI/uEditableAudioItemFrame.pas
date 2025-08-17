@@ -57,7 +57,7 @@ end;
 
 procedure TFrmEditableAudioItem.bRecordAudioClick(Sender: TObject);
 begin
-  if voMic.Input.IsBusy then
+  if voMic.Status = TOutputStatus.tosPlaying then
     voMic.Stop
   else
     RecordAudio;

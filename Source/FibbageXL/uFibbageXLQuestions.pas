@@ -41,7 +41,7 @@ type
     function GetPreview: TQuestionPreview; override;
     function GetJSON: string; override;
     function SuggestionsCount: Int32;
-    function IsMissingBlank: Boolean; override;
+    function IsMissingSpecialEntry(out AError: string): Boolean; override;
 
     property Category: string read FCategory;
   end;
@@ -91,7 +91,7 @@ type
     function HasQuestionWithTheSameCategory(AQuestion: TFibbageXLQuestion): Boolean;
     function GetFirstQuestionWithDuplicatedCategory: TFibbageXLQuestion; override;
     function GetFirstQuestionWithTooFewSuggestions: TFibbageXLQuestion; override;
-    function GetFirstQuestionWithMissingBlank: TFibbageXLQuestion; override;
+    function GetFirstQuestionWithMissingSpecialEntry: TFibbageXLQuestion; override;
   end;
 
   TFibbageXLQuestions_Shortie = class(TFibbageXLQuestions)
@@ -260,11 +260,13 @@ begin
         Exit(FList[idx]);
 end;
 
-function TFibbageXLQuestions.GetFirstQuestionWithMissingBlank: TFibbageXLQuestion;
+function TFibbageXLQuestions.GetFirstQuestionWithMissingSpecialEntry: TFibbageXLQuestion;
+var
+  dummy: string;
 begin
   Result := nil;
   for var idx := 0 to FList.Count - 1 do
-    if FList[idx].IsMissingBlank then
+    if FList[idx].IsMissingSpecialEntry(dummy) then
       Exit(FList[idx]);
 end;
 
@@ -277,9 +279,11 @@ begin
 end;
 
 function TFibbageXLQuestions.GetNextRandomId: UInt32;
+var
+  found: Boolean;
 begin
-  var found := False;
   repeat
+    found := False;
     Result := RandomRange(30000, 50000);
     for var item in FList do
       if item.FId = Result then
@@ -397,7 +401,7 @@ begin
   Result.Add(strItem);
 
   var strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Question Text';
+  strLongItem.Name := 'Question Text (with <BLANK>)';
   strLongItem.Value := FQuestionText;
   Result.Add(strLongItem);
 
@@ -525,11 +529,16 @@ begin
   Result.Question := FQuestionText;
 end;
 
-function TFibbageXLQuestion.IsMissingBlank: Boolean;
+function TFibbageXLQuestion.IsMissingSpecialEntry(out AError: string): Boolean;
 const
   BLANK = '<BLANK>';
 begin
-  Result := not FQuestionText.Contains(BLANK);
+  Result := False;
+  if not FQuestionText.Contains(BLANK) then
+  begin
+    Result := True;
+    AError := 'Question is missing <BLANK';
+  end;
 end;
 
 procedure TFibbageXLQuestion.SetEditableFields(AFields: TEditableFields);

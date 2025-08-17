@@ -61,7 +61,7 @@ type
     function GetEditableFields: TEditableFields; virtual; abstract;
     function GetPreview: TQuestionPreview; virtual; abstract;
     function GetJSON: string; virtual; abstract;
-    function IsMissingBlank: Boolean; virtual; abstract;
+    function IsMissingSpecialEntry(out AError: string): Boolean; virtual; abstract;
   end;
 
   TFibbageAudioEntry = record
@@ -102,7 +102,7 @@ type
 
     function GetFirstQuestionWithDuplicatedCategory: T; virtual; abstract;
     function GetFirstQuestionWithTooFewSuggestions: T; virtual; abstract;
-    function GetFirstQuestionWithMissingBlank: T; virtual; abstract;
+    function GetFirstQuestionWithMissingSpecialEntry: T; virtual; abstract;
 
     property Item[AIndex: Int32]: T read GetItem; default;
   end;

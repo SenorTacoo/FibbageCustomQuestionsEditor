@@ -133,7 +133,7 @@ begin
   bRemove.Enabled := not FField.Value.IsEmpty;
 
   if FField.Value.IsEmpty then
-    Image1.MultiResBitmap.Clear//.Clear(TAlphaColorRec.White)  // TODO do ogarniecia obrazek
+    Image1.MultiResBitmap.Clear
   else
   begin
     var filePath := System.IOUtils.TPath.Combine(FField.BasePath, FField.Value) + '.png';

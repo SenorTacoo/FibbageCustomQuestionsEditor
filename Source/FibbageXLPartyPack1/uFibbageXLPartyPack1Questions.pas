@@ -38,7 +38,7 @@ type
     function GetPreview: TQuestionPreview; override;
     function GetJSON: string; override;
     function SuggestionsCount: Int32;
-    function IsMissingBlank: Boolean; override;
+    function IsMissingSpecialEntry(out AError: string): Boolean; override;
 
     property Category: string read FCategory;
   end;
@@ -93,7 +93,7 @@ type
     function HasQuestionWithTheSameCategory(AQuestion: TFibbageXLPartyPack1Question): Boolean;
     function GetFirstQuestionWithDuplicatedCategory: TFibbageXLPartyPack1Question; override;
     function GetFirstQuestionWithTooFewSuggestions: TFibbageXLPartyPack1Question; override;
-    function GetFirstQuestionWithMissingBlank: TFibbageXLPartyPack1Question; override;
+    function GetFirstQuestionWithMissingSpecialEntry: TFibbageXLPartyPack1Question; override;
 
     function GetFirstQuestionWithId(AId: UInt32): TFibbageXLPartyPack1Question;
 
@@ -278,11 +278,13 @@ begin
       Exit(FList[idx]);
 end;
 
-function TFibbageXLPartyPack1Questions.GetFirstQuestionWithMissingBlank: TFibbageXLPartyPack1Question;
+function TFibbageXLPartyPack1Questions.GetFirstQuestionWithMissingSpecialEntry: TFibbageXLPartyPack1Question;
+var
+  dummy: string;
 begin
   Result := nil;
   for var idx := 0 to FList.Count - 1 do
-    if FList[idx].IsMissingBlank then
+    if FList[idx].IsMissingSpecialEntry(dummy) then
       Exit(FList[idx]);
 end;
 
@@ -404,7 +406,7 @@ begin
   Result.Add(strItem);
 
   var strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Question Text';
+  strLongItem.Name := 'Question Text (with <BLANK>)';
   strLongItem.Value := FQuestionText;
   Result.Add(strLongItem);
 
@@ -509,11 +511,16 @@ begin
   Result.Question := FQuestionText;
 end;
 
-function TFibbageXLPartyPack1Question.IsMissingBlank: Boolean;
+function TFibbageXLPartyPack1Question.IsMissingSpecialEntry(out AError: string): Boolean;
 const
   BLANK = '<BLANK>';
 begin
-  Result := not FQuestionText.Contains(BLANK);
+  Result := False;
+  if not FQuestionText.Contains(BLANK) then
+  begin
+    Result := False;
+    AError := 'Question is missing <BLANK>';
+  end;
 end;
 
 procedure TFibbageXLPartyPack1Question.SetEditableFields(AFields: TEditableFields);

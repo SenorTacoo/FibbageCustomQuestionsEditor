@@ -57,7 +57,7 @@ object frmEditablePicItem: TfrmEditablePicItem
     object bRemove: TButton
       Align = Client
       Size.Width = 180.500000000000000000
-      Size.Height = 50.000000000000000000
+      Size.Height = 96.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'trashtoolbuttonmultiview'
       TabOrder = 18
@@ -68,7 +68,7 @@ object frmEditablePicItem: TfrmEditablePicItem
     object bSelectFromFile: TButton
       Align = Client
       Size.Width = 180.500000000000000000
-      Size.Height = 50.000000000000000000
+      Size.Height = 96.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'filetoolbuttonmultiview'
       TabOrder = 17
@@ -89,7 +89,9 @@ object frmEditablePicItem: TfrmEditablePicItem
       MultiResBitmap.Width = 512
       MultiResBitmap.LoadSize = 2
       MultiResBitmap.TransparentColor = 0
-      MultiResBitmap = <>
+      MultiResBitmap = <
+        item
+        end>
       Align = Client
       Cursor = crHandPoint
       Size.Width = 123.000000000000000000
