@@ -115,6 +115,7 @@ type
     function GetNextRandomId: UInt32;
 
     procedure SaveAudioFile(const ABasePath: string; AEntry: TFibbageAudioEntry);
+    procedure SavePicFile(const ABasePath: string; AEntry: TFibbagePicEntry);
     procedure DoParseItem(AItem: TQuestionData);
   protected
     procedure DoInitialize; override;
@@ -280,6 +281,9 @@ begin
 
     if not item.FKeywordAudio.Name.IsEmpty then
       SaveAudioFile(basePath, item.FKeywordAudio);
+
+    if not item.FPic.Name.IsEmpty then
+      SavePicFile(basePath, item.FPic);
   end;
 end;
 
@@ -379,6 +383,21 @@ procedure TFibbage3Questions.SaveAudioFile(const ABasePath: string; AEntry: TFib
 begin
   var srcPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.ogg');
   var dstPath := TPath.Combine(ABasePath, AEntry.Name + '.ogg');
+
+  if srcPath = dstPath then
+    Exit;
+
+  if srcPath.StartsWith(TPath.GetTempPath) then
+    TFile.Move(srcPath, dstPath)
+  else
+    TFile.Copy(srcPath, dstPath);
+end;
+
+procedure TFibbage3Questions.SavePicFile(const ABasePath: string;
+  AEntry: TFibbagePicEntry);
+begin
+  var srcPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.png');
+  var dstPath := TPath.Combine(ABasePath, AEntry.Name + '.png');
 
   if srcPath = dstPath then
     Exit;
@@ -565,7 +584,7 @@ begin
       var pic := fields.BeginObject;
         pic.Add('t', 'G');
         if not FPic.Name.IsEmpty then
-          pic.Add('v', FCorrectAudio.Name);
+          pic.Add('v', FPic.Name);
         pic.Add('n', 'Pic')
       .EndObject;
 
@@ -671,10 +690,29 @@ end;
 procedure TFibbage3Questions_Special.DoSaveCategory;
 begin
   for var idx := 0 to Count - 1 do
-    if Self[idx].FPic.Name.IsEmpty then
-      Self[idx].FBumperType := 'SayWhat'
+  begin
+    if not Self[idx].FSocialMediaName.IsEmpty then
+    begin
+      Self[idx].FBumperType := 'SayWhat';
+      Self[idx].FSocialMediaDate := '3:46 PM<br />6 Sep 2012';
+      if not Self[idx].FSocialMediaName.StartsWith('@') then
+        Self[idx].FSocialMediaName := Format('@%s', [Self[idx].FSocialMediaName]);
+    end
+    else if Self[idx].FPic.Name.IsEmpty then
+      Self[idx].FBumperType := 'Russian'
     else
       Self[idx].FBumperType := 'Photo';
+
+    if not Self[idx].FBumperAudio.Name.IsEmpty then
+      Continue;
+
+    var oggFile := TPath.Combine(TPath.GetTempPath, ChangeFileExt(TPath.GetRandomFileName, '.ogg'));
+    if CreateEmptyOggFile(oggFile) then
+    begin
+      Self[idx].FBumperAudio.Name := TPath.GetFileNameWithoutExtension(oggFile);
+      Self[idx].FBumperAudio.BasePath := TPath.GetDirectoryName(oggFile);
+    end;
+  end;
   inherited;
 end;
 
@@ -809,15 +847,10 @@ begin
   strLongItem.Value := string.Join(', ', FSuggestions);
   Result.Add(strLongItem);
 
-  strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Social media date';
-  strLongItem.Value := FSocialMediaDate;
-  Result.Add(strLongItem);
-
-  strLongItem := TEditableLongStringField.Create;
-  strLongItem.Name := 'Social media name';
-  strLongItem.Value := FSocialMediaName;
-  Result.Add(strLongItem);
+  strItem := TEditableStringField.Create;
+  strItem.Name := 'Social media name';
+  strItem.Value := FSocialMediaName;
+  Result.Add(strItem);
 
   var boolItem := TEditableBoolField.Create;
   boolItem.Name := 'Family Friendly';
@@ -855,16 +888,15 @@ begin
   FCorrectText := (AFields[2] as TEditableStringField).Value;
   FAlternateSpellings := (AFields[3] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
   FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
-  FSocialMediaDate := (AFields[5] as TEditableLongStringField).Value;
-  FSocialMediaName := (AFields[6] as TEditableLongStringField).Value;
-  FFamilyFriendly := (AFields[7] as TEditableBoolField).Value;
-  FUsCentric := (AFields[8] as TEditableBoolField).Value;
-  FQuestionAudio.Name := (AFields[9] as TEditableAudioField).Value;
-  FQuestionAudio.BasePath := (AFields[9] as TEditableAudioField).BasePath;
-  FCorrectAudio.Name := (AFields[10] as TEditableAudioField).Value;
-  FCorrectAudio.BasePath := (AFields[10] as TEditableAudioField).BasePath;
-  FPic.Name := (AFields[11] as TEditableAudioField).Value;
-  FPic.BasePath := (AFields[11] as TEditableAudioField).BasePath;
+  FSocialMediaName := (AFields[5] as TEditableStringField).Value;
+  FFamilyFriendly := (AFields[6] as TEditableBoolField).Value;
+  FUsCentric := (AFields[7] as TEditableBoolField).Value;
+  FQuestionAudio.Name := (AFields[8] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[8] as TEditableAudioField).BasePath;
+  FCorrectAudio.Name := (AFields[9] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[9] as TEditableAudioField).BasePath;
+  FPic.Name := (AFields[10] as TEditablePicField).Value;
+  FPic.BasePath := (AFields[10] as TEditablePicField).BasePath;
 end;
 
 { TFibbage3PersonalQuestion }

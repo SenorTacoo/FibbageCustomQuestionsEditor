@@ -90,6 +90,7 @@ type
     procedure DoSaveQuestions; virtual; abstract;
 
     procedure ClearAudioEntryIfNotExistingFile(AEntry: PFibbageAudioEntry);
+    function CreateEmptyOGGFile(const AFilePath: string): Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -138,6 +139,49 @@ constructor TFibbageQuestions<T>.Create;
 begin
   inherited Create;
   FList := TObjectList<T>.Create;
+end;
+
+function TFibbageQuestions<T>.CreateEmptyOGGFile(
+  const AFilePath: string): Boolean;
+begin
+  Result := False;
+  var oggHeader := TBytes.Create(
+    $4F, $67, $67, $53,
+    $00,
+    $02,
+    $00, $00, $00, $00, $00, $00, $00, $00,
+    $01, $00, $00, $00,
+    $00, $00, $00, $00,
+    $00, $00, $00, $00,
+    $01,
+    $1E
+  );
+
+  var vorbisIdHeader := TBytes.Create(
+    $01,
+    $76, $6F, $72, $62, $69, $73,
+    $00, $00, $00, $00,
+    $02,
+    $44, $AC, $00, $00,
+    $00, $00, $00, $00,
+    $00, $00, $00, $00,
+    $00, $00, $00, $00,
+    $00,
+    $01
+  );
+
+  try
+    var stream := TFileStream.Create(AFilePath, fmCreate);
+    try
+      Stream.WriteBuffer(oggHeader[0], Length(oggHeader));
+      Stream.WriteBuffer(vorbisIdHeader[0], Length(vorbisIdHeader));
+      Result := True;
+    finally
+      Stream.Free;
+    end;
+  except
+    on E: Exception do
+  end;
 end;
 
 destructor TFibbageQuestions<T>.Destroy;
