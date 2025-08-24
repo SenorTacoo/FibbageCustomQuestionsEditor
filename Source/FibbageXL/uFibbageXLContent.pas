@@ -32,7 +32,7 @@ type
     function CreateNewQuestion(AType: TTypePreview): TFibbageQuestion; override;
     procedure RemoveQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion); override;
 
-    procedure CopyQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion); override;
+    function CopyQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; override;
     procedure MoveQuestion(ASrcType, ADstType: TTypePreview; AQuestion: TFibbageQuestion); override;
 
     procedure Activate(const APath: string); override;
@@ -42,6 +42,8 @@ type
     function HasTooFewSuggestions(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; override;
     function HasMissingSpecialEntries(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; override;
     function HasTooFewQuestions(AType: TTypePreview): Boolean; override;
+
+    function GetMoveCopyTypesFor(AType: TTypePreview): TArray<TTypePreview>; override;
   end;
 
 implementation
@@ -88,10 +90,11 @@ begin
   end;
 end;
 
-procedure TFibbageXLContent.CopyQuestion;
+function TFibbageXLContent.CopyQuestion;
 var
   question: TFibbageXLQuestion;
 begin
+  Result := True;
   if FShortieQuestions.GetName = AType.InternalName then
     question := FShortieQuestions.CreateNewQuestion
   else if FFinalQuestions.GetName = AType.InternalName then
@@ -99,7 +102,7 @@ begin
   else
   begin
     Assert(False);
-    Exit;
+    Exit(False);
   end;
   question.Assign(AQuestion);
 end;
@@ -169,6 +172,18 @@ begin
   end;
 end;
 
+function TFibbageXLContent.GetMoveCopyTypesFor(
+  AType: TTypePreview): TArray<TTypePreview>;
+begin
+  Result := [];
+  for var item in FEditableTypes do
+  begin
+    if item.InternalName = AType.InternalName then
+      Continue;
+    Result := Result + [item];
+  end;
+end;
+
 function TFibbageXLContent.HasDuplicatedCategory(AType: TTypePreview;
   AQuestion: TFibbageQuestion): Boolean;
 begin
@@ -209,8 +224,8 @@ end;
 
 procedure TFibbageXLContent.MoveQuestion;
 begin
-  CopyQuestion(ADstType, AQuestion);
-  RemoveQuestion(ASrcType, AQuestion);
+  if CopyQuestion(ADstType, AQuestion) then
+    RemoveQuestion(ASrcType, AQuestion);
 end;
 
 procedure TFibbageXLContent.RemoveQuestion;

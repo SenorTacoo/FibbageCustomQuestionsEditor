@@ -9,6 +9,7 @@ uses
   uFibbage3Content,
   uFibbageXLContent,
   uFibbage2Content,
+  uFibbage4Content,
   uFibbageXLPartyPack1Content;
 
 type
@@ -30,6 +31,7 @@ begin
     FibbageXLPartyPack1: Result := TFibbageXLPartyPack1Content.Create(AContentConfig);
     Fibbage3PartyPack4: Result := TFibbage3Content.Create(AContentConfig);
     Fibbage2PartyPack2: Result := TFibbage2Content.Create(AContentConfig);
+    Fibbage4PartyPack9: Result := TFibbage4Content.Create(AContentConfig);
   end;
 end;
 

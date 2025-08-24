@@ -39,7 +39,7 @@ type
     function CreateNewQuestion(AType: TTypePreview): TFibbageQuestion; virtual; abstract;
     procedure RemoveQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion); virtual; abstract;
 
-    procedure CopyQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion); virtual; abstract;
+    function CopyQuestion(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; virtual; abstract;
     procedure MoveQuestion(ASrcType, ADstType: TTypePreview; AQuestion: TFibbageQuestion); virtual; abstract;
 
     procedure ForEachQuestion(AType: TTypePreview; AProc: TProc<TFibbageQuestion>); virtual; abstract;
@@ -48,6 +48,8 @@ type
     function HasTooFewSuggestions(AType: TTypePreview; AQuestion: TFibbageQuestion): Boolean; virtual; abstract;
     function HasMissingSpecialEntries(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean; virtual; abstract;
     function HasTooFewQuestions(AType: TTypePreview): Boolean; virtual; abstract;
+
+    function GetMoveCopyTypesFor(AType: TTypePreview): TArray<TTypePreview>; virtual; abstract;
 
     property EditableTypes: TPreviewTypes read GetEditableTypes;
   end;

@@ -63,7 +63,13 @@ begin
         IncludeTrailingPathDelimiter('en')) then
         Exit(True);
       if DirectoryExists(IncludeTrailingPathDelimiter(APath) +
-        IncludeTrailingPathDelimiter('fibbageblankie')) then
+        IncludeTrailingPathDelimiter('fanblankie')) then
+        Exit(True);
+      if DirectoryExists(IncludeTrailingPathDelimiter(APath) +
+        IncludeTrailingPathDelimiter('idfan')) then
+        Exit(True);
+      if DirectoryExists(IncludeTrailingPathDelimiter(APath) +
+        IncludeTrailingPathDelimiter('movieblankie')) then
         Exit(True);
     end
     else

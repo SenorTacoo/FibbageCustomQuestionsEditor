@@ -34,7 +34,9 @@ uses
   uFibbage3Content in 'JackboxPartyPack4\uFibbage3Content.pas',
   uEditablePicItemFrame in 'GUI\uEditablePicItemFrame.pas' {frmEditablePicItem: TFrame},
   uFibbage2Content in 'JackboxPartyPack2\uFibbage2Content.pas',
-  uFibbage2Questions in 'JackboxPartyPack2\uFibbage2Questions.pas';
+  uFibbage2Questions in 'JackboxPartyPack2\uFibbage2Questions.pas',
+  uFibbage4Content in 'JackboxPartyPack9\uFibbage4Content.pas',
+  uFibbage4Questions in 'JackboxPartyPack9\uFibbage4Questions.pas';
 
 {$R *.res}
 

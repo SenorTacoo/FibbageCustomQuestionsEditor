@@ -33,7 +33,7 @@ type
 
     function FileExists(const AFile: string): Boolean; virtual;
 
-    property BasePath: string read FBasePath;
+    property BasePath: string read FBasePath write FBasePath;
   end;
 
   EMissingFile = class(Exception);

@@ -7,7 +7,7 @@ uses
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Controls.Presentation, FMX.Layouts, uQuestionsLoader, ACS_Classes,
   ACS_Vorbis, ACS_Converters, ACS_DXAudio, NewACDSAudio, uConfig, System.IOUtils,
-  uUserDialog;
+  uUserDialog, System.StrUtils;
 
 type
   TFrmEditableAudioItem = class(TFrame)
@@ -170,7 +170,7 @@ begin
     end;
 
   FField.BasePath := TPath.GetTempPath;
-  FField.Value := ChangeFileExt(TPath.GetRandomFileName, '');
+  FField.Value := IfThen(FField.ForcedFileName.IsEmpty, ChangeFileExt(TPath.GetRandomFileName, ''), FField.ForcedFileName);
 
   voMic.FileName := TPath.Combine(FField.BasePath, FField.Value + '.ogg');
   voMic.Run;

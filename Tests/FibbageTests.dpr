@@ -25,7 +25,9 @@ uses
   TestuFibbage3 in 'TestuFibbage3.pas',
   uFibbage3Questions in '..\Source\JackboxPartyPack4\uFibbage3Questions.pas',
   TestuFibbage2 in 'TestuFibbage2.pas',
-  uFibbage2Questions in '..\Source\JackboxPartyPack2\uFibbage2Questions.pas';
+  uFibbage2Questions in '..\Source\JackboxPartyPack2\uFibbage2Questions.pas',
+  TestuFibbage4 in 'TestuFibbage4.pas',
+  uFibbage4Questions in '..\Source\JackboxPartyPack9\uFibbage4Questions.pas';
 
 begin
 {$IFDEF TESTINSIGHT}

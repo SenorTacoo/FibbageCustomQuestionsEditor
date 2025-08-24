@@ -235,6 +235,8 @@
         </DCCReference>
         <DCCReference Include="JackboxPartyPack2\uFibbage2Content.pas"/>
         <DCCReference Include="JackboxPartyPack2\uFibbage2Questions.pas"/>
+        <DCCReference Include="JackboxPartyPack9\uFibbage4Content.pas"/>
+        <DCCReference Include="JackboxPartyPack9\uFibbage4Questions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

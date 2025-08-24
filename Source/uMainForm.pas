@@ -511,8 +511,6 @@ begin
         ShowMessage('Invalid path, needed directories for this game not found');
         Continue;
       end;
-      if (gameType = TGameType.Fibbage4PartyPack9) and DirectoryExists(System.IOUtils.TPath.Combine(str, 'en')) then
-        cfg.SetPath(System.IOUtils.TPath.Combine(str, 'en'));
 
       if not GetProjectName(str) then
         Exit;
@@ -1553,6 +1551,8 @@ begin
   Log('OnQuestionItemDoubleClick');
 
   FLastClickedItemToEdit := Sender as TQuestionScrollItem;
+  FQuestionVisItems.Select(FLastClickedItemToEdit.OrgQuestion);
+  RefreshQuestionsFormActions;
   aEditQuestion.Execute;
 end;
 
@@ -1849,7 +1849,7 @@ begin
     FreeAndNil(item);
   end;
 
-  for var sType in FContent.EditableTypes do
+  for var sType in FContent.GetMoveCopyTypesFor(FActiveQuestionsType) do
   begin
     if sType.InternalName = FActiveQuestionsType.InternalName then
       Continue;
@@ -1864,6 +1864,9 @@ begin
     moveItem.OnClick := OnMoveQuestionTo;
     miMoveTo.AddObject(moveItem);
   end;
+
+  miCopyTo.Enabled := miCopyTo.ItemsCount > 0;
+  miMoveTo.Enabled := miMoveTo.ItemsCount > 0;
 end;
 
 procedure TFrmMain.cbAudioInputChange(Sender: TObject);

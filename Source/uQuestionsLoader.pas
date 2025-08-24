@@ -31,6 +31,7 @@ type
     Name: string;
     Value: string;
     BasePath: string;
+    ForcedFileName: string;
   end;
 
   TEditableBoolField = class(TEditableFieldBase)
@@ -77,6 +78,22 @@ type
     Name: string;
   end;
 
+  PFibbagePicEntry = ^TFibbagePicEntry;
+
+  TFibbageVideoEntry = record
+    BasePath: string;
+    Name: string;
+  end;
+
+  PFibbageVideoEntry = ^TFibbageVideoEntry;
+
+  TFibbageSubtitlesEntry = record
+    BasePath: string;
+    Name: string;
+  end;
+
+  PFibbageSubtitlesEntry = ^TFibbageSubtitlesEntry;
+
   TFibbageQuestions<T: class> = class abstract
   private
     function GetItem(AIndex: Int32): T;
@@ -90,6 +107,10 @@ type
     procedure DoSaveQuestions; virtual; abstract;
 
     procedure ClearAudioEntryIfNotExistingFile(AEntry: PFibbageAudioEntry);
+    procedure ClearPicEntryIfNotExistingFile(AEntry: PFibbagePicEntry);
+    procedure ClearVideoEntryIfNotExistingFile(AEntry: PFibbageVideoEntry);
+    procedure ClearVideoSubtitlesIfNotExistingFile(AEntry: PFibbageSubtitlesEntry);
+
     function CreateEmptyOGGFile(const AFilePath: string): Boolean;
   public
     constructor Create;
@@ -126,6 +147,39 @@ begin
     Exit;
 
   var wantedPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.ogg');
+  if not FReader.FileExists(wantedPath) then
+    AEntry.Name := '';
+end;
+
+procedure TFibbageQuestions<T>.ClearPicEntryIfNotExistingFile(
+  AEntry: PFibbagePicEntry);
+begin
+  if AEntry.Name = '' then
+    Exit;
+
+  var wantedPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.png');
+  if not FReader.FileExists(wantedPath) then
+    AEntry.Name := '';
+end;
+
+procedure TFibbageQuestions<T>.ClearVideoEntryIfNotExistingFile(
+  AEntry: PFibbageVideoEntry);
+begin
+  if AEntry.Name = '' then
+    Exit;
+
+  var wantedPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.srt');
+  if not FReader.FileExists(wantedPath) then
+    AEntry.Name := '';
+end;
+
+procedure TFibbageQuestions<T>.ClearVideoSubtitlesIfNotExistingFile(
+  AEntry: PFibbageSubtitlesEntry);
+begin
+  if AEntry.Name = '' then
+    Exit;
+
+  var wantedPath := TPath.Combine(AEntry.BasePath, AEntry.Name + '.srt');
   if not FReader.FileExists(wantedPath) then
     AEntry.Name := '';
 end;
