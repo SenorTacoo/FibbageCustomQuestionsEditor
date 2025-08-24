@@ -39,6 +39,7 @@ type
     procedure OnInputAudioStart;
   public
     constructor Create(AOwner: TComponent; AField: TEditableAudioField); reintroduce;
+    procedure BeforeDestruction; override;
   end;
 
 implementation
@@ -46,6 +47,12 @@ implementation
 {$R *.fmx}
 
 { TFrmEditableAudioItem }
+
+procedure TFrmEditableAudioItem.BeforeDestruction;
+begin
+  DSAudioOut1.Stop(False);
+  inherited;
+end;
 
 procedure TFrmEditableAudioItem.bPlayClick(Sender: TObject);
 begin
