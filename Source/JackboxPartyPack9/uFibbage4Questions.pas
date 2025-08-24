@@ -97,6 +97,7 @@ type
     procedure SetEditableFields(AFields: TEditableFields); override;
     function GetEditableFields: TEditableFields; override;
     function GetPreview: TQuestionPreview; override;
+    function IsMissingSpecialEntry(out AError: string): Boolean; override;
   end;
 
   TFibbage4CelebrityQuestion = class(TFibbage4BlankieQuestion);
@@ -225,10 +226,6 @@ type
     function GetCategoriesJSON: string; override;
   end;
 
-  TFibbage4Questions_EAY = class(TFibbage4Question)
-
-  end;
-
 implementation
 
 { TFibbage4Questions }
@@ -245,7 +242,7 @@ end;
 
 procedure TFibbage4Questions.DoSaveCategory;
 begin
-  var filePath := TPath.Combine(FSavePath, 'en');
+  var filePath := TPath.Combine(FSavePath);
   ForceDirectories(filePath);
   filePath := TPath.Combine(filePath, Format('%s.jet', [GetName]));
   var fs := TFileStream.Create(filePath, fmCreate);
@@ -262,7 +259,7 @@ procedure TFibbage4Questions.DoSaveQuestions;
 begin
   for var item in FList do
   begin
-    var basePath := TPath.Combine(FSavePath, 'en', GetName, UIntToStr(item.FId));
+    var basePath := TPath.Combine(FSavePath, GetName, UIntToStr(item.FId));
     ForceDirectories(basePath);
     var filePath := TPath.Combine(basePath, 'data.jet');
     var fs := TFileStream.Create(filePath, fmCreate);
@@ -1274,6 +1271,19 @@ begin
   Result := Default(TQuestionPreview);
   Result.Header := Format('Id: %d', [FId]);
   Result.Question := FQuestionText;
+end;
+
+function TFibbage4PersonalQuestion.IsMissingSpecialEntry(
+  out AError: string): Boolean;
+const
+  PLAYER = '{{PLAYER}}';
+begin
+  Result := True;
+
+  if FQuestionText.Contains(PLAYER) then
+    Exit(False);
+
+  AError := 'Question is missing ' + PLAYER
 end;
 
 procedure TFibbage4PersonalQuestion.SetEditableFields(AFields: TEditableFields);

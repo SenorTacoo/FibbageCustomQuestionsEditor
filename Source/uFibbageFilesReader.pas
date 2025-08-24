@@ -32,6 +32,7 @@ type
     function ReadWithCustomQuestionsDir(const AType, AQuestionsDir: string): TQuestionData;
 
     function FileExists(const AFile: string): Boolean; virtual;
+    function DirectoryExists(const ADir: string): Boolean; virtual;
 
     property BasePath: string read FBasePath write FBasePath;
   end;
@@ -73,6 +74,11 @@ destructor TFibbageFilesReader.Destroy;
 begin
   FQuestionData.Free;
   inherited;
+end;
+
+function TFibbageFilesReader.DirectoryExists(const ADir: string): Boolean;
+begin
+  Result := TDirectory.Exists(ADir);
 end;
 
 procedure TFibbageFilesReader.DoRead(const ACategoryFile, AQuestionsDirectory: string);

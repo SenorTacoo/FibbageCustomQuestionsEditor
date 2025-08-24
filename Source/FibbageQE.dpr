@@ -36,7 +36,8 @@ uses
   uFibbage2Content in 'JackboxPartyPack2\uFibbage2Content.pas',
   uFibbage2Questions in 'JackboxPartyPack2\uFibbage2Questions.pas',
   uFibbage4Content in 'JackboxPartyPack9\uFibbage4Content.pas',
-  uFibbage4Questions in 'JackboxPartyPack9\uFibbage4Questions.pas';
+  uFibbage4Questions in 'JackboxPartyPack9\uFibbage4Questions.pas',
+  uFibbage4Skeleton in 'JackboxPartyPack9\uFibbage4Skeleton.pas';
 
 {$R *.res}
 
