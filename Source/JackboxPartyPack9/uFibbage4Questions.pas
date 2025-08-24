@@ -71,12 +71,16 @@ type
     property SuggestionsCount: Int32 read GetSuggestionsCount;
   end;
 
-  TFibbage4BlankieQuestion = class(TFibbage4Question)
+  TFibbage4BaseQuestion = class(TFibbage4Question)
+  public
+    function GetJSON: string; override;
+    function IsMissingSpecialEntry(out AError: string): Boolean; override;
+  end;
+
+  TFibbage4BlankieQuestion = class(TFibbage4BaseQuestion)
   public
     procedure SetEditableFields(AFields: TEditableFields); override;
     function GetEditableFields: TEditableFields; override;
-    function GetJSON: string; override;
-    function IsMissingSpecialEntry(out AError: string): Boolean; override;
   end;
 
   TFibbage4FinalQuestion = class(TFibbage4Question)
@@ -85,6 +89,13 @@ type
     function GetEditableFields: TEditableFields; override;
     function GetJSON: string; override;
     function IsMissingSpecialEntry(out AError: string): Boolean; override;
+    function GetPreview: TQuestionPreview; override;
+  end;
+
+  TFibbage4PersonalQuestion = class(TFibbage4BaseQuestion)
+  public
+    procedure SetEditableFields(AFields: TEditableFields); override;
+    function GetEditableFields: TEditableFields; override;
     function GetPreview: TQuestionPreview; override;
   end;
 
@@ -112,7 +123,7 @@ type
     function GetFirstQuestionWithMissingSpecialEntry: TFibbage4Question; override;
   end;
 
-  TFibbage4Questions_Blankie = class(TFibbage4Questions)
+  TFibbage4QuestionsBase = class(TFibbage4Questions)
   strict private type
     TCategory = class
     private
@@ -139,11 +150,23 @@ type
   protected
     procedure DoParseItem(AItem: TQuestionData); override;
   public
+    function GetCategoriesJSON: string; override;
+  end;
+
+  TFibbage4Questions_Blankie = class(TFibbage4QuestionsBase)
+  public
     function GetName: string; override;
     function GetTypePreview: TTypePreview; override;
     function CreateNewQuestion: TFibbage4Question; override;
-    function GetCategoriesJSON: string; override;
   end;
+
+  TFibbage4Questions_Personal = class(TFibbage4QuestionsBase)
+  public
+    function GetName: string; override;
+    function GetTypePreview: TTypePreview; override;
+    function CreateNewQuestion: TFibbage4Question; override;
+  end;
+
 
   TFibbage4Questions_Final = class(TFibbage4Questions)
   strict private type
@@ -168,13 +191,16 @@ type
       destructor Destroy; override;
     end;
   protected
-    procedure DoParseItem
-    (AItem: TQuestionData); override;
+    procedure DoParseItem(AItem: TQuestionData); override;
   public
     function GetName: string; override;
     function GetTypePreview: TTypePreview; override;
     function CreateNewQuestion: TFibbage4Question; override;
     function GetCategoriesJSON: string; override;
+  end;
+
+  TFibbage4Questions_EAY = class(TFibbage4Question)
+
   end;
 
 implementation
@@ -370,16 +396,9 @@ begin
 //
 end;
 
-{ TFibbage4Questions_Blankie }
+{ TFibbage4QuestionsBase }
 
-function TFibbage4Questions_Blankie.CreateNewQuestion: TFibbage4Question;
-begin
-  Result := TFibbage4BlankieQuestion.Create;
-  Result.FId := GetNextRandomId;
-  FList.Add(Result);
-end;
-
-procedure TFibbage4Questions_Blankie.DoParseItem(AItem: TQuestionData);
+procedure TFibbage4QuestionsBase.DoParseItem(AItem: TQuestionData);
 begin
   var rawCategory := TJson.JsonToObject<TCategories>(AItem.CategoryData);
   try
@@ -388,10 +407,10 @@ begin
       if not AItem.QuestionData.ContainsKey(rawCategory.FContent[idx].FId.ToString) then
         Continue;
 
-      var newItem: TFibbage4BlankieQuestion := nil;
+      var newItem: TFibbage4Question := nil;
       var rawQuestion := TJson.JsonToObject<TQuestions>(AItem.QuestionData[rawCategory.FContent[idx].FId.ToString]);
       try
-        newItem := CreateNewQuestion as TFibbage4BlankieQuestion;
+        newItem := CreateNewQuestion;
 
         newItem.FId := rawCategory.FContent[idx].FId;
         newItem.FIsValid := rawCategory.FContent[idx].FIsValid;
@@ -505,7 +524,7 @@ begin
   end;
 end;
 
-function TFibbage4Questions_Blankie.GetCategoriesJSON: string;
+function TFibbage4QuestionsBase.GetCategoriesJSON: string;
 begin
   var builder := TFibbageJSONBuilder.Create;
   try
@@ -549,17 +568,6 @@ begin
   finally
     builder.Free;
   end;
-end;
-
-function TFibbage4Questions_Blankie.GetName: string;
-begin
-  Result := 'fibbageblankie';
-end;
-
-function TFibbage4Questions_Blankie.GetTypePreview: TTypePreview;
-begin
-  Result.InternalName := GetName;
-  Result.DisplayName := 'Round 1 + Round 2';
 end;
 
 { TFibbage4Questions_Final }
@@ -740,7 +748,7 @@ begin
   Result.Add(audioItem);
 end;
 
-function TFibbage4BlankieQuestion.GetJSON: string;
+function TFibbage4BaseQuestion.GetJSON: string;
 begin
   var builder := TFibbageJSONBuilder.Create;
   try
@@ -879,8 +887,8 @@ begin
   end;
 end;
 
-function TFibbage4BlankieQuestion.IsMissingSpecialEntry(
-out AError: string): Boolean;
+function TFibbage4BaseQuestion.IsMissingSpecialEntry(
+  out AError: string): Boolean;
 const
   BLANK = '{{BLANK}}';
 begin
@@ -1151,14 +1159,106 @@ begin
   inherited;
 end;
 
-{ TFibbage4Questions_Blankie.TCategories }
+{ TFibbage4QuestionsBase.TCategories }
 
-destructor TFibbage4Questions_Blankie.TCategories.Destroy;
+destructor TFibbage4QuestionsBase.TCategories.Destroy;
 begin
   for var idx := Length(FContent) - 1 downto 0 do
     FContent[idx].Free;
   SetLength(FContent, 0);
   inherited;
+end;
+
+{ TFibbage4Questions_Blankie }
+
+function TFibbage4Questions_Blankie.CreateNewQuestion: TFibbage4Question;
+begin
+  Result := TFibbage4BlankieQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
+
+function TFibbage4Questions_Blankie.GetName: string;
+begin
+  Result := 'fibbageblankie';
+end;
+
+function TFibbage4Questions_Blankie.GetTypePreview: TTypePreview;
+begin
+  Result.InternalName := GetName;
+  Result.DisplayName := 'Round 1 + Round 2';
+end;
+
+{ TFibbage4Questions_Personal }
+
+function TFibbage4Questions_Personal.CreateNewQuestion: TFibbage4Question;
+begin
+  Result := TFibbage4PersonalQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
+
+function TFibbage4Questions_Personal.GetName: string;
+begin
+  Result := 'eayblankie';
+end;
+
+function TFibbage4Questions_Personal.GetTypePreview: TTypePreview;
+begin
+  Result.InternalName := GetName;
+  Result.DisplayName := 'Personal';
+end;
+
+{ TFibbage4PersonalQuestion }
+
+function TFibbage4PersonalQuestion.GetEditableFields: TEditableFields;
+begin
+  Result := TEditableFields.Create;
+
+  var strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Question (when asked for truth,' + sLineBreak + 'without any special elements)';
+  strLongItem.Value := FPersonal;
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Question (when picking truth,' + sLineBreak + 'with {{PLAYER}})';
+  strLongItem.Value := FQuestionText;
+  Result.Add(strLongItem);
+
+  strLongItem := TEditableLongStringField.Create;
+  strLongItem.Name := 'Suggestions';
+  strLongItem.Value := string.Join(', ', FSuggestions);
+  Result.Add(strLongItem);
+
+  var boolItem := TEditableBoolField.Create;
+  boolItem.Name := 'Family Friendly';
+  boolItem.Value := FFamilyFriendly;
+  Result.Add(boolItem);
+
+  var audioItem := TEditableAudioField.Create;
+  audioItem.Name := 'Question Audio';
+  audioItem.Value := FQuestionAudio.Name;
+  audioItem.BasePath := FQuestionAudio.BasePath;
+  audioItem.ForcedFileName := 'questionAudio';
+  Result.Add(audioItem);
+end;
+
+function TFibbage4PersonalQuestion.GetPreview: TQuestionPreview;
+begin
+  Result := Default(TQuestionPreview);
+  Result.Header := Format('Id: %d', [FId]);
+  Result.Question := FQuestionText;
+end;
+
+procedure TFibbage4PersonalQuestion.SetEditableFields(AFields: TEditableFields);
+begin
+  FPersonal := (AFields[0] as TEditableLongStringField).Value;
+  FQuestionText := (AFields[1] as TEditableLongStringField).Value;
+  FSuggestions := (AFields[2] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
+  FFamilyFriendly := (AFields[3] as TEditableBoolField).Value;
+
+  FQuestionAudio.Name := (AFields[4] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[4] as TEditableAudioField).BasePath;
 end;
 
 end.

@@ -18,9 +18,19 @@ type
   private
     FShortieQuestions: TFibbage4Questions_Blankie;
     FFinalQuestions: TFibbage4Questions_Final;
+    FPersonalQuestions: TFibbage4Questions_Personal;
 
     function GetManifestJSON: string;
     procedure SaveManifest(const APath: string);
+    procedure SaveDummyFiles(const APath: string);
+    procedure SaveIdBlankie(const APath: string);
+    procedure SaveIdFinal(const APath: string);
+    procedure SaveIdFan(const APath: string);
+    procedure SaveIdHeadline(const APath: string);
+    procedure SaveIdHistory(const APath: string);
+    procedure SaveSkeleton(const APath: string);
+
+    procedure DoSaveDummyContent(const APath, AFileName: string);
   protected
     function DoInitialize: Boolean; override;
     function DoGetEditableTypes: TPreviewTypes; override;
@@ -57,6 +67,8 @@ begin
     Result := FShortieQuestions.CreateNewQuestion
   else if AType.InternalName = FFinalQuestions.GetName then
     Result := FFinalQuestions.CreateNewQuestion
+  else if AType.InternalName = FPersonalQuestions.GetName then
+    Result := FPersonalQuestions.CreateNewQuestion
   else
     Assert(False);
 end;
@@ -72,6 +84,7 @@ begin
         FConfiguration.Save(savePath);
       FShortieQuestions.Save(savePath);
       FFinalQuestions.Save(savePath);
+      FPersonalQuestions.Save(savePath);
       SaveManifest(savePath);
     except
       on E: Exception do
@@ -99,6 +112,8 @@ begin
     question := FShortieQuestions.CreateNewQuestion
   else if FFinalQuestions.GetName = AType.InternalName then
     question := FFinalQuestions.CreateNewQuestion
+  {else if FPersonalQuestions.GetName = AType.InternalName then
+    question := FPersonalQuestions.CreateNewQuestion}
   else
   begin
     {Assert(False);}
@@ -112,6 +127,7 @@ begin
   inherited Create(ACfg);
   FShortieQuestions := TFibbage4Questions_Blankie.Create;
   FFinalQuestions := TFibbage4Questions_Final.Create;
+  FPersonalQuestions := TFibbage4Questions_Personal.Create;
   FFilesReader.BasePath := TPath.Combine(FFilesReader.BasePath, 'en');
 end;
 
@@ -119,6 +135,7 @@ destructor TFibbage4Content.Destroy;
 begin
   FShortieQuestions.Free;
   FFinalQuestions.Free;
+  FPersonalQuestions.Free;
   inherited;
 end;
 
@@ -128,8 +145,30 @@ begin
   begin
     FShortieQuestions.Initialize(FFilesReader);
     FFinalQuestions.Initialize(FFilesReader);
+    FPersonalQuestions.Initialize(FFilesReader);
   end;
   Result := True;
+end;
+
+procedure TFibbage4Content.DoSaveDummyContent(const APath, AFileName: string);
+begin
+  var fileName := TPath.Combine(APath, 'en', AFileName);
+  var fs := TFileStream.Create(fileName, fmCreate);
+  var sw := TStreamWriter.Create(fs);
+  var builder := TFibbageJSONBuilder.Create;
+  try
+    builder
+      .BeginObject
+        .BeginArray('content')
+        .EndArray
+      .EndObject;
+
+    sw.OwnStream;
+    sw.Write(builder.Build);
+  finally
+    builder.Free;
+    sw.Free;
+  end;
 end;
 
 procedure TFibbage4Content.ForEachQuestion;
@@ -144,6 +183,11 @@ begin
     for var idx := 0 to FFinalQuestions.Count - 1 do
       AProc(FFinalQuestions[idx]);
   end
+  else if AType.InternalName = FPersonalQuestions.GetName then
+  begin
+    for var idx := 0 to FPersonalQuestions.Count - 1 do
+      AProc(FPersonalQuestions[idx]);
+  end
   else
     Assert(False);
 end;
@@ -153,6 +197,7 @@ begin
   Result := TPreviewTypes.Create;
   Result.Add(FShortieQuestions.GetTypePreview);
   Result.Add(FFinalQuestions.GetTypePreview);
+  Result.Add(FPersonalQuestions.GetTypePreview);
 end;
 
 function TFibbage4Content.GetManifestJSON: string;
@@ -166,7 +211,7 @@ begin
         .Add(FShortieQuestions.GetName)
         .Add(FFinalQuestions.GetName)
         .Add('skeleton')
-        .Add('eayblankie')
+        .Add(FPersonalQuestions.GetName)
         .Add('celebrityblankie')
         .Add('headlineblankie')
         .Add('historyblankie')
@@ -207,6 +252,8 @@ begin
     Result := FShortieQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbage4Question)
   else if AType.InternalName = FFinalQuestions.GetName then
     Result := FFinalQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbage4Question)
+  else if AType.InternalName = FPersonalQuestions.GetName then
+    Result := FPersonalQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbage4Question)
   else
     Assert(False);
 end;
@@ -228,6 +275,8 @@ begin
     Result := FShortieQuestions.Count < MIN_SHORTIE_QUESTIONS_COUNT
   else if AType.InternalName = FFinalQuestions.GetName then
     Result := FFinalQuestions.Count < MIN_FINAL_QUESTIONS_COUNT
+  else if AType.InternalName = FPersonalQuestions.GetName then
+    Result := FPersonalQuestions.Count < MIN_FINAL_QUESTIONS_COUNT
   else
     Assert(False);
 end;
@@ -254,6 +303,8 @@ begin
     FShortieQuestions.RemoveQuestion(AQuestion as TFibbage4Question)
   else if AType.InternalName = FFinalQuestions.GetName then
     FFinalQuestions.RemoveQuestion(AQuestion as TFibbage4Question)
+  else if AType.InternalName = FPersonalQuestions.GetName then
+    FPersonalQuestions.RemoveQuestion(AQuestion as TFibbage4Question)
   else
     Assert(False);
 end;
@@ -266,6 +317,8 @@ begin
       FConfiguration.Save(savePath);
       FShortieQuestions.Save(savePath);
       FFinalQuestions.Save(savePath);
+      FPersonalQuestions.Save(savePath);
+      SaveDummyFiles(savePath);
       SaveManifest(savePath);
     except
       on E: Exception do
@@ -284,6 +337,41 @@ begin
   end;
 end;
 
+procedure TFibbage4Content.SaveDummyFiles(const APath: string);
+begin
+  SaveIdBlankie(APath);
+  SaveIdFinal(APath);
+  SaveIdFan(APath);
+  SaveIdHeadline(APath);
+  SaveIdHistory(APath);
+  SaveSkeleton(APath);
+end;
+
+procedure TFibbage4Content.SaveIdBlankie(const APath: string);
+begin
+  DoSaveDummyContent(APath, 'idblankie.jet');
+end;
+
+procedure TFibbage4Content.SaveIdFan(const APath: string);
+begin
+  DoSaveDummyContent(APath, 'idfan.jet');
+end;
+
+procedure TFibbage4Content.SaveIdFinal(const APath: string);
+begin
+  DoSaveDummyContent(APath, 'idfinal.jet');
+end;
+
+procedure TFibbage4Content.SaveIdHeadline(const APath: string);
+begin
+  DoSaveDummyContent(APath, 'idheadline.jet');
+end;
+
+procedure TFibbage4Content.SaveIdHistory(const APath: string);
+begin
+  DoSaveDummyContent(APath, 'idhistory.jet');
+end;
+
 procedure TFibbage4Content.SaveManifest(const APath: string);
 begin
   var fileName := TPath.Combine(APath, 'manifest.jet');
@@ -295,6 +383,11 @@ begin
   finally
     sw.Free;
   end;
+end;
+
+procedure TFibbage4Content.SaveSkeleton(const APath: string);
+begin
+  DoSaveDummyContent(APath, 'skeleton.jet');
 end;
 
 end.

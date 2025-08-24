@@ -601,7 +601,16 @@ begin
       button.Parent := lyTypes;
     end;
 
-    lyTypes.Height := BUTTON_HEIGHT * (FContent.EditableTypes.Count / 2);
+    if (FContent.EditableTypes.Count mod 2) <> 0 then
+    begin
+      var button := TButton.Create(Self);
+      button.Height := BUTTON_HEIGHT;
+      button.Enabled := False;
+      button.Width := lyTypes.Width / 2;
+      button.Parent := lyTypes;
+    end;
+
+    lyTypes.Height := BUTTON_HEIGHT * (lyTypes.ControlsCount / 2);
 
     SetActiveQuestionsType(FContent.EditableTypes.First);
 
