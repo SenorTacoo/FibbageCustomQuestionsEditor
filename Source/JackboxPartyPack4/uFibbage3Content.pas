@@ -99,24 +99,8 @@ begin
 end;
 
 function TFibbage3Content.CopyQuestion;
-var
-  question: TFibbageQuestion;
 begin
-  Result := True;
-  if FShortieQuestions.GetName = AType.InternalName then
-    question := FShortieQuestions.CreateNewQuestion
-  else if FFinalQuestions.GetName = AType.InternalName then
-    question := FFinalQuestions.CreateNewQuestion
-  else if FSpecialQuestions.GetName = AType.InternalName then
-    question := FSpecialQuestions.CreateNewQuestion
-  else if FTMIQuestions.GetName = AType.InternalName then
-    question := FTMIQuestions.CreateNewQuestion
-  else
-  begin
-    Assert(False);
-    Exit(False);
-  end;
-  question.Assign(AQuestion);
+  Result := False;
 end;
 
 constructor TFibbage3Content.Create(ACfg: TContentConfiguration);
@@ -204,26 +188,9 @@ begin
   end;
 end;
 
-function TFibbage3Content.GetMoveCopyTypesFor(
-  AType: TTypePreview): TArray<TTypePreview>;
+function TFibbage3Content.GetMoveCopyTypesFor;
 begin
   Result := [];
-
-  if AType.InternalName = FSpecialQuestions.GetName then
-    Exit;
-  if AType.InternalName = FTMIQuestions.GetName then
-    Exit;
-
-  for var item in FEditableTypes do
-  begin
-    if item.InternalName = AType.InternalName then
-      Continue;
-    if item.InternalName = FSpecialQuestions.GetName then
-      Continue;
-    if item.InternalName = FTMIQuestions.GetName then
-      Continue;
-    Result := Result + [item];
-  end;
 end;
 
 function TFibbage3Content.HasDuplicatedCategory(AType: TTypePreview;

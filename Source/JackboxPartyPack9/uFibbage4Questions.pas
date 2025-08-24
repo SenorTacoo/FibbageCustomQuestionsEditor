@@ -99,6 +99,12 @@ type
     function GetPreview: TQuestionPreview; override;
   end;
 
+  TFibbage4CelebrityQuestion = class(TFibbage4BlankieQuestion);
+
+  TFibbage4HeadlineQuestion = class(TFibbage4BlankieQuestion);
+
+  TFibbage4HistoryQuestion = class(TFibbage4BlankieQuestion);
+
   TFibbage4Questions = class(TFibbageQuestions<TFibbage4Question>)
   strict private const
     OPTIMAL_SUGGESTIONS_COUNT = 17;
@@ -167,6 +173,26 @@ type
     function CreateNewQuestion: TFibbage4Question; override;
   end;
 
+  TFibbage4Questions_Celebrity = class(TFibbage4QuestionsBase)
+  public
+    function GetName: string; override;
+    function GetTypePreview: TTypePreview; override;
+    function CreateNewQuestion: TFibbage4Question; override;
+  end;
+
+  TFibbage4Questions_Headline = class(TFibbage4QuestionsBase)
+  public
+    function GetName: string; override;
+    function GetTypePreview: TTypePreview; override;
+    function CreateNewQuestion: TFibbage4Question; override;
+  end;
+
+  TFibbage4Questions_History = class(TFibbage4QuestionsBase)
+  public
+    function GetName: string; override;
+    function GetTypePreview: TTypePreview; override;
+    function CreateNewQuestion: TFibbage4Question; override;
+  end;
 
   TFibbage4Questions_Final = class(TFibbage4Questions)
   strict private type
@@ -1259,6 +1285,66 @@ begin
 
   FQuestionAudio.Name := (AFields[4] as TEditableAudioField).Value;
   FQuestionAudio.BasePath := (AFields[4] as TEditableAudioField).BasePath;
+end;
+
+{ TFibbage4Questions_Celebrity }
+
+function TFibbage4Questions_Celebrity.CreateNewQuestion: TFibbage4Question;
+begin
+  Result := TFibbage4CelebrityQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
+
+function TFibbage4Questions_Celebrity.GetName: string;
+begin
+  Result := 'celebrityblankie';
+end;
+
+function TFibbage4Questions_Celebrity.GetTypePreview: TTypePreview;
+begin
+  Result.InternalName := GetName;
+  Result.DisplayName := 'Celebrity';
+end;
+
+{ TFibbage4Questions_Headline }
+
+function TFibbage4Questions_Headline.CreateNewQuestion: TFibbage4Question;
+begin
+  Result := TFibbage4HeadlineQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
+
+function TFibbage4Questions_Headline.GetName: string;
+begin
+  Result := 'headlineblankie';
+end;
+
+function TFibbage4Questions_Headline.GetTypePreview: TTypePreview;
+begin
+  Result.InternalName := GetName;
+  Result.DisplayName := 'Headline';
+end;
+
+{ TFibbage4Questions_History }
+
+function TFibbage4Questions_History.CreateNewQuestion: TFibbage4Question;
+begin
+  Result := TFibbage4HistoryQuestion.Create;
+  Result.FId := GetNextRandomId;
+  FList.Add(Result);
+end;
+
+function TFibbage4Questions_History.GetName: string;
+begin
+  Result := 'historyblankie';
+end;
+
+function TFibbage4Questions_History.GetTypePreview: TTypePreview;
+begin
+  Result.InternalName := GetName;
+  Result.DisplayName := 'History';
 end;
 
 end.

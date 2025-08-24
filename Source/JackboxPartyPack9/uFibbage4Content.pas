@@ -19,6 +19,9 @@ type
     FShortieQuestions: TFibbage4Questions_Blankie;
     FFinalQuestions: TFibbage4Questions_Final;
     FPersonalQuestions: TFibbage4Questions_Personal;
+    FCelebrityQuestions: TFibbage4Questions_Celebrity;
+    FHeadlineQuestions: TFibbage4Questions_Headline;
+    FHistoryQuestions: TFibbage4Questions_History;
 
     function GetManifestJSON: string;
     procedure SaveManifest(const APath: string);
@@ -63,14 +66,10 @@ implementation
 function TFibbage4Content.CreateNewQuestion(AType: TTypePreview): TFibbageQuestion;
 begin
   Result := nil;
-  if AType.InternalName = FShortieQuestions.GetName then
-    Result := FShortieQuestions.CreateNewQuestion
-  else if AType.InternalName = FFinalQuestions.GetName then
-    Result := FFinalQuestions.CreateNewQuestion
-  else if AType.InternalName = FPersonalQuestions.GetName then
-    Result := FPersonalQuestions.CreateNewQuestion
-  else
-    Assert(False);
+  for var list: TFibbage4Questions in [FShortieQuestions, FFinalQuestions, FPersonalQuestions, FCelebrityQuestions, FHeadlineQuestions, FHistoryQuestions] do
+    if AType.InternalName = list.GetName then
+      Exit(list.CreateNewQuestion);
+  Assert(False);
 end;
 
 procedure TFibbage4Content.Activate(const APath: string);
@@ -85,6 +84,9 @@ begin
       FShortieQuestions.Save(savePath);
       FFinalQuestions.Save(savePath);
       FPersonalQuestions.Save(savePath);
+      FCelebrityQuestions.Save(savePath);
+      FHeadlineQuestions.Save(savePath);
+      FHistoryQuestions.Save(savePath);
       SaveManifest(savePath);
     except
       on E: Exception do
@@ -104,22 +106,8 @@ begin
 end;
 
 function TFibbage4Content.CopyQuestion;
-var
-  question: TFibbageQuestion;
 begin
-  Result := True;
-  if FShortieQuestions.GetName = AType.InternalName then
-    question := FShortieQuestions.CreateNewQuestion
-  else if FFinalQuestions.GetName = AType.InternalName then
-    question := FFinalQuestions.CreateNewQuestion
-  {else if FPersonalQuestions.GetName = AType.InternalName then
-    question := FPersonalQuestions.CreateNewQuestion}
-  else
-  begin
-    {Assert(False);}
-    Exit(False);
-  end;
-  question.Assign(AQuestion);
+  Result := False;
 end;
 
 constructor TFibbage4Content.Create(ACfg: TContentConfiguration);
@@ -128,6 +116,9 @@ begin
   FShortieQuestions := TFibbage4Questions_Blankie.Create;
   FFinalQuestions := TFibbage4Questions_Final.Create;
   FPersonalQuestions := TFibbage4Questions_Personal.Create;
+  FCelebrityQuestions := TFibbage4Questions_Celebrity.Create;
+  FHeadlineQuestions := TFibbage4Questions_Headline.Create;
+  FHistoryQuestions := TFibbage4Questions_History.Create;
   FFilesReader.BasePath := TPath.Combine(FFilesReader.BasePath, 'en');
 end;
 
@@ -136,6 +127,9 @@ begin
   FShortieQuestions.Free;
   FFinalQuestions.Free;
   FPersonalQuestions.Free;
+  FCelebrityQuestions.Free;
+  FHeadlineQuestions.Free;
+  FHistoryQuestions.Free;
   inherited;
 end;
 
@@ -146,6 +140,9 @@ begin
     FShortieQuestions.Initialize(FFilesReader);
     FFinalQuestions.Initialize(FFilesReader);
     FPersonalQuestions.Initialize(FFilesReader);
+    FCelebrityQuestions.Initialize(FFilesReader);
+    FHeadlineQuestions.Initialize(FFilesReader);
+    FHistoryQuestions.Initialize(FFilesReader);
   end;
   Result := True;
 end;
@@ -173,31 +170,24 @@ end;
 
 procedure TFibbage4Content.ForEachQuestion;
 begin
-  if AType.InternalName = FShortieQuestions.GetName then
-  begin
-    for var idx := 0 to FShortieQuestions.Count - 1 do
-      AProc(FShortieQuestions[idx]);
-  end
-  else if AType.InternalName = FFinalQuestions.GetName then
-  begin
-    for var idx := 0 to FFinalQuestions.Count - 1 do
-      AProc(FFinalQuestions[idx]);
-  end
-  else if AType.InternalName = FPersonalQuestions.GetName then
-  begin
-    for var idx := 0 to FPersonalQuestions.Count - 1 do
-      AProc(FPersonalQuestions[idx]);
-  end
-  else
-    Assert(False);
+  for var list: TFibbage4Questions in [FShortieQuestions, FFinalQuestions,
+    FPersonalQuestions, FCelebrityQuestions, FHeadlineQuestions, FHistoryQuestions] do
+    if AType.InternalName = list.GetName then
+    begin
+      for var idx := 0 to list.Count - 1 do
+        AProc(list[idx]);
+      Exit;
+    end;
+
+  Assert(False);
 end;
 
 function TFibbage4Content.DoGetEditableTypes: TPreviewTypes;
 begin
   Result := TPreviewTypes.Create;
-  Result.Add(FShortieQuestions.GetTypePreview);
-  Result.Add(FFinalQuestions.GetTypePreview);
-  Result.Add(FPersonalQuestions.GetTypePreview);
+  for var list: TFibbage4Questions in [FShortieQuestions, FFinalQuestions,
+    FPersonalQuestions, FCelebrityQuestions, FHeadlineQuestions, FHistoryQuestions] do
+    Result.Add(list.GetTypePreview);
 end;
 
 function TFibbage4Content.GetManifestJSON: string;
@@ -212,9 +202,9 @@ begin
         .Add(FFinalQuestions.GetName)
         .Add('skeleton')
         .Add(FPersonalQuestions.GetName)
-        .Add('celebrityblankie')
-        .Add('headlineblankie')
-        .Add('historyblankie')
+        .Add(FCelebrityQuestions.GetName)
+        .Add(FHeadlineQuestions.GetName)
+        .Add(FHistoryQuestions.GetName)
         .Add('fanblankie')
         .Add('movieblankie')
         .Add('idblankie')
@@ -248,14 +238,10 @@ function TFibbage4Content.HasDuplicatedCategory(AType: TTypePreview;
   AQuestion: TFibbageQuestion): Boolean;
 begin
   Result := False;
-  if AType.InternalName = FShortieQuestions.GetName then
-    Result := FShortieQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbage4Question)
-  else if AType.InternalName = FFinalQuestions.GetName then
-    Result := FFinalQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbage4Question)
-  else if AType.InternalName = FPersonalQuestions.GetName then
-    Result := FPersonalQuestions.HasQuestionWithTheSameCategory(AQuestion as TFibbage4Question)
-  else
-    Assert(False);
+  for var list: TFibbage4Questions in [FShortieQuestions, FFinalQuestions, FPersonalQuestions, FCelebrityQuestions, FHeadlineQuestions, FHistoryQuestions] do
+    if AType.InternalName = list.GetName then
+      Exit(list.HasQuestionWithTheSameCategory(AQuestion as TFibbage4Question));
+  Assert(False);
 end;
 
 function TFibbage4Content.HasMissingSpecialEntries(AType: TTypePreview; AQuestion: TFibbageQuestion; out AError: string): Boolean;
@@ -267,8 +253,10 @@ function TFibbage4Content.HasTooFewQuestions(AType: TTypePreview): Boolean;
 const
   MIN_SHORTIE_QUESTIONS_COUNT = 5;
   MIN_FINAL_QUESTIONS_COUNT = 1;
-  MIN_SPECIAL_QUESTIONS_COUNT = 1;
-  MIN_TMI_SHORTIE_QUESTIONS_COUNT = 5;
+  MIN_PERSONAL_QUESTIONS_COUNT = 6;
+  MIN_CELEBRITY_QUESTIONS_COUNT = 2;
+  MIN_HEADLINE_QUESTIONS_COUNT = 2;
+  MIN_HISTORY_QUESTIONS_COUNT = 2;
 begin
   Result := False;
   if AType.InternalName = FShortieQuestions.GetName then
@@ -276,7 +264,13 @@ begin
   else if AType.InternalName = FFinalQuestions.GetName then
     Result := FFinalQuestions.Count < MIN_FINAL_QUESTIONS_COUNT
   else if AType.InternalName = FPersonalQuestions.GetName then
-    Result := FPersonalQuestions.Count < MIN_FINAL_QUESTIONS_COUNT
+    Result := FPersonalQuestions.Count < MIN_PERSONAL_QUESTIONS_COUNT
+  else if AType.InternalName = FCelebrityQuestions.GetName then
+    Result := FCelebrityQuestions.Count < MIN_CELEBRITY_QUESTIONS_COUNT
+  else if AType.InternalName = FHeadlineQuestions.GetName then
+    Result := FCelebrityQuestions.Count < MIN_HEADLINE_QUESTIONS_COUNT
+  else if AType.InternalName = FHistoryQuestions.GetName then
+    Result := FCelebrityQuestions.Count < MIN_HISTORY_QUESTIONS_COUNT
   else
     Assert(False);
 end;
@@ -299,14 +293,15 @@ end;
 procedure TFibbage4Content.RemoveQuestion(AType: TTypePreview;
   AQuestion: TFibbageQuestion);
 begin
-  if AType.InternalName = FShortieQuestions.GetName then
-    FShortieQuestions.RemoveQuestion(AQuestion as TFibbage4Question)
-  else if AType.InternalName = FFinalQuestions.GetName then
-    FFinalQuestions.RemoveQuestion(AQuestion as TFibbage4Question)
-  else if AType.InternalName = FPersonalQuestions.GetName then
-    FPersonalQuestions.RemoveQuestion(AQuestion as TFibbage4Question)
-  else
-    Assert(False);
+  for var list: TFibbage4Questions in [FShortieQuestions, FFinalQuestions,
+    FPersonalQuestions, FCelebrityQuestions, FHeadlineQuestions, FHistoryQuestions] do
+    if AType.InternalName = list.GetName then
+    begin
+      list.RemoveQuestion(AQuestion as TFibbage4Question);
+      Exit;
+    end;
+
+  Assert(False);
 end;
 
 procedure TFibbage4Content.Save;
@@ -318,6 +313,9 @@ begin
       FShortieQuestions.Save(savePath);
       FFinalQuestions.Save(savePath);
       FPersonalQuestions.Save(savePath);
+      FCelebrityQuestions.Save(savePath);
+      FHeadlineQuestions.Save(savePath);
+      FHistoryQuestions.Save(savePath);
       SaveDummyFiles(savePath);
       SaveManifest(savePath);
     except
