@@ -8,5 +8,6 @@ If you would like to check how to use this editor, check
 Currently working game versions:
 - Fibbage XL (individual game)
 - Fibbage XL (from Party Pack 1)
+- Fibbage 2 (from Party Pack 2)
 - Fibbage 3 (from Party Pack 4)
 - Fibbage 4 (from Party Pack 9)
