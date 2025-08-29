@@ -26,7 +26,8 @@ begin
     Exit;
 
   case AGameType of
-    FibbageXL:
+    FibbageXL,
+    Fibbage2PartyPack2:
       begin
         if not DirectoryExists(IncludeTrailingPathDelimiter(APath) +
           IncludeTrailingPathDelimiter('fibbageshortie')) then
@@ -58,15 +59,17 @@ begin
       end;
     Fibbage4PartyPack9:
     begin
-      if DirectoryExists(IncludeTrailingPathDelimiter(APath) +
-        IncludeTrailingPathDelimiter('en')) then
-        Exit(True);
-      if DirectoryExists(IncludeTrailingPathDelimiter(APath) +
-        IncludeTrailingPathDelimiter('fibbageblankie')) then
+      if DirectoryExists(TPath.Combine(APath, 'en')) then
+        Exit(DirectoryExists(TPath.Combine(APath, 'en', 'fibbageblankie')));
+
+      if DirectoryExists(TPath.Combine(APath, 'fibbageblankie')) then
         Exit(True);
     end
     else
+    begin
+      Assert(False);
       Exit;
+    end;
   end;
 
   Result := True;

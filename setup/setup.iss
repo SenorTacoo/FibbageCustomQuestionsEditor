@@ -1,12 +1,13 @@
 ; -- FibbageQE.iss --
+
 [Setup]
 AppName=FibbageQE
-AppVersion=0.5
-DefaultDirName={localappdata}\FibbageCQE
+AppVersion={#MyAppVersion}
+DefaultDirName={localappdata}\FibbageQE
 DisableDirPage=yes
 DefaultGroupName=FibbageQE
 OutputDir=.
-OutputBaseFilename=FibbageCQE_Installer
+OutputBaseFilename=FibbageQE_Installer_{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest

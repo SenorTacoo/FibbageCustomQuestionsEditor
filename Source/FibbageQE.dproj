@@ -4,7 +4,7 @@
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -148,10 +148,9 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=0.0.6.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=pl.senortaco.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=0.0.1.1;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=pl.senortaco.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=0.0.1.1;Comments=</VerInfo_Keys>
         <Icon_MainIcon>..\icon.ico</Icon_MainIcon>
-        <VerInfo_MajorVer>0</VerInfo_MajorVer>
-        <VerInfo_Release>6</VerInfo_Release>
+        <VerInfo_Release>1</VerInfo_Release>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -170,13 +169,6 @@
         <DCCReference Include="uConfig.pas"/>
         <DCCReference Include="uInterfaces.pas"/>
         <DCCReference Include="uPathChecker.pas"/>
-        <DCCReference Include="uQuestionsLoader.pas"/>
-        <DCCReference Include="uCategoriesLoader.pas"/>
-        <DCCReference Include="uFibbageContent.pas"/>
-        <DCCReference Include="uRecordForm.pas">
-            <Form>RecordForm</Form>
-            <FormType>fmx</FormType>
-        </DCCReference>
         <DCCReference Include="uLastQuestionsLoader.pas"/>
         <DCCReference Include="uLog.pas"/>
         <DCCReference Include="uGetTextDlg.pas">
@@ -194,6 +186,57 @@
             <Form>GetGameTypeDlg</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <DCCReference Include="uFibbageContent.pas"/>
+        <DCCReference Include="uFibbageFilesReader.pas"/>
+        <DCCReference Include="uFibbageJSONWriter.pas"/>
+        <DCCReference Include="uQuestionsLoader.pas"/>
+        <DCCReference Include="GUI\uEditQuestionFrame.pas">
+            <Form>FrmEditQuestion</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableStringItemFrame.pas">
+            <Form>FrmEditableStringItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableU32ItemFrame.pas">
+            <Form>FrmEditableU32Item</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableBoolItemFrame.pas">
+            <Form>FrmEditableBoolItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableLongStringItemFrame.pas">
+            <Form>FrmEditableLongStringItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="GUI\uEditableAudioItemFrame.pas">
+            <Form>FrmEditableAudioItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="uFibbageContentFactory.pas"/>
+        <DCCReference Include="FibbageXL\uFibbageXLContent.pas"/>
+        <DCCReference Include="FibbageXL\uFibbageXLQuestions.pas"/>
+        <DCCReference Include="FibbageXLPartyPack1\uFibbageXLPartyPack1Content.pas"/>
+        <DCCReference Include="FibbageXLPartyPack1\uFibbageXLPartyPack1Questions.pas"/>
+        <DCCReference Include="JackboxPartyPack4\uFibbage3Questions.pas"/>
+        <DCCReference Include="JackboxPartyPack4\uFibbage3Content.pas"/>
+        <DCCReference Include="GUI\uEditablePicItemFrame.pas">
+            <Form>frmEditablePicItem</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="JackboxPartyPack2\uFibbage2Content.pas"/>
+        <DCCReference Include="JackboxPartyPack2\uFibbage2Questions.pas"/>
+        <DCCReference Include="JackboxPartyPack9\uFibbage4Content.pas"/>
+        <DCCReference Include="JackboxPartyPack9\uFibbage4Questions.pas"/>
+        <DCCReference Include="JackboxPartyPack9\uFibbage4Skeleton.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -247,6 +290,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="bin\Win32\Release\FibbageQE.exe" Configuration="Release" Class="ProjectOutput"/>
+                <DeployFile LocalName="bin\Win32\Release\FibbageQE.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>FibbageQE.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

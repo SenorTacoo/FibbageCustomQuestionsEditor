@@ -4,15 +4,18 @@ interface
 
 uses
   uInterfaces,
+  System.Generics.Collections,
   System.IOUtils,
   System.StrUtils,
   System.SysUtils,
   System.Classes;
 
 type
-  TContentConfiguration = class(TInterfacedObject, IContentConfiguration)
+  TContentConfiguration = class
   private
     FRawCfg: TStringList;
+    FNewContent: Boolean;
+    FImportedContent: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -29,11 +32,16 @@ type
     function GetShowTooFewSuggestions: Boolean;
     function GetGameType: TGameType;
 
-    function GetClone: IContentConfiguration;
+    function GetClone: TContentConfiguration;
     function Initialize(const APath: string): Boolean;
     procedure Save(const APath: string); overload;
     procedure Save; overload;
+
+    property NewContent: Boolean read FNewContent write FNewContent;
+    property ImportedContent: Boolean read FImportedContent write FImportedContent;
   end;
+
+  TContentConfigurations = TObjectList<TContentConfiguration>;
 
 implementation
 
@@ -52,7 +60,7 @@ begin
   inherited;
 end;
 
-function TContentConfiguration.GetClone: IContentConfiguration;
+function TContentConfiguration.GetClone: TContentConfiguration;
 begin
   Result := TContentConfiguration.Create;
   Result.SetName(GetName);
@@ -106,8 +114,6 @@ end;
 
 procedure TContentConfiguration.Save(const APath: string);
 begin
-  if GetPath <> APath then
-    SetPath(APath);
   ForceDirectories(APath);
   FRawCfg.SaveToFile(TPath.Combine(APath, '.fcqeinfo'));
 end;

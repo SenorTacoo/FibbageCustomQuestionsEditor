@@ -17,7 +17,8 @@ type
     procedure FormCreate(Sender: TObject);
   public
     function MakeInfo(const AInfo: string; out ADontAskAgain: Boolean): Boolean;
-    procedure MakeSimpleInfo(const AInfo: string);
+    procedure MakeSimpleInfo(const AInfo: string); overload;
+    procedure MakeSimpleInfo(const AInfo: string; out ADontAskAgain: Boolean); overload;
     function MakeSimpleInfoWithResult(const AInfo: string): Boolean;
   end;
 
@@ -54,6 +55,14 @@ begin
   gplButtons.ColumnCollection[0].Value := 0;
   gplButtons.ColumnCollection[1].Value := 100;
   ShowModal;
+end;
+
+procedure TUserDialog.MakeSimpleInfo(const AInfo: string;
+  out ADontAskAgain: Boolean);
+begin
+  lUserDialogInfo.Text := AInfo;
+  ShowModal;
+  ADontAskAgain := cbDontAskAgain.IsChecked;
 end;
 
 function TUserDialog.MakeSimpleInfoWithResult(const AInfo: string): Boolean;

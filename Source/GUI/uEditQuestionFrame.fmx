@@ -1,0 +1,69 @@
+object FrmEditQuestion: TFrmEditQuestion
+  Size.Width = 507.000000000000000000
+  Size.Height = 328.000000000000000000
+  Size.PlatformDefault = False
+  TabOrder = 0
+  object sbxQuestionItems: TScrollBox
+    Align = Client
+    Size.Width = 507.000000000000000000
+    Size.Height = 282.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    OnCalcContentBounds = sbxQuestionItemsCalcContentBounds
+    Viewport.Width = 507.000000000000000000
+    Viewport.Height = 282.000000000000000000
+  end
+  object ToolBar3: TToolBar
+    Size.Width = 507.000000000000000000
+    Size.Height = 46.000000000000000000
+    Size.PlatformDefault = False
+    object pQuestionToolbar: TPanel
+      Align = Client
+      Size.Width = 507.000000000000000000
+      Size.Height = 46.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'pHeaderToolbarStyle'
+      TabOrder = 1
+      object lNewQuestion: TLabel
+        Align = Contents
+        Margins.Top = 8.000000000000000000
+        Margins.Bottom = 8.000000000000000000
+        Size.Width = 507.000000000000000000
+        Size.Height = 30.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = 'listboxheaderlabel'
+        TextSettings.HorzAlign = Center
+        Text = 'New question'
+        TabOrder = 1
+      end
+      object GlowEffect5: TGlowEffect
+        Softness = 0.400000005960464500
+        GlowColor = claBlack
+        Opacity = 0.899999976158142100
+      end
+      object bSaveQuestionChanges: TButton
+        Align = Right
+        Margins.Right = 15.000000000000000000
+        Position.X = 400.000000000000000000
+        Size.Width = 46.000000000000000000
+        Size.Height = 46.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = 'ticktoolbutton'
+        TabOrder = 3
+        TextSettings.Trimming = None
+        OnClick = bSaveQuestionChangesClick
+      end
+      object bCancelQuestionChanges: TButton
+        Align = Right
+        Position.X = 461.000000000000000000
+        Size.Width = 46.000000000000000000
+        Size.Height = 46.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = 'canceltoolbutton'
+        TabOrder = 2
+        TextSettings.Trimming = None
+        OnClick = bCancelQuestionChangesClick
+      end
+    end
+  end
+end

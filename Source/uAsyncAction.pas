@@ -12,16 +12,21 @@ type
   TOnActionEnd = procedure of object;
   TActionProc = procedure of object;
 
+  TActionProcRef = reference to procedure;
+
   TAsyncAction = class(TThread)
   private
     FOnActionStart: TOnActionStart;
     FOnActionEnd: TOnActionEnd;
     FActionProc: TActionProc;
+    FActionProcRef: TActionProcRef;
     FThreadWorking: Boolean;
   protected
     procedure Execute; override;
   public
-    constructor Create(AOnActionStart: TOnActionStart; AOnActionEnd: TOnActionEnd; AActionProc: TActionProc);
+    constructor Create(AOnActionStart: TOnActionStart; AOnActionEnd: TOnActionEnd; AActionProc: TActionProc); overload;
+    constructor Create(AOnActionStart: TOnActionStart; AOnActionEnd: TOnActionEnd; AActionProc: TActionProcRef); overload;
+
     destructor Destroy; override;
 
   end;
@@ -38,6 +43,16 @@ begin
   FOnActionStart := AOnActionStart;
   FOnActionEnd := AOnActionEnd;
   FActionProc := AActionProc;
+end;
+
+constructor TAsyncAction.Create(AOnActionStart: TOnActionStart;
+  AOnActionEnd: TOnActionEnd; AActionProc: TActionProcRef);
+begin
+  inherited Create(True);
+  FreeOnTerminate := True;
+  FOnActionStart := AOnActionStart;
+  FOnActionEnd := AOnActionEnd;
+  FActionProcRef := AActionProc;
 end;
 
 destructor TAsyncAction.Destroy;
@@ -60,6 +75,8 @@ begin
     try
       if Assigned(FActionProc) then
         FActionProc;
+      if Assigned(FActionProcRef) then
+        FActionProcRef;
     finally
       if Assigned(FOnActionEnd) then
         TThread.Synchronize(nil,

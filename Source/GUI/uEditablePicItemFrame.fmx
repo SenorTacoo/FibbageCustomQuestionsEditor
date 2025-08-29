@@ -1,0 +1,104 @@
+object frmEditablePicItem: TfrmEditablePicItem
+  Margins.Left = 10.000000000000000000
+  Margins.Top = 5.000000000000000000
+  Margins.Right = 10.000000000000000000
+  Margins.Bottom = 5.000000000000000000
+  Size.Width = 620.000000000000000000
+  Size.Height = 102.000000000000000000
+  Size.PlatformDefault = False
+  object Label1: TLabel
+    Align = Left
+    AutoSize = True
+    Margins.Left = 3.000000000000000000
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 10.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Position.X = 3.000000000000000000
+    Position.Y = 3.000000000000000000
+    Size.Width = 120.000000000000000000
+    Size.Height = 96.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Label1'
+    TabOrder = 0
+  end
+  object GridPanelLayout1: TGridPanelLayout
+    Align = Right
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 3.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Position.X = 256.000000000000000000
+    Position.Y = 3.000000000000000000
+    Size.Width = 361.000000000000000000
+    Size.Height = 96.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    ColumnCollection = <
+      item
+        Value = 50.000000000000000000
+      end
+      item
+        Value = 50.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 1
+        Control = bSelectFromFile
+        Row = 0
+      end
+      item
+        Column = 0
+        Control = bRemove
+        Row = 0
+      end>
+    RowCollection = <
+      item
+        Value = 100.000000000000000000
+      end>
+    object bRemove: TButton
+      Align = Client
+      Size.Width = 180.500000000000000000
+      Size.Height = 96.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'trashtoolbuttonmultiview'
+      TabOrder = 18
+      Text = 'Remove image'
+      TextSettings.Trimming = None
+      OnClick = bRemoveClick
+    end
+    object bSelectFromFile: TButton
+      Align = Client
+      Size.Width = 180.500000000000000000
+      Size.Height = 96.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'filetoolbuttonmultiview'
+      TabOrder = 17
+      Text = 'Select file'
+      TextSettings.Trimming = None
+      OnClick = bSelectFromFileClick
+    end
+  end
+  object Layout1: TLayout
+    Align = Client
+    Size.Width = 123.000000000000000000
+    Size.Height = 102.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    OnResize = Layout1Resize
+    object Image1: TImage
+      MultiResBitmap.Height = 512
+      MultiResBitmap.Width = 512
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap.TransparentColor = 0
+      MultiResBitmap = <
+        item
+        end>
+      Align = Client
+      Cursor = crHandPoint
+      Size.Width = 123.000000000000000000
+      Size.Height = 102.000000000000000000
+      Size.PlatformDefault = False
+      WrapMode = Stretch
+      OnClick = Image1Click
+    end
+  end
+end

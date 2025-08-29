@@ -1,0 +1,172 @@
+object FrmEditableAudioItem: TFrmEditableAudioItem
+  Margins.Left = 10.000000000000000000
+  Margins.Top = 5.000000000000000000
+  Margins.Right = 10.000000000000000000
+  Margins.Bottom = 5.000000000000000000
+  Size.Width = 396.000000000000000000
+  Size.Height = 240.000000000000000000
+  Size.PlatformDefault = False
+  object Label1: TLabel
+    Align = Left
+    AutoSize = True
+    Margins.Left = 3.000000000000000000
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 10.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Position.X = 3.000000000000000000
+    Position.Y = 3.000000000000000000
+    Size.Width = 35.000000000000000000
+    Size.Height = 234.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 'Label1'
+    TabOrder = 0
+  end
+  object GridPanelLayout1: TGridPanelLayout
+    Align = Client
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 3.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Size.Width = 345.000000000000000000
+    Size.Height = 234.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    ColumnCollection = <
+      item
+        Value = 25.000000000000000000
+      end
+      item
+        Value = 25.000000000000000000
+      end
+      item
+        Value = 24.999998092651260000
+      end
+      item
+        Value = 25.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = bPlay
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = bRecordAudio
+        Row = 0
+      end
+      item
+        Column = 2
+        Control = bRemoveAllAudio
+        Row = 0
+      end
+      item
+        Column = 3
+        Control = bSelectAudioFromFile
+        Row = 0
+      end>
+    ExpandStyle = AddColumns
+    RowCollection = <
+      item
+        Value = 100.000000000000000000
+      end
+      item
+        SizeStyle = Auto
+      end>
+    object bPlay: TButton
+      Align = Client
+      Size.Width = 86.250000000000000000
+      Size.Height = 50.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'playtoolbuttonmultiview'
+      TabOrder = 1
+      Text = 'Play'
+      TextSettings.Trimming = None
+      OnClick = bPlayClick
+    end
+    object bRecordAudio: TButton
+      Align = Client
+      Size.Width = 86.250000000000000000
+      Size.Height = 234.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'mictoolbuttonmultiview'
+      TabOrder = 0
+      Text = 'Record'
+      TextSettings.Trimming = None
+      OnClick = bRecordAudioClick
+    end
+    object bRemoveAllAudio: TButton
+      Align = Client
+      Size.Width = 86.250000000000000000
+      Size.Height = 50.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'trashtoolbuttonmultiview'
+      TabOrder = 18
+      Text = 'Remove audio'
+      TextSettings.Trimming = None
+      OnClick = bRemoveAllAudioClick
+    end
+    object bSelectAudioFromFile: TButton
+      Align = Client
+      Size.Width = 86.250000000000000000
+      Size.Height = 50.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'filetoolbuttonmultiview'
+      TabOrder = 17
+      Text = 'Select file'
+      TextSettings.Trimming = None
+      OnClick = bSelectAudioFromFileClick
+    end
+  end
+  object DSAudioOut1: TDSAudioOut
+    Input = StereoBalance1
+    OnDone = DSAudioOut1Done
+    DeviceNumber = 0
+    Calibrate = False
+    Latency = 100
+    SpeedFactor = 1.000000000000000000
+    Left = 84
+    Top = 169
+  end
+  object DXAudioIn1: TDXAudioIn
+    Latency = 100
+    SamplesToRead = -1
+    DeviceNumber = 1
+    InBitsPerSample = 24
+    InChannels = 2
+    InSampleRate = 44100
+    RecTime = -1
+    EchoRecording = False
+    FramesInBuffer = 24576
+    PollingInterval = 100
+    Left = 292
+    Top = 103
+  end
+  object StereoBalance1: TStereoBalance
+    Input = VorbisIn1
+    Balance = 0.500000000000000000
+    Left = 162
+    Top = 169
+  end
+  object voMic: TVorbisOut
+    Input = DXAudioIn1
+    OnDone = voMicDone
+    ShareMode = 0
+    Compression = 1.000000000000000000
+    DesiredMaximumBitrate = brAutoSelect
+    DesiredNominalBitrate = brAutoSelect
+    FileMode = foRewrite
+    MinimumBitrate = brAutoSelect
+    Serial = 0
+    Left = 292
+    Top = 150
+  end
+  object VorbisIn1: TVorbisIn
+    Loop = False
+    EndSample = -1
+    StartSample = 0
+    Left = 130
+    Top = 129
+  end
+end

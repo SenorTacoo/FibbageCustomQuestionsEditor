@@ -1,0 +1,42 @@
+object FrmEditableLongStringItem: TFrmEditableLongStringItem
+  Margins.Left = 10.000000000000000000
+  Margins.Top = 5.000000000000000000
+  Margins.Right = 10.000000000000000000
+  Margins.Bottom = 5.000000000000000000
+  Size.Width = 250.000000000000000000
+  Size.Height = 111.000000000000000000
+  Size.PlatformDefault = False
+  object Label1: TLabel
+    Align = Left
+    AutoSize = True
+    Margins.Left = 3.000000000000000000
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 10.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Position.X = 3.000000000000000000
+    Position.Y = 3.000000000000000000
+    Size.Width = 35.000000000000000000
+    Size.Height = 105.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 'Label1'
+    TabOrder = 0
+  end
+  object Memo1: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    TextSettings.WordWrap = True
+    OnChange = Memo1Change
+    Align = Client
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 3.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Size.Width = 199.000000000000000000
+    Size.Height = 105.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Viewport.Width = 195.000000000000000000
+    Viewport.Height = 101.000000000000000000
+  end
+end

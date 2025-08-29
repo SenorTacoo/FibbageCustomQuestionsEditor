@@ -86,7 +86,7 @@ begin
     begin
       var rb := TRadioButton.Create(Self);
       rb.Align := TAlignLayout.Top;
-      rb.Text := gameType.ToString;
+      rb.Text := gameType.ToUserString;
       rb.TextAlign := TTextAlign.Center;
       rb.Tag := Ord(gameType);
       rb.Margins.Top := 3;

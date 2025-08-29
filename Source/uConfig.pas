@@ -38,14 +38,18 @@ type
     procedure SetShowInfoAboutDuplicatedCategories(const Value: Boolean);
     function GetShowInfoAboutTooFewSuggestions: Boolean;
     procedure SetShowInfoAboutTooFewSuggestions(const Value: Boolean);
-    function GetShowInfoAboutTooFewShortieQuestions: Boolean;
-    procedure SetShowInfoAboutTooFewShortieQuestions(const Value: Boolean);
-    function GetFibbage3PartyPack4Path: string;
-    function GetFibbageXLPartyPack1Path: string;
-    procedure SetFibbage3PartyPack4Path(const Value: string);
-    procedure SetFibbageXLPartyPack1Path(const Value: string);
-    function GetFibbage4PartyPack9Path: string;
-    procedure SetFibbage4PartyPack9Path(const Value: string);
+    function GetShowInfoAboutTooFewQuestions: Boolean;
+    procedure SetShowInfoAboutTooFewQuestions(const Value: Boolean);
+    function GetJackboxPartyPack4Path: string;
+    function GetJackboxPartyPack1Path: string;
+    procedure SetJackboxPartyPack4Path(const Value: string);
+    procedure SetJackboxPartyPack1Path(const Value: string);
+    function GetJackboxPartyPack9Path: string;
+    procedure SetJackboxPartyPack9Path(const Value: string);
+    function GetShowInfoAboutMissingSpecialEntries: Boolean;
+    procedure SetShowInfoAboutMissingSpecialEntries(const Value: Boolean);
+    function GetJackboxPartyPack2Path: string;
+    procedure SetJackboxPartyPack2Path(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -58,13 +62,15 @@ type
     property LogService: string read GetLogService write SetLogService;
 
     property FibbageXLPath: string read GetFibbagePath write SetFibbagePath;
-    property FibbageXLPartyPack1Path: string read GetFibbageXLPartyPack1Path write SetFibbageXLPartyPack1Path;
-    property Fibbage3PartyPack4Path: string read GetFibbage3PartyPack4Path write SetFibbage3PartyPack4Path;
-    property Fibbage4PartyPack9Path: string read GetFibbage4PartyPack9Path write SetFibbage4PartyPack9Path;
+    property JackboxPartyPack1Path: string read GetJackboxPartyPack1Path write SetJackboxPartyPack1Path;
+    property JackboxPartyPack4Path: string read GetJackboxPartyPack4Path write SetJackboxPartyPack4Path;
+    property JackboxPartyPack9Path: string read GetJackboxPartyPack9Path write SetJackboxPartyPack9Path;
+    property JackboxPartyPack2Path: string read GetJackboxPartyPack2Path write SetJackboxPartyPack2Path;
 
     property ShowInfoAboutDuplicatedCategories: Boolean read GetShowInfoAboutDuplicatedCategories write SetShowInfoAboutDuplicatedCategories;
     property ShowInfoAboutTooFewSuggestions: Boolean read GetShowInfoAboutTooFewSuggestions write SetShowInfoAboutTooFewSuggestions;
-    property ShowInfoAboutTooFewShortieQuestions: Boolean read GetShowInfoAboutTooFewShortieQuestions write SetShowInfoAboutTooFewShortieQuestions;
+    property ShowInfoAboutTooFewQuestions: Boolean read GetShowInfoAboutTooFewQuestions write SetShowInfoAboutTooFewQuestions;
+    property ShowInfoAboutMissingSpecialEntries: Boolean read GetShowInfoAboutMissingSpecialEntries write SetShowInfoAboutMissingSpecialEntries;
   end;
 
 implementation
@@ -94,14 +100,14 @@ begin
   Result := FIniFile.ReadBool('Style', 'DarkMode', False);
 end;
 
-function TAppConfig.GetFibbage3PartyPack4Path: string;
+function TAppConfig.GetJackboxPartyPack4Path: string;
 begin
-  Result := FIniFile.ReadString('General', 'Fibbage3PartyPack4Path', '');
+  Result := FIniFile.ReadString('General', 'JackboxPartyPack4Path', '');
 end;
 
-function TAppConfig.GetFibbage4PartyPack9Path: string;
+function TAppConfig.GetJackboxPartyPack9Path: string;
 begin
-  Result := FIniFile.ReadString('General', 'Fibbage4PartyPack9Path', '');
+  Result := FIniFile.ReadString('General', 'JackboxPartyPack9Path', '');
 end;
 
 function TAppConfig.GetFibbagePath: string;
@@ -109,9 +115,14 @@ begin
   Result := FIniFile.ReadString('General', 'FibbagePath', '');
 end;
 
-function TAppConfig.GetFibbageXLPartyPack1Path: string;
+function TAppConfig.GetJackboxPartyPack1Path: string;
 begin
-  Result := FIniFile.ReadString('General', 'FibbageXLPartyPack1Path', '');
+  Result := FIniFile.ReadString('General', 'JackboxPartyPack1Path', '');
+end;
+
+function TAppConfig.GetJackboxPartyPack2Path: string;
+begin
+  Result := FIniFile.ReadString('General', 'JackboxPartyPack2Path', '');
 end;
 
 function TAppConfig.GetInputDeviceName: string;
@@ -151,9 +162,14 @@ begin
   Result := FIniFile.ReadBool('General', 'ShowInfoAboutDuplicatedCategories', True);
 end;
 
-function TAppConfig.GetShowInfoAboutTooFewShortieQuestions: Boolean;
+function TAppConfig.GetShowInfoAboutMissingSpecialEntries: Boolean;
 begin
-  Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewShortieQuestions', True);
+  Result := FIniFile.ReadBool('General', 'ShowInfoAboutMissingSpecialEntries', True);
+end;
+
+function TAppConfig.GetShowInfoAboutTooFewQuestions: Boolean;
+begin
+  Result := FIniFile.ReadBool('General', 'ShowInfoAboutTooFewQuestions', True);
 end;
 
 function TAppConfig.GetShowInfoAboutTooFewSuggestions: Boolean;
@@ -166,14 +182,14 @@ begin
   FIniFile.WriteBool('Style', 'DarkMode', Value);
 end;
 
-procedure TAppConfig.SetFibbage3PartyPack4Path(const Value: string);
+procedure TAppConfig.SetJackboxPartyPack4Path(const Value: string);
 begin
-  FIniFile.WriteString('General', 'Fibbage3PartyPack4Path', Value);
+  FIniFile.WriteString('General', 'JackboxPartyPack4Path', Value);
 end;
 
-procedure TAppConfig.SetFibbage4PartyPack9Path(const Value: string);
+procedure TAppConfig.SetJackboxPartyPack9Path(const Value: string);
 begin
-  FIniFile.WriteString('General', 'Fibbage4PartyPack9Path', Value);
+  FIniFile.WriteString('General', 'JackboxPartyPack9Path', Value);
 end;
 
 procedure TAppConfig.SetFibbagePath(const Value: string);
@@ -181,9 +197,14 @@ begin
   FIniFile.WriteString('General', 'FibbagePath', Value);
 end;
 
-procedure TAppConfig.SetFibbageXLPartyPack1Path(const Value: string);
+procedure TAppConfig.SetJackboxPartyPack1Path(const Value: string);
 begin
-  FIniFile.WriteString('General', 'FibbageXLPartyPack1Path', Value);
+  FIniFile.WriteString('General', 'JackboxPartyPack1Path', Value);
+end;
+
+procedure TAppConfig.SetJackboxPartyPack2Path(const Value: string);
+begin
+  FIniFile.WriteString('General', 'JackboxPartyPack2Path', Value);
 end;
 
 procedure TAppConfig.SetInputDeviceName(const Value: string);
@@ -216,10 +237,15 @@ begin
   FIniFile.WriteBool('General', 'ShowInfoAboutDuplicatedCategories', Value);
 end;
 
-procedure TAppConfig.SetShowInfoAboutTooFewShortieQuestions(
+procedure TAppConfig.SetShowInfoAboutMissingSpecialEntries(const Value: Boolean);
+begin
+  FIniFile.WriteBool('General', 'ShowInfoAboutMissingSpecialEntries', Value);
+end;
+
+procedure TAppConfig.SetShowInfoAboutTooFewQuestions(
   const Value: Boolean);
 begin
-  FIniFile.WriteBool('General', 'ShowInfoAboutTooFewShortieQuestions', Value);
+  FIniFile.WriteBool('General', 'ShowInfoAboutTooFewQuestions', Value);
 end;
 
 procedure TAppConfig.SetShowInfoAboutTooFewSuggestions(const Value: Boolean);
