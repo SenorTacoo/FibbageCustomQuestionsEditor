@@ -783,11 +783,6 @@ begin
   boolItem.Value := FFamilyFriendly;
   Result.Add(boolItem);
 
-  boolItem := TEditableBoolField.Create;
-  boolItem.Name := 'US Centric';
-  boolItem.Value := FUsCentric;
-  Result.Add(boolItem);
-
   var audioItem := TEditableAudioField.Create;
   audioItem.Name := 'Question Audio';
   audioItem.Value := FQuestionAudio.Name;
@@ -809,11 +804,10 @@ begin
   FAlternateSpellings := (AFields[3] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
   FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
   FFamilyFriendly := (AFields[5] as TEditableBoolField).Value;
-  FUsCentric := (AFields[6] as TEditableBoolField).Value;
-  FQuestionAudio.Name := (AFields[7] as TEditableAudioField).Value;
-  FQuestionAudio.BasePath := (AFields[7] as TEditableAudioField).BasePath;
-  FCorrectAudio.Name := (AFields[8] as TEditableAudioField).Value;
-  FCorrectAudio.BasePath := (AFields[8] as TEditableAudioField).BasePath;
+  FQuestionAudio.Name := (AFields[6] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[6] as TEditableAudioField).BasePath;
+  FCorrectAudio.Name := (AFields[7] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[7] as TEditableAudioField).BasePath;
 end;
 
 { TFibbage3SpecialQuestion }
@@ -857,11 +851,6 @@ begin
   boolItem.Value := FFamilyFriendly;
   Result.Add(boolItem);
 
-  boolItem := TEditableBoolField.Create;
-  boolItem.Name := 'US Centric';
-  boolItem.Value := FUsCentric;
-  Result.Add(boolItem);
-
   var audioItem := TEditableAudioField.Create;
   audioItem.Name := 'Question Audio';
   audioItem.Value := FQuestionAudio.Name;
@@ -890,13 +879,12 @@ begin
   FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
   FSocialMediaName := (AFields[5] as TEditableStringField).Value;
   FFamilyFriendly := (AFields[6] as TEditableBoolField).Value;
-  FUsCentric := (AFields[7] as TEditableBoolField).Value;
-  FQuestionAudio.Name := (AFields[8] as TEditableAudioField).Value;
-  FQuestionAudio.BasePath := (AFields[8] as TEditableAudioField).BasePath;
-  FCorrectAudio.Name := (AFields[9] as TEditableAudioField).Value;
-  FCorrectAudio.BasePath := (AFields[9] as TEditableAudioField).BasePath;
-  FPic.Name := (AFields[10] as TEditablePicField).Value;
-  FPic.BasePath := (AFields[10] as TEditablePicField).BasePath;
+  FQuestionAudio.Name := (AFields[7] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[7] as TEditableAudioField).BasePath;
+  FCorrectAudio.Name := (AFields[8] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[8] as TEditableAudioField).BasePath;
+  FPic.Name := (AFields[9] as TEditablePicField).Value;
+  FPic.BasePath := (AFields[9] as TEditablePicField).BasePath;
 end;
 
 { TFibbage3PersonalQuestion }
@@ -991,11 +979,6 @@ begin
   var boolItem := TEditableBoolField.Create;
   boolItem.Name := 'Family Friendly';
   boolItem.Value := FFamilyFriendly;
-  Result.Add(boolItem);
-
-  boolItem := TEditableBoolField.Create;
-  boolItem.Name := 'US Centric';
-  boolItem.Value := FUsCentric;
   Result.Add(boolItem);
 
   var audioItem := TEditableAudioField.Create;

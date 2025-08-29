@@ -226,6 +226,7 @@ type
     bJackboxPartyPack2Path: TButton;
     Label1: TLabel;
     eJackboxPartyPack2Path: TEdit;
+    sbxSettings: TVertScrollBox;
     procedure lDarkModeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -364,7 +365,6 @@ type
     function CheckForTooFewQuestions: Boolean;
 
     function ShouldSaveProject: Boolean;
-    procedure InsertNewProject(AConfig: TContentConfiguration);
     procedure ShowSimpleInfo(const AInfo: string);
 
     procedure SetActiveQuestionsType(AType: TTypePreview);
@@ -401,6 +401,7 @@ begin
   try
     FLastClickedItemToEdit := AddQuestionScrollItem(question);
     SwitchHighlightQuestionItem(FLastClickedItemToEdit, True);
+    RefreshQuestionsFormActions;
   finally
     sbxQuestions.EndUpdate;
   end;
@@ -661,11 +662,11 @@ begin
 
   cfg.SetName(str);
   cfg.SetGameType(gameType);
-  cfg.Save(cfg.GetPath);
 
-  InsertNewProject(cfg);
+  FSelectedConfiguration := cfg;
 
-  aInitializeProject.Execute;
+  ClearPreviousQuestions;
+  TAsyncAction.Create(PreContentInitialized, PostContentInitialized, InitializeContentTask).Start;
 end;
 
 procedure TFrmMain.aOpenInWindowsExplorerExecute(Sender: TObject);
@@ -805,6 +806,7 @@ begin
     end;
   finally
     FLastClickedItemToEdit := nil;
+    RefreshQuestionsFormActions;
     aRemoveQuestions.Enabled := False;
     sbxQuestions.EndUpdate;
   end;
@@ -2075,26 +2077,6 @@ begin
       pItem.OnDblClick := OnProjectItemDoubleClick;
       FProjectVisItems.Add(pItem);
     end;
-  finally
-    sbxProjects.EndUpdate;
-  end;
-end;
-
-procedure TFrmMain.InsertNewProject(AConfig: TContentConfiguration);
-begin
-  sbxProjects.BeginUpdate;
-  try
-    FProjectVisItems.ClearSelection;
-    var pItem := TProjectScrollItem.CreateItem(sbxProjects, AConfig);
-    pItem.Parent := sbxProjects;
-    pItem.Align := TAlignLayout.Top;
-    pItem.Position.Y := -999;
-    pItem.OnMouseDown := OnProjectItemMouseDown;
-    pItem.OnDblClick := OnProjectItemDoubleClick;
-    FLastClickedConfigurationToEdit := pItem;
-    FProjectVisItems.Add(pItem);
-    pItem.Selected := True;
-    aRemoveProjects.Enabled := True;
   finally
     sbxProjects.EndUpdate;
   end;

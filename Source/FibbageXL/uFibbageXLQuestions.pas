@@ -408,11 +408,6 @@ begin
   strLongItem.Value := string.Join(', ', FSuggestions);
   Result.Add(strLongItem);
 
-  var boolItem := TEditableBoolField.Create;
-  boolItem.Name := 'Family Friendly';
-  boolItem.Value := FFamilyFriendly;
-  Result.Add(boolItem);
-
   var audioItem := TEditableAudioField.Create;
   audioItem.Name := 'Question Audio';
   audioItem.Value := FQuestionAudio.Name;
@@ -536,11 +531,10 @@ begin
   FCorrectText := (AFields[2] as TEditableStringField).Value;
   FAlternateSpellings := (AFields[3] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
   FSuggestions := (AFields[4] as TEditableLongStringField).Value.Replace(', ', ',').Split([',']);
-  FFamilyFriendly := (AFields[5] as TEditableBoolField).Value;
-  FQuestionAudio.Name := (AFields[6] as TEditableAudioField).Value;
-  FQuestionAudio.BasePath := (AFields[6] as TEditableAudioField).BasePath;
-  FCorrectAudio.Name := (AFields[7] as TEditableAudioField).Value;
-  FCorrectAudio.BasePath := (AFields[7] as TEditableAudioField).BasePath;
+  FQuestionAudio.Name := (AFields[5] as TEditableAudioField).Value;
+  FQuestionAudio.BasePath := (AFields[5] as TEditableAudioField).BasePath;
+  FCorrectAudio.Name := (AFields[6] as TEditableAudioField).Value;
+  FCorrectAudio.BasePath := (AFields[6] as TEditableAudioField).BasePath;
 end;
 
 function TFibbageXLQuestion.SuggestionsCount: Int32;

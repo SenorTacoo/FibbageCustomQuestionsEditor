@@ -117020,7 +117020,7 @@ object FrmMain: TFrmMain
       Size.Width = 794.000000000000000000
       Size.Height = 600.000000000000000000
       Size.PlatformDefault = False
-      TabIndex = 1
+      TabIndex = 2
       TabOrder = 0
       TabPosition = None
       Sizes = (
@@ -117254,7 +117254,7 @@ object FrmMain: TFrmMain
           item
           end>
         TextSettings.Trimming = None
-        IsSelected = True
+        IsSelected = False
         Size.Width = 12.000000000000000000
         Size.Height = 12.000000000000000000
         Size.PlatformDefault = False
@@ -117263,56 +117263,12 @@ object FrmMain: TFrmMain
         Text = 'tiSettings'
         ExplicitSize.cx = 12.000000000000000000
         ExplicitSize.cy = 12.000000000000000000
-        object Layout2: TLayout
-          Align = Top
-          Position.Y = 46.000000000000000000
-          Size.Width = 794.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 7
-          object bSettingsFibbageXLPath: TButton
-            Align = Right
-            Margins.Left = 5.000000000000000000
-            Margins.Right = 10.000000000000000000
-            Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
-            Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
-            Size.PlatformDefault = False
-            StyleLookup = 'arrowdowntoolbutton'
-            TabOrder = 2
-            Text = 'aGetGamePath'
-            TextSettings.Trimming = None
-            OnClick = bSettingsFibbageXLPathClick
-          end
-          object lSettingsFibbageXLPath: TLabel
-            Align = Left
-            AutoSize = True
-            Margins.Left = 10.000000000000000000
-            Position.X = 10.000000000000000000
-            Size.Width = 115.000000000000000000
-            Size.Height = 50.000000000000000000
-            Size.PlatformDefault = False
-            TextSettings.WordWrap = False
-            Text = 'Fibbage XL path'
-            TabOrder = 0
-          end
-          object eSettingsFibbageXLPath: TEdit
-            Touch.InteractiveGestures = [LongTap, DoubleTap]
-            Align = Client
-            TabOrder = 1
-            Margins.Left = 10.000000000000000000
-            Size.Width = 598.000000000000000000
-            Size.Height = 32.000000000000000000
-            Size.PlatformDefault = False
-          end
-        end
         object ToolBar1: TToolBar
           Align = MostTop
           Size.Width = 794.000000000000000000
           Size.Height = 46.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 2
+          TabOrder = 0
           object Panel1: TPanel
             Align = Client
             Size.Width = 794.000000000000000000
@@ -117364,283 +117320,335 @@ object FrmMain: TFrmMain
             end
           end
         end
-        object cbShowCategoryDuplicatedInfo: TCheckBox
-          Align = Top
-          Margins.Left = 10.000000000000000000
-          Position.X = 10.000000000000000000
-          Position.Y = 296.000000000000000000
-          Size.Width = 784.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 8
-          Text = 'Show dialog about duplicated categories'
-        end
-        object cbShowDialogAboutTooFewSuggestions: TCheckBox
-          Align = Top
-          Margins.Left = 10.000000000000000000
-          Position.X = 10.000000000000000000
-          Position.Y = 346.000000000000000000
-          Size.Width = 784.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 9
-          Text = 'Show dialog about too few suggestions'
-        end
-        object cbShowDialogAboutTooFewQuestions: TCheckBox
-          Align = Top
-          Margins.Left = 10.000000000000000000
-          Position.X = 10.000000000000000000
-          Position.Y = 396.000000000000000000
-          Size.Width = 784.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 11
-          Text = 'Show dialog about too few questions'
-        end
-        object Layout4: TLayout
-          Align = Top
-          Position.Y = 196.000000000000000000
+        object sbxSettings: TVertScrollBox
+          Align = Client
           Size.Width = 794.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 6
-          object bSettingsFibbage3PP4Path: TButton
-            Align = Right
-            Margins.Left = 5.000000000000000000
-            Margins.Right = 10.000000000000000000
-            Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
-            Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
-            Size.PlatformDefault = False
-            StyleLookup = 'arrowdowntoolbutton'
-            TabOrder = 2
-            Text = 'aGetGamePath'
-            TextSettings.Trimming = None
-            OnClick = bSettingsFibbage3PP4PathClick
-          end
-          object lSettingsFibbage3PP4Path: TLabel
-            Align = Left
-            AutoSize = True
-            Margins.Left = 10.000000000000000000
-            Position.X = 10.000000000000000000
-            Size.Width = 181.000000000000000000
-            Size.Height = 50.000000000000000000
-            Size.PlatformDefault = False
-            TextSettings.WordWrap = False
-            Text = 'Jackbox Party Pack 4 path'
-            TabOrder = 0
-          end
-          object eSettingsFibbage3PP4Path: TEdit
-            Touch.InteractiveGestures = [LongTap, DoubleTap]
-            Align = Client
-            TabOrder = 1
-            Margins.Left = 10.000000000000000000
-            Size.Width = 532.000000000000000000
-            Size.Height = 32.000000000000000000
-            Size.PlatformDefault = False
-          end
-        end
-        object Layout5: TLayout
-          Align = Top
-          Position.Y = 96.000000000000000000
-          Size.Width = 794.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 4
-          object bSettingsFibbageXLPP1Path: TButton
-            Align = Right
-            Margins.Left = 5.000000000000000000
-            Margins.Right = 10.000000000000000000
-            Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
-            Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
-            Size.PlatformDefault = False
-            StyleLookup = 'arrowdowntoolbutton'
-            TabOrder = 2
-            Text = 'Action1'
-            TextSettings.Trimming = None
-            OnClick = bSettingsFibbageXLPP1PathClick
-          end
-          object lSettingsFibbagePP1Path: TLabel
-            Align = Left
-            AutoSize = True
-            Margins.Left = 10.000000000000000000
-            Position.X = 10.000000000000000000
-            Size.Width = 168.000000000000000000
-            Size.Height = 50.000000000000000000
-            Size.PlatformDefault = False
-            TextSettings.WordWrap = False
-            Text = 'Jackbox Party Pack path'
-            TabOrder = 0
-          end
-          object eSettingsFibbageXLPP1Path: TEdit
-            Touch.InteractiveGestures = [LongTap, DoubleTap]
-            Align = Client
-            TabOrder = 1
-            Margins.Left = 10.000000000000000000
-            Size.Width = 545.000000000000000000
-            Size.Height = 32.000000000000000000
-            Size.PlatformDefault = False
-          end
-        end
-        object Layout6: TLayout
-          Align = Top
-          Position.Y = 246.000000000000000000
-          Size.Width = 794.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 5
-          object bSettingsFibbage4PP9Path: TButton
-            Align = Right
-            Margins.Left = 5.000000000000000000
-            Margins.Right = 10.000000000000000000
-            Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
-            Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
-            Size.PlatformDefault = False
-            StyleLookup = 'arrowdowntoolbutton'
-            TabOrder = 2
-            Text = 'aGetGamePath'
-            TextSettings.Trimming = None
-            OnClick = bSettingsFibbage4PP9PathClick
-          end
-          object lSettingsFibbage4PP9Path: TLabel
-            Align = Left
-            AutoSize = True
-            Margins.Left = 10.000000000000000000
-            Position.X = 10.000000000000000000
-            Size.Width = 181.000000000000000000
-            Size.Height = 50.000000000000000000
-            Size.PlatformDefault = False
-            TextSettings.WordWrap = False
-            Text = 'Jackbox Party Pack 9 path'
-            TabOrder = 0
-          end
-          object eSettingsFibbage4PP9Path: TEdit
-            Touch.InteractiveGestures = [LongTap, DoubleTap]
-            Align = Client
-            TabOrder = 1
-            Margins.Left = 10.000000000000000000
-            Size.Width = 532.000000000000000000
-            Size.Height = 32.000000000000000000
-            Size.PlatformDefault = False
-          end
-        end
-        object Layout3: TLayout
-          Align = Top
-          Margins.Left = 10.000000000000000000
-          Margins.Right = 10.000000000000000000
-          Position.X = 10.000000000000000000
-          Position.Y = 496.000000000000000000
-          Size.Width = 774.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 0
-          object lAudioOutput: TLabel
-            Align = Left
-            AutoSize = True
-            Size.Width = 205.000000000000000000
-            Size.Height = 50.000000000000000000
-            Size.PlatformDefault = False
-            TextSettings.WordWrap = False
-            Text = 'Default audio output device: '
-            TabOrder = 11
-          end
-          object cbAudioOutput: TComboBox
-            Align = Client
-            Size.Width = 569.000000000000000000
-            Size.Height = 32.000000000000000000
-            Size.PlatformDefault = False
-            StyleLookup = 'comboboxstyle'
-            TabOrder = 10
-            OnChange = cbAudioOutputChange
-          end
-        end
-        object Layout7: TLayout
-          Align = Top
-          Margins.Left = 10.000000000000000000
-          Margins.Right = 10.000000000000000000
-          Position.X = 10.000000000000000000
-          Position.Y = 546.000000000000000000
-          Size.Width = 774.000000000000000000
-          Size.Height = 50.000000000000000000
+          Size.Height = 554.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 1
-          object cbAudioInput: TComboBox
-            Align = Client
-            Size.Width = 580.000000000000000000
-            Size.Height = 32.000000000000000000
-            Size.PlatformDefault = False
-            TabOrder = 9
-            OnChange = cbAudioInputChange
-          end
-          object lAudioInput: TLabel
-            Align = Left
-            AutoSize = True
-            Size.Width = 194.000000000000000000
+          Viewport.Width = 794.000000000000000000
+          Viewport.Height = 554.000000000000000000
+          object Layout2: TLayout
+            Align = Top
+            Size.Width = 794.000000000000000000
             Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
-            TextSettings.WordWrap = False
-            Text = 'Default audio input device: '
-            TabOrder = 12
+            TabOrder = 7
+            object bSettingsFibbageXLPath: TButton
+              Align = Right
+              Margins.Left = 5.000000000000000000
+              Margins.Right = 10.000000000000000000
+              Position.X = 738.000000000000000000
+              Position.Y = 2.000000000000000000
+              Size.Width = 46.000000000000000000
+              Size.Height = 46.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'arrowdowntoolbutton'
+              TabOrder = 2
+              Text = 'aGetGamePath'
+              TextSettings.Trimming = None
+              OnClick = bSettingsFibbageXLPathClick
+            end
+            object lSettingsFibbageXLPath: TLabel
+              Align = Left
+              AutoSize = True
+              Margins.Left = 10.000000000000000000
+              Position.X = 10.000000000000000000
+              Size.Width = 115.000000000000000000
+              Size.Height = 50.000000000000000000
+              Size.PlatformDefault = False
+              TextSettings.WordWrap = False
+              Text = 'Fibbage XL path'
+              TabOrder = 0
+            end
+            object eSettingsFibbageXLPath: TEdit
+              Touch.InteractiveGestures = [LongTap, DoubleTap]
+              Align = Client
+              TabOrder = 1
+              Margins.Left = 10.000000000000000000
+              Size.Width = 598.000000000000000000
+              Size.Height = 32.000000000000000000
+              Size.PlatformDefault = False
+            end
           end
-        end
-        object cbShowDialogAboutMissingSpecialEntries: TCheckBox
-          Align = Top
-          Margins.Left = 10.000000000000000000
-          Position.X = 10.000000000000000000
-          Position.Y = 446.000000000000000000
-          Size.Width = 784.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 10
-          Text = 'Show dialog about missing entries (eg. BLANK)'
-        end
-        object Layout8: TLayout
-          Align = Top
-          Position.Y = 146.000000000000000000
-          Size.Width = 794.000000000000000000
-          Size.Height = 50.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 3
-          object bJackboxPartyPack2Path: TButton
-            Align = Right
-            Margins.Left = 5.000000000000000000
+          object Layout3: TLayout
+            Align = Top
+            Margins.Left = 10.000000000000000000
             Margins.Right = 10.000000000000000000
-            Position.X = 738.000000000000000000
-            Position.Y = 2.000000000000000000
-            Size.Width = 46.000000000000000000
-            Size.Height = 46.000000000000000000
+            Position.X = 10.000000000000000000
+            Position.Y = 450.000000000000000000
+            Size.Width = 774.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
-            StyleLookup = 'arrowdowntoolbutton'
-            TabOrder = 2
-            Text = 'Action1'
-            TextSettings.Trimming = None
-            OnClick = bJackboxPartyPack2PathClick
+            TabOrder = 0
+            object lAudioOutput: TLabel
+              Align = Left
+              AutoSize = True
+              Size.Width = 205.000000000000000000
+              Size.Height = 50.000000000000000000
+              Size.PlatformDefault = False
+              TextSettings.WordWrap = False
+              Text = 'Default audio output device: '
+              TabOrder = 11
+            end
+            object cbAudioOutput: TComboBox
+              Align = Client
+              Size.Width = 569.000000000000000000
+              Size.Height = 32.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'comboboxstyle'
+              TabOrder = 10
+              OnChange = cbAudioOutputChange
+            end
           end
-          object Label1: TLabel
-            Align = Left
-            AutoSize = True
+          object Layout4: TLayout
+            Align = Top
+            Position.Y = 150.000000000000000000
+            Size.Width = 794.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 6
+            object bSettingsFibbage3PP4Path: TButton
+              Align = Right
+              Margins.Left = 5.000000000000000000
+              Margins.Right = 10.000000000000000000
+              Position.X = 738.000000000000000000
+              Position.Y = 2.000000000000000000
+              Size.Width = 46.000000000000000000
+              Size.Height = 46.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'arrowdowntoolbutton'
+              TabOrder = 2
+              Text = 'aGetGamePath'
+              TextSettings.Trimming = None
+              OnClick = bSettingsFibbage3PP4PathClick
+            end
+            object lSettingsFibbage3PP4Path: TLabel
+              Align = Left
+              AutoSize = True
+              Margins.Left = 10.000000000000000000
+              Position.X = 10.000000000000000000
+              Size.Width = 181.000000000000000000
+              Size.Height = 50.000000000000000000
+              Size.PlatformDefault = False
+              TextSettings.WordWrap = False
+              Text = 'Jackbox Party Pack 4 path'
+              TabOrder = 0
+            end
+            object eSettingsFibbage3PP4Path: TEdit
+              Touch.InteractiveGestures = [LongTap, DoubleTap]
+              Align = Client
+              TabOrder = 1
+              Margins.Left = 10.000000000000000000
+              Size.Width = 532.000000000000000000
+              Size.Height = 32.000000000000000000
+              Size.PlatformDefault = False
+            end
+          end
+          object Layout5: TLayout
+            Align = Top
+            Position.Y = 50.000000000000000000
+            Size.Width = 794.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 4
+            object bSettingsFibbageXLPP1Path: TButton
+              Align = Right
+              Margins.Left = 5.000000000000000000
+              Margins.Right = 10.000000000000000000
+              Position.X = 738.000000000000000000
+              Position.Y = 2.000000000000000000
+              Size.Width = 46.000000000000000000
+              Size.Height = 46.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'arrowdowntoolbutton'
+              TabOrder = 2
+              Text = 'Action1'
+              TextSettings.Trimming = None
+              OnClick = bSettingsFibbageXLPP1PathClick
+            end
+            object lSettingsFibbagePP1Path: TLabel
+              Align = Left
+              AutoSize = True
+              Margins.Left = 10.000000000000000000
+              Position.X = 10.000000000000000000
+              Size.Width = 168.000000000000000000
+              Size.Height = 50.000000000000000000
+              Size.PlatformDefault = False
+              TextSettings.WordWrap = False
+              Text = 'Jackbox Party Pack path'
+              TabOrder = 0
+            end
+            object eSettingsFibbageXLPP1Path: TEdit
+              Touch.InteractiveGestures = [LongTap, DoubleTap]
+              Align = Client
+              TabOrder = 1
+              Margins.Left = 10.000000000000000000
+              Size.Width = 545.000000000000000000
+              Size.Height = 32.000000000000000000
+              Size.PlatformDefault = False
+            end
+          end
+          object Layout6: TLayout
+            Align = Top
+            Position.Y = 200.000000000000000000
+            Size.Width = 794.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 5
+            object bSettingsFibbage4PP9Path: TButton
+              Align = Right
+              Margins.Left = 5.000000000000000000
+              Margins.Right = 10.000000000000000000
+              Position.X = 738.000000000000000000
+              Position.Y = 2.000000000000000000
+              Size.Width = 46.000000000000000000
+              Size.Height = 46.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'arrowdowntoolbutton'
+              TabOrder = 2
+              Text = 'aGetGamePath'
+              TextSettings.Trimming = None
+              OnClick = bSettingsFibbage4PP9PathClick
+            end
+            object lSettingsFibbage4PP9Path: TLabel
+              Align = Left
+              AutoSize = True
+              Margins.Left = 10.000000000000000000
+              Position.X = 10.000000000000000000
+              Size.Width = 181.000000000000000000
+              Size.Height = 50.000000000000000000
+              Size.PlatformDefault = False
+              TextSettings.WordWrap = False
+              Text = 'Jackbox Party Pack 9 path'
+              TabOrder = 0
+            end
+            object eSettingsFibbage4PP9Path: TEdit
+              Touch.InteractiveGestures = [LongTap, DoubleTap]
+              Align = Client
+              TabOrder = 1
+              Margins.Left = 10.000000000000000000
+              Size.Width = 532.000000000000000000
+              Size.Height = 32.000000000000000000
+              Size.PlatformDefault = False
+            end
+          end
+          object Layout7: TLayout
+            Align = Top
+            Margins.Left = 10.000000000000000000
+            Margins.Right = 10.000000000000000000
+            Position.X = 10.000000000000000000
+            Position.Y = 500.000000000000000000
+            Size.Width = 774.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 1
+            object cbAudioInput: TComboBox
+              Align = Client
+              Size.Width = 580.000000000000000000
+              Size.Height = 32.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 9
+              OnChange = cbAudioInputChange
+            end
+            object lAudioInput: TLabel
+              Align = Left
+              AutoSize = True
+              Size.Width = 194.000000000000000000
+              Size.Height = 50.000000000000000000
+              Size.PlatformDefault = False
+              TextSettings.WordWrap = False
+              Text = 'Default audio input device: '
+              TabOrder = 12
+            end
+          end
+          object Layout8: TLayout
+            Align = Top
+            Position.Y = 100.000000000000000000
+            Size.Width = 794.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 3
+            object bJackboxPartyPack2Path: TButton
+              Align = Right
+              Margins.Left = 5.000000000000000000
+              Margins.Right = 10.000000000000000000
+              Position.X = 738.000000000000000000
+              Position.Y = 2.000000000000000000
+              Size.Width = 46.000000000000000000
+              Size.Height = 46.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'arrowdowntoolbutton'
+              TabOrder = 2
+              Text = 'Action1'
+              TextSettings.Trimming = None
+              OnClick = bJackboxPartyPack2PathClick
+            end
+            object Label1: TLabel
+              Align = Left
+              AutoSize = True
+              Margins.Left = 10.000000000000000000
+              Position.X = 10.000000000000000000
+              Size.Width = 181.000000000000000000
+              Size.Height = 50.000000000000000000
+              Size.PlatformDefault = False
+              TextSettings.WordWrap = False
+              Text = 'Jackbox Party Pack 2 path'
+              TabOrder = 0
+            end
+            object eJackboxPartyPack2Path: TEdit
+              Touch.InteractiveGestures = [LongTap, DoubleTap]
+              Align = Client
+              TabOrder = 1
+              Margins.Left = 10.000000000000000000
+              Size.Width = 532.000000000000000000
+              Size.Height = 32.000000000000000000
+              Size.PlatformDefault = False
+            end
+          end
+          object cbShowCategoryDuplicatedInfo: TCheckBox
+            Align = Top
             Margins.Left = 10.000000000000000000
             Position.X = 10.000000000000000000
-            Size.Width = 181.000000000000000000
+            Position.Y = 250.000000000000000000
+            Size.Width = 784.000000000000000000
             Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
-            TextSettings.WordWrap = False
-            Text = 'Jackbox Party Pack 2 path'
-            TabOrder = 0
+            TabOrder = 8
+            Text = 'Show dialog about duplicated categories'
           end
-          object eJackboxPartyPack2Path: TEdit
-            Touch.InteractiveGestures = [LongTap, DoubleTap]
-            Align = Client
-            TabOrder = 1
+          object cbShowDialogAboutMissingSpecialEntries: TCheckBox
+            Align = Top
             Margins.Left = 10.000000000000000000
-            Size.Width = 532.000000000000000000
-            Size.Height = 32.000000000000000000
+            Position.X = 10.000000000000000000
+            Position.Y = 400.000000000000000000
+            Size.Width = 784.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
+            TabOrder = 10
+            Text = 'Show dialog about missing entries (eg. BLANK)'
+          end
+          object cbShowDialogAboutTooFewQuestions: TCheckBox
+            Align = Top
+            Margins.Left = 10.000000000000000000
+            Position.X = 10.000000000000000000
+            Position.Y = 350.000000000000000000
+            Size.Width = 784.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 11
+            Text = 'Show dialog about too few questions'
+          end
+          object cbShowDialogAboutTooFewSuggestions: TCheckBox
+            Align = Top
+            Margins.Left = 10.000000000000000000
+            Position.X = 10.000000000000000000
+            Position.Y = 300.000000000000000000
+            Size.Width = 784.000000000000000000
+            Size.Height = 50.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 9
+            Text = 'Show dialog about too few suggestions'
           end
         end
       end
@@ -117649,7 +117657,7 @@ object FrmMain: TFrmMain
           item
           end>
         TextSettings.Trimming = None
-        IsSelected = False
+        IsSelected = True
         Size.Width = 12.000000000000000000
         Size.Height = 12.000000000000000000
         Size.PlatformDefault = False
