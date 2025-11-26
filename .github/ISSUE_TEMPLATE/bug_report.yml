@@ -14,7 +14,6 @@ body:
       description: Please select the exact version where you see the bug
       multiple: false
       options:
-        - None
         - Base FibbageXL
         - FibbageXL from Party Pack 1
         - Fibbage 2 from Party Pack 2
