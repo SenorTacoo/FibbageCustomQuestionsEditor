@@ -380,6 +380,7 @@ type
     procedure OnCopyQuestionTo(Sender: TObject);
     procedure OnMoveQuestionTo(Sender: TObject);
     procedure ShowErrorsIfEditedQuestionIsNotOk;
+    procedure SetCaptionWithVersion;
   public
     { Public declarations }
   end;
@@ -1915,6 +1916,7 @@ end;
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
   Randomize;
+  SetCaptionWithVersion;
   Application.OnException := OnUnhandledException;
 
   FQuestionVisItems := TQuestionScrollItems.Create;
@@ -2118,6 +2120,32 @@ begin
   for var item in lyTypes.Controls do
     if item is TButton then
       (item as TButton).IsPressed := (item as TButton).Text = FActiveQuestionsType.DisplayName;
+end;
+
+procedure TFrmMain.SetCaptionWithVersion;
+var
+  wnd: DWORD;
+  verValue: PVSFixedFileInfo;
+  verValueSize: DWORD;
+begin
+  var fileName := ParamStr(0);
+  var infoSize := GetFileVersionInfoSize(PChar(fileName), wnd);
+  if infoSize > 0 then
+  begin
+    var verInfo := AllocMem(infoSize);
+    try
+      if not GetFileVersionInfo(PChar(fileName), wnd, infoSize, verInfo) then
+        Exit;
+      if not VerQueryValue(verInfo, '\', Pointer(verValue), verValueSize) then
+        Exit;
+
+      Caption := Format('%s v%u.%u.%u.%u', [Caption,
+        HiWord(verValue.dwFileVersionMS), LoWord(verValue.dwFileVersionMS),
+        HiWord(verValue.dwFileVersionLS), LoWord(verValue.dwFileVersionLS)]);
+    finally
+      FreeMem(verInfo);
+    end;
+  end;
 end;
 
 procedure TFrmMain.SetDarkMode(AEnabled: Boolean);
