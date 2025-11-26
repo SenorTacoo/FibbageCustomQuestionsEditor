@@ -1,0 +1,39 @@
+name: Bug Report
+description: Report a bug
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out a bug report!
+        Please make sure to be as specific as possible in your description and title.
+  - type: dropdown
+    id: game-type
+    attributes:
+      label: Game version affected
+      description: Please select the exact version where you see the bug
+      multiple: false
+      options:
+        - None
+        - Base FibbageXL
+        - FibbageXL from Party Pack 1
+        - Fibbage 2 from Party Pack 2
+        - Fibbage 3 from Party Pack 4
+        - Fibbage 4 from Party Pack 9
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Issue description
+      description: |
+        Describe your issue briefly. What doesn't work, and how do you expect it to work instead?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Provide steps that can be used to reproduce the issue. Issues that are not reproducible are
+        unlikely to be resolved.
+    validations:
+      required: true
